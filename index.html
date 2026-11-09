@@ -391,7 +391,7 @@ const RULES = {
   rarePetChance: 1/1000  // per quest completed, for that skill's rare companion
 };
 const DEMO = !!window.XP_DEMO;
-const APP_VERSION = '2026.11.09-1840';
+const APP_VERSION = '2026.11.09-1855';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -423,10 +423,26 @@ const ICONS = {
   skull:'<path d="M12 3a7.5 7.5 0 0 0-7.5 7.5c0 2.6 1.3 4.4 3 5.5V20h9v-4c1.7-1.1 3-2.9 3-5.5A7.5 7.5 0 0 0 12 3z"/><circle cx="9" cy="11" r="1.6"/><circle cx="15" cy="11" r="1.6"/><path d="M10.5 20v-2M13.5 20v-2"/>',
   paw:'<circle cx="7" cy="10" r="1.8"/><circle cx="10.5" cy="6.5" r="1.8"/><circle cx="14.5" cy="6.5" r="1.8"/><circle cx="18" cy="10" r="1.8"/><path d="M12 11.5c-3 0-5.5 3.5-5.5 6 0 1.6 1.4 2.2 2.8 1.8 1-.3 1.8-.6 2.7-.6s1.7.3 2.7.6c1.4.4 2.8-.2 2.8-1.8 0-2.5-2.5-6-5.5-6z"/>',
   chevron:'<path d="m6 9 6 6 6-6"/>',
+  cup:'<path d="M5 8h11v6a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 3.5c0 1.2 1 1.3 1 2.5M12 3.5c0 1.2 1 1.3 1 2.5"/>',
+  utensils:'<path d="M6 3v6a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3M8 3v18"/><path d="M17.5 21V3c-2 1.2-3.5 4-3.5 7.5V13h3.5"/>',
+  note:'<path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+  brush:'<path d="M20 3.5 11.5 12"/><path d="M11.5 12c-2.6-.6-5 1-5 3.6 0 1.9-1.4 2.9-3 3.4 3.3 2 8.4 1.2 8.9-2.8.2-1.6-.2-3-.9-4.2z"/>',
+  camera:'<path d="M4 7.5h3.5L9 5h6l1.5 2.5H20a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8.5a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
+  quill:'<path d="M20 4C11 5 6 11 5 20.5"/><path d="M20 4c-.5 6-4.5 10.5-11 12"/><path d="M9.5 11.5l3 3"/>',
+  home:'<path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/>',
+  coin:'<circle cx="12" cy="12" r="8.5"/><path d="M14.6 9.2c-.4-1-1.4-1.6-2.6-1.6-1.5 0-2.7.8-2.7 2.1 0 3 5.4 1.6 5.4 4.6 0 1.3-1.2 2.3-2.7 2.3-1.2 0-2.2-.6-2.6-1.6M12 6v1.6M12 16.6V18"/>',
+  bike:'<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l3.5-7h6L18 16M9.5 9 8 6.5H6.5M15.5 9 14.5 6.5H17M12 16l-2.5-7"/>',
+  phone:'<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/>',
+  code:'<path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4.5l-4 15"/>',
+  globe:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.4 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.4-3.5-8.5s1.1-6.1 3.5-8.5z"/>',
+  pill:'<path d="M10.5 20.5a4.95 4.95 0 0 1-7-7l7-7a4.95 4.95 0 0 1 7 7z"/><path d="m7 10 7 7"/>',
+  gamepad:'<path d="M7 8h10a4 4 0 0 1 4 4.4l-.5 3.6a2.5 2.5 0 0 1-4.3 1.3L14.5 15h-5l-1.7 2.3A2.5 2.5 0 0 1 3.5 16L3 12.4A4 4 0 0 1 7 8z"/><path d="M8 10.5v3M6.5 12h3"/><circle cx="15.5" cy="11" r=".6"/><circle cx="17.5" cy="13" r=".6"/>',
+  briefcase:'<rect x="3" y="7.5" width="18" height="12" rx="1.5"/><path d="M9 7.5v-2a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18"/>',
+  cart:'<path d="M3 4h2.5l2.2 10.5h10.5l2-7.5H6.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
   hourglass:'<path d="M6.5 2.8h11M6.5 21.2h11M7.5 2.8c0 5 9 6 9 9.2s-9 4.2-9 9.2M16.5 2.8c0 5-9 6-9 9.2s9 4.2 9 9.2"/>',
 };
 const COND_ICONS = ['drop','moon','sun','cloud','heart','flame','bolt','star','skull','shield','leaf','potion'];
-const SKILL_ICONS = ['guitar','bolt','mountain','book','sword','flame','heart','star','shield','potion','dumbbell','leaf'];
+const SKILL_ICONS = ['guitar','bolt','mountain','book','sword','flame','heart','star','shield','potion','dumbbell','leaf','cup','utensils','note','brush','camera','quill','home','coin','bike','phone','code','globe','pill','gamepad','briefcase','cart'];
 function svg(name, extra){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra||''}>${ICONS[name]||ICONS.star}</svg>`; }
 
 /* ============ Dates ============ */
@@ -474,6 +490,86 @@ const GROUP_NAME = { exercise:'Exercise' };
 // Sprites: 32x32 canvas. Rows of 16 chars are mirrored; rows of 32 are used as-is.
 // Region letters (auto-shaded): a c d x y z.  Flat: e eye, w white, n dark/mouth.
 const SPR = {
+cat: { pal:{a:[24,85,55], c:[35,40,88], d:[18,75,36], x:[350,60,72]}, e:'#7bd35a', rows:[
+"........a..............a........",
+"........aa............aa........",
+"........axa..........axa........",
+"........axaaaaaaaaaaaaxa........",
+"........aaaaadaddadaaaaa........",
+".......aaaaaaaaaaaaaaaaaa.......",
+".......aaweaaaaaaaaaaewaa.......",
+".......aaeeaaaaaaaaaaeeaa.......",
+".......aaaaaaccccccaaaaaa.......",
+"........aaaaccxxxxccaaaa........",
+".........aaaaccccccaaaa.........",
+"..........aaaaaaaaaaaa..........",
+"...aa...aadaaccccccaadaa........",
+"..aad..aadaaaccccccaaadaa.......",
+"..ad...adaaaaccccccaaaada.......",
+".aa...aadaaaaccccccaaaadaa......",
+".ad...aaaaaaaccccccaaaaaaa......",
+".aa...adaaaaaccccccaaaaada......",
+"..aaa.aaaaaccc.cc.cccaaaaa......"]},
+turtle: { pal:{a:[105,40,48], c:[60,45,70], d:[28,45,30], y:[22,85,52], z:[0,0,85], x:[355,70,45]}, e:'#120c0a', rows:[
+"..........aaaaaa",
+".........aaaaaaa",
+"........aaaaaaaa",
+"........xxxxxxxx",
+"........aaweaaaa",
+"........aaeeaaaa",
+"........aaaaaaaa",
+".........aaannnn",
+"....ddddddaaaaaa",
+"...dccdcddyyyyyy",
+"...dcdddcayyyyyy",
+"...ddcdda.yyyyzy",
+"...dcddd..yyyzyy",
+"...ddcdda.yyzyyy",
+"...dcddd..yzyyyy",
+"....dddd.yyyyyyy",
+".........yyyyyyy",
+"........yyyyyyyy",
+"..........aaa...",
+".........aaaa..."]},
+boa: { pal:{a:[110,55,40], c:[70,55,70], d:[120,50,22], x:[355,75,50]}, e:'#ffd23a', rows:[
+".......................aaaaa....",
+"......................aaaaaaa...",
+"......................aeaaaaaa..",
+".......................aaaaaanxx",
+".......................aaaaaa...",
+"......................aaaaa.....",
+".....................aaaaa......",
+"....................aaaaa.......",
+"..........aaaaaaaaaaaaaaa.......",
+"........aaadaaadaaadaaaaa.......",
+".......aacccccccccccccccaa......",
+"........aaaaaaaaaaaaaaaaa.......",
+"......aaadaaadaaadaaadaaaaa.....",
+".....aacccccccccccccccccccaa....",
+"......aaaaaaaaaaaaaaaaaaaaa.....",
+"....aaadaaadaaadaaadaaadaaaaa...",
+"...aacccccccccccccccccccccccaa..",
+"....aaaaaaaaaaaaaaaaaaaaaaaaa..."]},
+kingslime: { pal:{a:[215,70,52], c:[200,75,75], d:[220,55,28], y:[45,90,55], z:[355,80,50], x:[150,70,45]}, e:'#120c0a', rows:[
+".......y...y...y",
+".......yy..yy.yy",
+".......yyyyyyyyy",
+".......yyzyyyxyy",
+".......yyyyyyyyy",
+"......aaaaaaaaaa",
+"....aaaaaaaaaaaa",
+"...aacccaaaaaaaa",
+"..aacccaaaaaaaaa",
+"..acccaaaaaaaaaa",
+".aaccaaaaawwaaaa",
+".aacaaaaaaweaaaa",
+".aaaaaaaaaweaaaa",
+"aaaaaaaaaaaaaaaa",
+"aaaaaaaaaaaannnn",
+"aaaaaaaaaaaaaaaa",
+"aaaaaaaaaaaaaaaa",
+".aaaaaaaaaaaaaaa",
+"..dddddddddddddd"]},
 owl: { pal:{a:[28,40,42], c:[38,45,80], d:[25,40,26], x:[35,85,55], y:[45,80,58], z:[355,55,38]}, e:'#120c0a', rows:[
 "................",
 ".....d..........",
@@ -662,28 +758,6 @@ fox: { pal:{a:[18,78,52], c:[30,40,88], d:[15,50,22], x:[330,60,70]}, e:'#120c0a
 "..acaa.....aaaaaaaa.aa.cc.......",
 "...acaaaaaaaaaaaaaa..aa.cc......",
 "....ccaaaaaaaaaaaad..dd.dd......"]},
-naga: { pal:{a:[150,55,36], c:[52,80,58], y:[55,60,72], x:[350,80,55]}, e:'#ffd23a', rows:[
-"............aaaa",
-"...........aaaaa",
-"...........aaeaa",
-"......aa...aaaaa",
-".....aaca..aaaax",
-"....aacca...aaax",
-"....acccaa..aaaa",
-"....aacccaaaaaaa",
-"....aaccaaaayyyy",
-".....aacaaaayyyy",
-"......aaaaaayyyy",
-"........aaaayyyy",
-"..........aayyyy",
-"..........ayyyyy",
-".........aayyyyy",
-".......aaaayyyyy",
-".....aaaaaaaaaaa",
-"....aaccaaaaccaa",
-"...aaaaaaaaaaaaa",
-"...aacaaaaaacaaa",
-"....aaaaaaaaaaaa"]},
 hare: { pal:{a:[32,25,58], c:[35,25,86], d:[25,25,30], x:[350,60,75]}, e:'#120c0a', rows:[
 "...................aa..aa.......",
 "..................adaa.aadd.....",
@@ -699,29 +773,6 @@ hare: { pal:{a:[32,25,58], c:[35,25,86], d:[25,25,30], x:[350,60,75]}, e:'#120c0
 "...aaaaa..cccccc......aaaaadd...",
 "..aaaa....................aaadd.",
 ".ddd............................"]},
-goblin: { pal:{a:[95,45,42], c:[30,35,30], y:[25,45,38], x:[40,70,50], d:[25,25,20]}, e:'#ff3a2a', rows:[
-"..............aa",
-".............aaa",
-"............aaa.",
-"...........aaa..",
-"..........aaa...",
-".........aaa.aaa",
-"........aaa.aaaa",
-".aa.....aa.aaaaa",
-"..aaa...aa.aaaaa",
-"...aaaa.aaaaeeaa",
-"......aaaaaaaaaa",
-"........aaaawnnn",
-"........aaaaaaaa",
-".........yyyyyyy",
-".........yyyyyyy",
-".........yyyyyyy",
-".........xxxxxxx",
-".........ccccccc",
-"..........ccc...",
-"..........ccc...",
-"..........ccc...",
-".........dddd..."]},
 slime: { pal:{a:[100,60,42], c:[95,65,68], d:[100,50,24]}, e:'#120c0a', rows:[
 "................",
 "................",
@@ -776,29 +827,6 @@ bat: { pal:{a:[270,25,38], c:[270,20,62], d:[275,30,24]}, e:'#ffd23a', shinyShif
 "..ddddd.ddddaaccccaaddd.ddddd...",
 "...dd....dd..aaaaaa..dd....dd...",
 ".............dd..dd............."]},
-phantom: { pal:{a:[200,25,82], c:[0,0,90], d:[260,25,18], x:[355,70,40]}, e:'#9ff0ff', rows:[
-"........dddddddd",
-"........dddddddd",
-"........dddddddd",
-"........xxxxxxxx",
-"......dddddddddd",
-".........wwwwwww",
-"........wwwwwwww",
-"........wweewwww",
-"........wwwwwwww",
-".........wwwwwww",
-"..........wwwwww",
-"......ddddcccccc",
-".....dxxxdcccccc",
-"....dxxxxdcccxcc",
-"...dxxxxxdcccccc",
-"..dxxxxxxdcccccc",
-"..dxxxxxxdcccccc",
-".dxxxxxxxddddddd",
-".dxxxxxx.aaaaaaa",
-"ddxxxxx...aaaaaa",
-"dddd.......aaaa.",
-".............aa."]},
 mandrake: { pal:{a:[34,40,56], c:[34,40,72], d:[30,40,28], x:[110,55,40]}, e:'#120c0a', rows:[
 "......xx.........xx.............",
 ".....xxxx..xxx..xxxx............",
@@ -926,21 +954,21 @@ sprSVG.n = 0;
 
 
 
-const SKILL_PETS = { reading:['owl','golem'], running:['hound','werewolf'], climbing:['lizard','wyvern'], guitar:['finch','phoenix'], yoga:['fox','naga'], stretching:['hare','goblin'], social:['slime','beholder'], cinema:['bat','phantom'], plants:['mandrake','treant'], housekeeping:['mimic','gargoyle'] };
+const SKILL_PETS = { reading:['owl','golem'], running:['hound','werewolf'], climbing:['lizard','wyvern'], guitar:['finch','phoenix'], yoga:['fox','turtle'], stretching:['hare','boa'], social:['slime','kingslime'], cinema:['bat','beholder'], plants:['mandrake','treant'], housekeeping:['mimic','gargoyle'] };
 const PET_NAMES = {
   reading:     [['Wisened Owl','Peers over its spectacles at anything you have not finished reading.'],['Tome Golem','A guardian stitched from a hundred books. It remembers every page.']],
-  running:     [['Trail Hound','Knows every path for miles and wants to run all of them.'],['Moonhowl Werewolf','Runs all night and is still waiting at the door at dawn.']],
-  climbing:    [['Crag Lizard','Sticks to any rock face. Judges your grip.'],['Sky Wyvern','Nests on peaks no climber has reached. Yet.']],
-  guitar:      [['Lyre Finch','Hums your last practice back to you, slightly off-key.'],['Ember Phoenix','Its song catches fire on the high notes.']],
-  yoga:        [['Lotus Fox','Naps in perfect balance on one paw.'],['Cobra Naga','Holds a perfect cobra pose. Always.']],
-  stretching:  [['Limber Hare','Can touch its toes. Can also touch your toes.'],['Goblin Acrobat','Bends in ways goblins should not bend.']],
-  social:      [['Chatter Slime','Wobbles happily whenever someone says hello.'],['Gossip Beholder','Sees everyone. Remembers every name. Keeps most secrets.']],
-  cinema:      [['Matinee Bat','Watches from the rafters. Shushes no one.'],['Opera Phantom','Haunts the best seat in every theater.']],
+  running:     [['Trail Hound','Knows every path for miles and wants to run all of them.'],['Werewolf','Runs all night and is still waiting at the door at dawn.']],
+  climbing:    [['Crag Lizard','Sticks to any rock face. Judges your grip.'],['Ancient Wyvern','Has nested on the highest peaks for a thousand years. Respects a good climb.']],
+  guitar:      [['Lyre Finch','Hums your last practice back to you, slightly off-key.'],['Phoenix','Its song catches fire on the high notes.']],
+  yoga:        [['Lotus Fox','Naps in perfect balance on one paw.'],['Turtle Monk','Has held the same pose for three hundred years. Still breathing deeply.']],
+  stretching:  [['Limber Hare','Can touch its toes. Can also touch your toes.'],['Lithe Boa','Ties itself in knots on purpose. Untangles with a sigh of relief.']],
+  social:      [['Chatter Slime','Wobbles happily whenever someone says hello.'],['King Slime','Rules a kingdom of friends. Its crown has a jewel for each one.']],
+  cinema:      [['Matinee Bat','Watches from the rafters. Shushes no one.'],['Beholder','Never blinks during a film. Has a dozen eyes for every scene.']],
   plants:      [['Mandrake Sprout','Screams softly when thirsty. Quite polite about it.'],['Ancient Treant','Has watched forests rise and fall. Approves of your ferns.']],
   housekeeping:[['Dust Mimic','Eats crumbs. Only crumbs. Probably.'],['Gargoyle Sentinel','Guards your home from its perch. Nothing gets past it, especially clutter.']],
 };
 function petDefs(){
-  const out = [];
+  const out = [{ id:'p_cat', skill:null, sprite:'cat', form:'base', starter:true, name:'Cat', desc:'An orange tabby who followed you out the door one morning and never left.', how:'Starter companion' }];
   for(const s of state.skills){
     let pair = SKILL_PETS[s.id], names = PET_NAMES[s.id], pal = null;
     if(!pair){
@@ -954,6 +982,7 @@ function petDefs(){
   }
   return out;
 }
+const petOrigin = p => p.starter ? 'Starter companion' : skillById(p.skill).name;
 function petArt(def, width, locked){ return sprSVG(def.sprite, {width, locked, shiny: !!def.rare, pal: def.pal || undefined}); }
 const DEFAULT_CONDITIONS = () => [
   { id:'poisoned',  name:'Poisoned',  desc:'Sick today',                icon:'drop', kind:'bad'  },
@@ -963,9 +992,9 @@ const DEFAULT_CONDITIONS = () => [
 function defaultState(){
   const t = todayKey();
   return {
-    v: 4, created: t,
+    v: 5, created: t,
     conditionDefs: DEFAULT_CONDITIONS(), conditions: {}, pets: {},
-    profile: { name: '', portrait: '', title: '' },
+    profile: { name: '', portrait: '', title: '', pet: 'p_cat' },
     skills: [
       { id:'guitar',   name:'Guitar',        icon:'guitar',   ability:'CHA', titles:['Bard','Virtuoso'] },
       { id:'running',  name:'Running',       icon:'bolt',     ability:'STR', titles:['Fleetfoot','Windrunner'] },
@@ -1028,6 +1057,7 @@ function migrate(s){
     s.v = 3;
   }
   if(s.v < 4){ s.conditionDefs = s.conditionDefs || DEFAULT_CONDITIONS(); s.conditions = s.conditions || {}; s.pets = s.pets || {}; s.v = 4; }
+  if(s.v < 5){ if(!s.profile.pet) s.profile.pet = 'p_cat'; s.v = 5; }
   s.conditionDefs = s.conditionDefs || []; s.conditions = s.conditions || {}; s.pets = s.pets || {};
   s.skills.forEach(k=>{ if(!ABILITY_NAME[k.ability]) k.ability = 'WIS'; });
   return s;
@@ -1164,6 +1194,7 @@ function compute(){
   for(const s of state.skills) skills[s.id] = Object.assign(levelInfo(skillXP[s.id]||0, RULES.skillBase), {qty:skillQty[s.id]||{}, minutes:(skillQty[s.id]||{}).min||0, count:skillCount[s.id]||0, best:skillBest[s.id]||0, streak:skillStreak[s.id]||0});
   const abilities = {};
   for(const [ab] of ABILITIES){ const xp = state.skills.filter(s=>s.ability===ab).reduce((a,s)=>a+(skillXP[s.id]||0),0); abilities[ab] = levelInfo(xp, RULES.abilityBase); }
+  petDates.p_cat = start;
   for(const id in state.pets) if(!petDates[id]) petDates[id] = state.pets[id].date || today;
   return { today, start, days, weeks, char: levelInfo(c.total, RULES.charBase), skills, abilities, cur, best, nextMult, ach, defs, c, pets: petDates };
 }
@@ -1233,7 +1264,7 @@ function condBar(k){
 function currentCompanion(){ const id = state.profile.pet; if(!id || !R.pets[id]) return null; return petDefs().find(p=>p.id===id) || null; }
 function companionHTML(){
   const def = currentCompanion(); if(!def) return '';
-  return `<button class="compstrip ${def.form}" data-act="pet" data-id="${def.id}"><span class="compart">${petArt(def, 80)}</span><span class="comptext"><span class="label">Traveling with</span><b>${esc(def.name)}</b><span class="muted">${esc(skillById(def.skill).name)} companion</span></span></button>`;
+  return `<button class="compstrip ${def.form}" data-act="pet" data-id="${def.id}"><span class="compart">${petArt(def, 80)}</span><span class="comptext"><span class="label">Traveling with</span><b>${esc(def.name)}</b><span class="muted">${def.starter ? 'Starter companion' : esc(skillById(def.skill).name)+' companion'}</span></span></button>`;
 }
 function heroHeader(opts){
   const ch = R.char; opts = opts || {};
@@ -1424,7 +1455,7 @@ function viewTrophies(){
   }).join('');
   const pets = petDefs(); const ownedN = pets.filter(p=>R.pets[p.id]).length;
   const petCards = pets.map(p=>{ const got = !!R.pets[p.id];
-    return `<button class="pet ${got?'got':''} ${p.form}" data-act="pet" data-id="${p.id}"><div class="petart">${petArt(p, 80, !got)}</div><div class="pn">${got ? esc(p.name) : '???'}</div><div class="ph">${got ? esc(skillById(p.skill).name) : esc(p.how)}</div></button>`; }).join('');
+    return `<button class="pet ${got?'got':''} ${p.form}" data-act="pet" data-id="${p.id}"><div class="petart">${petArt(p, 80, !got)}</div><div class="pn">${got ? esc(p.name) : '???'}</div><div class="ph">${got ? esc(petOrigin(p)) : esc(p.how)}</div></button>`; }).join('');
   return `<div class="rule">Medals</div>
   <div class="medalcount">
     ${['bronze','silver','gold'].map(m=>`<div class="frame mc"><div class="in"><span class="coin ${m}">${m[0].toUpperCase()}</span><b class="num">${c.medals[m]}</b><span class="label">${m} days</span></div></div>`).join('')}
@@ -1690,7 +1721,7 @@ function petSheet(id){
   const got = R.pets[p.id], isComp = state.profile.pet===p.id;
   openSheet(`<div class="label" style="color:var(--gold)">${got ? (p.rare?'Shiny companion':'Companion') : 'Not yet found'}</div><h2>${got ? esc(p.name) : '???'}</h2>
     <div class="petbig ${p.form}" style="align-self:center">${petArt(p, 200, !got)}</div>
-    ${got ? `<p style="margin:0">${esc(p.desc)}</p><p class="hint" style="margin:0">${esc(skillById(p.skill).name)} · found ${esc(niceDate(got))}</p>` : `<p class="hint" style="margin:0">How to find it: ${esc(p.how)}.</p>`}
+    ${got ? `<p style="margin:0">${esc(p.desc)}</p><p class="hint" style="margin:0">${esc(petOrigin(p))} · found ${esc(niceDate(got))}</p>` : `<p class="hint" style="margin:0">How to find it: ${esc(p.how)}.</p>`}
     ${got ? `<button class="btn ${isComp?'':'primary'} block" id="f-comp">${isComp ? 'Stop traveling together' : 'Travel together'}</button><p class="hint" style="margin:0">Your traveling companion appears on your character card.</p>` : ''}
     <button class="btn block" id="f-cancel">Close</button>`, root=>{
     root.querySelector('#f-cancel').onclick = closeSheet;

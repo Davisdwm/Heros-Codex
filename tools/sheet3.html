@@ -2,7 +2,8 @@
 <div id="g" style="display:grid;grid-template-columns:repeat(3,116px);gap:6px"></div>
 <script src="pets3.js"></script><script src="petrender3.js"></script>
 <script>
-const P = [['owl','golem'],['hound','werewolf'],['lizard','wyvern'],['finch','phoenix'],['fox','naga'],['hare','goblin'],['slime','beholder'],['bat','phantom'],['mandrake','treant'],['mimic','gargoyle']];
+const P = [['owl','golem'],['hound','werewolf'],['lizard','wyvern'],['finch','phoenix'],['fox','turtle'],['hare','boa'],['slime','kingslime'],['bat','beholder'],['mandrake','treant'],['mimic','gargoyle']];
+document.getElementById('g').insertAdjacentHTML('beforeend', `<div style="text-align:center">${sprSVG('cat',{width:112})}<br>cat (starter)</div><div></div><div></div>`);
 for(const [a,b] of P){ for(const [n,o,l] of [[a,{},a],[b,{},b],[a,{shiny:true},a+' shiny']])
   document.getElementById('g').insertAdjacentHTML('beforeend', `<div style="text-align:center">${sprSVG(n,Object.assign({width:112},o))}<br>${l}</div>`); }
 </script></body></html>
