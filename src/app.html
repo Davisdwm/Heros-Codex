@@ -165,6 +165,17 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 
 /* Companion & conditions */
 .pwrap{position:relative;flex:none}
+.compstrip{grid-column:1/-1;display:flex;align-items:center;gap:12px;text-align:left;padding:4px 8px 4px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:radial-gradient(60% 120% at 15% 50%,rgba(217,173,85,.10),rgba(0,0,0,0) 70%)}
+.compstrip.rare{background:radial-gradient(60% 120% at 15% 50%,rgba(160,210,255,.14),rgba(0,0,0,0) 70%)}
+.compart{display:block;width:96px;flex:none}
+.compart svg{display:block}
+.comptext{display:flex;flex-direction:column;min-width:0;line-height:1.2}
+.comptext b{font-family:var(--display);font-size:17px}
+.comptext .muted{font-size:13px}
+.pickpets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pick{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1px solid var(--line);background:var(--panel);font-size:12px;font-weight:700;text-align:center;line-height:1.15}
+.pick .pickart{height:60px;display:grid;place-items:center;font-size:12px}
+.pick.sel{border-color:var(--gold);background:rgba(217,173,85,.12);box-shadow:inset 0 0 0 1px rgba(217,173,85,.4)}
 .companion{position:absolute;right:-10px;bottom:-8px;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:var(--inset);border:1px solid rgba(217,173,85,.6);box-shadow:0 2px 6px rgba(0,0,0,.5)}
 .companion svg{width:32px;height:32px}
 .conds{grid-column:1/-1;border-top:1px solid var(--line);padding-top:10px}
@@ -189,7 +200,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .sigil.cond-bad{color:#9fd36b}.sigil.cond-good{color:var(--gold-hi)}
 .pets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .pet{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border:1px solid var(--line);background:var(--panel);text-align:center;width:100%}
-.pet .petart{width:64px;height:64px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.04),rgba(0,0,0,0) 70%)}
+.pet .petart{width:88px;height:68px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.04),rgba(0,0,0,0) 70%)}
 .pet.got.rare{border-color:rgba(242,205,120,.6);box-shadow:inset 0 0 18px rgba(242,205,120,.12)}
 .pet.got.elder{border-color:rgba(217,173,85,.45)}
 .pet:not(.got) .petart{opacity:.55}
@@ -360,7 +371,7 @@ const RULES = {
   streakShort: {days: 2, bonus: 0.10},
   streakLong:  {days: 7, bonus: 0.20},
   medals: {bronze: 0.50, silver: 0.75, gold: 0.90},
-  rarePetChance: 1/10000  // per quest completed, for that skill's rare companion
+  rarePetChance: 1/1000  // per quest completed, for that skill's rare companion
 };
 const DEMO = !!window.XP_DEMO;
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
@@ -442,220 +453,246 @@ const EXTRA_TASKS = created => [
 ];
 const GROUP_NAME = { exercise:'Exercise' };
 /* ============ Companions (pixel pets) ============ */
-// Keys: . empty, o outline, a main, b shade, c light, e eye, w eye shine, n nose/mouth, x accent, k cheek
-const PET_SPRITES = {
-  hound: [
-    "........",
-    "........",
-    "........",
-    ".oo.oooo",
-    "obbooaaa",
-    "obbaaaaa",
-    "obbaaaaa",
-    ".obaawea",
-    ".obaaeea",
-    "..oakacc",
-    "..oaaccn",
-    "...oaccc",
-    "..ooaooo",
-    ".oaaaccc",
-    ".oaaoacc",
-    "..oo.ooo"],
-  drake: [
-    "........",
-    "..x.....",
-    "..xx....",
-    "...xoooo",
-    "...oaaaa",
-    "..oaaaaa",
-    "o.oaaaaa",
-    "oxoaawea",
-    "oxxoaeea",
-    "oxxoakcc",
-    ".oxxoaan",
-    "..ooaaoo",
-    "..oaacco",
-    "..oaaccc",
-    "...oaaoa",
-    "....oo.o"],
-  owl: [
-    "........",
-    "........",
-    ".o......",
-    ".boooooo",
-    ".obaaaaa",
-    ".oaccccc",
-    "oacwwwca",
-    "oacweeca",
-    "oaccecca",
-    "oabaccxx",
-    "oabaaacx",
-    "oabacccc",
-    "oabacbcc",
-    ".oabcccc",
-    "..oaaaaa",
-    "...oxoxo"],
-  songbird: [
-    "........",
-    "......x.",
-    ".....xx.",
-    "....oxoo",
-    "...oaaaa",
-    "..oaaaaa",
-    "..oaaaaa",
-    ".oaaawea",
-    ".oaaaeea",
-    ".obaakan",
-    "obbaaaac",
-    "obbaaccc",
-    "obbaaccc",
-    ".obaaccc",
-    "..ooaaaa",
-    "....x.x."],
-  fox: [
-    ".o......",
-    ".oo.....",
-    ".oco....",
-    ".occo...",
-    ".occaooo",
-    ".oaaaaaa",
-    "oaaaaaaa",
-    "oaaaweaa",
-    "oaaaeeaa",
-    ".ocakccc",
-    "..occccn",
-    "...occcc",
-    "...ooaoo",
-    "..oaaccc",
-    "..oaoacc",
-    "...o.ooo"],
-  hare: [
-    "..oo....",
-    ".occo...",
-    ".occo...",
-    ".occo...",
-    ".occo...",
-    "..oaoooo",
-    "..oaaaaa",
-    ".oaaaaaa",
-    ".oaaweaa",
-    ".oaaeeaa",
-    ".oakaccc",
-    "..oaaccn",
-    "..ooaccc",
-    ".oaaaccc",
-    ".oaaoacc",
-    "..oo.ooo"],
-  slime: [
-    "........",
-    "........",
-    "........",
-    "........",
-    ".......o",
-    ".....ooc",
-    "....oacc",
-    "...oaaac",
-    "..oaaaaa",
-    "..oaawea",
-    ".oaaaeea",
-    ".oaakaaa",
-    "oaaaaann",
-    "obaaaaaa",
-    "obbbbbbb",
-    ".ooooooo"],
-  bat: [
-    "........",
-    "....o...",
-    "....oo..",
-    "o...oaoo",
-    "oo..oaaa",
-    "obo.oaaa",
-    "obbooaaa",
-    "obbboawe",
-    "obbboaee",
-    "obbbboak",
-    "obobboaa",
-    "o.o.boan",
-    "....ooaa",
-    ".....oaa",
-    ".....oxo",
-    "......o."],
-  sprout: [
-    "......o.",
-    ".....oxo",
-    "..oo.oxo",
-    ".oxxooxo",
-    "..oxxoxo",
-    "...ooooo",
-    "...oaaaa",
-    "..oaaaaa",
-    "..oaawea",
-    "..oaaeea",
-    "..oakaaa",
-    "...oaaan",
-    "...oaaaa",
-    "..obaoaa",
-    "..obo.oa",
-    "...o...o"],
-  mimic: [
-    "........",
-    "........",
-    ".ooooooo",
-    "oaaaaaaa",
-    "oaxaaaaa",
-    "oaaaaaaa",
-    "oxxxxxxx",
-    "ownwnwnw",
-    "oeeeeeee",
-    "onwnwnwn",
-    "oxxxxxxx",
-    "oaaaaaxx",
-    "oaxaaaxe",
-    "obaaaaxx",
-    "obbbbbbb",
-    ".ooooooo"],
+// x feature (beak, flame, leaves, book), l collar, p armor (level 10 only; coat otherwise),
+// H horn/antler/tuft (level 10 + rare), W wing/spirit tail (rare only)
+const PET2 = {
+hound: { pal:{a:[28,62,52], c:[38,60,82], d:[20,40,28], x:[0,0,90]}, rows:[
+"..........WW..........d.d.......",
+"........WWWWW......HH.dadd......",
+".......WWWWWWW....H..daaad......",
+"..aa..WWWWWWWWW..H..aaaaaaa.....",
+".acaa.WWWWWWWWWW...aaaaaaaaa....",
+".acaa..WWWWWWWWW..aaaaaaeaaa....",
+"..acaa...WWWWWWW..aaaaaaaaacccn.",
+"...acaa.....WWWW.aaaaaaaccccccc.",
+"....acaaaaapppppaaaaaaaacccnnn..",
+".....aappppppppppaaallacccw.....",
+".....aappppppppppaaallccc.......",
+"......aaaaaaaaaaaaaaaaacc.......",
+"......aaacccccccccaaaaacc.......",
+".......aaccccccccaaaaaac........",
+".......aaa......aaa.aaa.........",
+"......aaa........aa..aa.........",
+".....aaa.........aa...aa........",
+"....aaa..........aa....aa.......",
+"...ddd...........dd.....dd......"]},
+drake: { pal:{a:[150,30,42], c:[60,45,70], d:[150,35,24], x:[22,95,58]}, rows:[
+"...........WWW..................",
+".........WWWWWW.................",
+"........WWWWWWWW.......H........",
+".......WWWWWWWWWW.....HH.H......",
+"......WWWWWWWWWWWW...HH.HH......",
+".......d.d.d.WWWWWW..aaaaa......",
+"......dadadadaWWWW.aaaaaeaa.....",
+"..d..aaaaaaaaaaaa.aaaaaaaaaaxx..",
+".dad.appppppppppaaaaaaaccccccw..",
+".aaaaaaaaaaaaaaaaaallacccnnnn...",
+"aa..aaaaaaaaaaaaaaaallcccc......",
+"a...aaaccccccccccaaaaacc........",
+"aa...accccccccccaaaaacc.........",
+".aa...aaa...aaaa..aaa...........",
+"..aa.aaa.....aa....aa...........",
+"...aaaa......aa.....aa..........",
+"............dd......dd.........."]},
+owl: { pal:{a:[28,38,40], c:[38,40,78], d:[25,40,22], x:[200,40,40]}, rows:[
+".............H.....H............",
+"..WW.........HH...HH............",
+".WWWW.........aaaaa.............",
+"WWWWWW.......aaaaaaa............",
+"WWWWWWW.....aaacccaaa...........",
+".WWWWWWW...aaacewccaa...........",
+"..WWWWWWW..aaaccccnna...........",
+"...WWWWWWW.aaaacccna............",
+"....WWWWWWaaaapppcca............",
+".....WWWWaaaappppcca............",
+"......WWaaaaapppccca............",
+".......aaaaaaallccca............",
+".......aadaadaaccccca...........",
+"........aaaaaaaccccca...........",
+".........aaaaacccca.............",
+"..........daa.dd.d..............",
+".......xxxxxxxxxxxxxxx..........",
+".......xcccccccccccccx..........",
+".......xxxxxxxxxxxxxxx.........."]},
+songbird: { pal:{a:[44,85,56], c:[48,70,84], d:[30,60,30], x:[6,75,52]}, rows:[
+"..............HH.x..............",
+"..............H.xx..............",
+"...WWW.........xaaa.............",
+"..WWWWW.......aaaaaa............",
+".WWWWWWW.....aaaaeaa............",
+"WWWWWWWWW....aaaaaaann..........",
+".WWWWWWWWW..aaaalccann..........",
+"..WWWWWWWWWaaaacccc.............",
+"....WWWWWWaaapppccc.............",
+"......WWaaaapppcccc.............",
+"...xxaaaaaapppcccc..............",
+".xxxaaaaaaaaacccc...............",
+"xxxaaa..aaaaaccc................",
+"xx.......d...d..................",
+".......ddddddddddddd............"]},
+fox: { pal:{a:[18,78,52], c:[30,40,88], d:[15,50,22], x:[0,0,90]}, rows:[
+"......................d...d.....",
+".....................dad.dad....",
+"..............HH....daaaaaad....",
+"..............H.H...aaaaaaaa....",
+"...................aaaaaeaaacc..",
+"...................aaaaaaaccccn.",
+"....................aaacccccc...",
+"..........WW.......llaaaccw.....",
+".........WWWW.....aallaccc......",
+"........WWWWWW...aaaaacccc......",
+".......WWWWWWW..aaaappcccc......",
+"......WWWWWWW..aaappppcccc......",
+"..aa..WWWWWW..aaaappppccc.......",
+".acca..WWWW..aaaaaaaacccc.......",
+".acaa.......aaaaaaaaccccc.......",
+"..acaa.....aaaaaaaa.aa.cc.......",
+"...acaaaaaaaaaaaaaa..aa.cc......",
+"....ccaaaaaaaaaaaad..dd.dd......"]},
+hare: { pal:{a:[32,25,58], c:[35,25,86], d:[25,25,32], x:[350,60,75]}, rows:[
+"........................HH..H...",
+".......................H..HH....",
+"...................aa..aaH......",
+"..................adaa.aadd.....",
+"...................adaaaada.....",
+".........WW.........aaaaaaa.....",
+"........WWWW......aaaaaeaacc....",
+".......WWWWWW....aaaaaaaacccn...",
+"......WWWWWWWW..aaaaaaaacccc....",
+"..cc.WWWWWWWWaaaappppaalllcw....",
+".cccaaaaWWWaaapppppppaaacc......",
+"..ccaaaaaaaaaaaaaaaaaaaacc......",
+"....aaaaacccccccccaaaaaccdd.....",
+"...aaaaa..cccccc......aaaaadd...",
+"..aaaa....................aaadd.",
+".ddd............................"]},
+slime: { pal:{a:[135,55,52], c:[120,55,80], d:[140,45,28], x:[0,0,95]}, rows:[
+"..........HH......HH............",
+"..........H.H....H.H............",
+"..WW.........ppppp.......WW.....",
+".WWWW......pppppppp.....WWWW....",
+"WWWWWW....aaccaaaaaa...WWWWWW...",
+".WWWWWW..accaaaaaaaaa.WWWWWW....",
+"..WWWWW.accaaaaeaaeaaaWWWWW.....",
+"...WWW..acaaaaawaawaaa.WWW......",
+".......aaaaaaaaaaaaaaaa.........",
+".......aaaaaaaannnaaaaa.........",
+".......aaaaaaallllaaaaa.........",
+"........aaaaaaaaaaaaaa..........",
+".........dddddddddddd..........."]},
+bat: { pal:{a:[270,25,38], c:[270,20,62], d:[275,30,24], x:[0,0,95]}, rows:[
+".............H....H.............",
+"..WWW........HH..HH.......WWW...",
+".WWWWW........a..a.......WWWWW..",
+"WWWWWWW......aaaaaa.....WWWWWWW.",
+"d.......dd...aeaaea...dd.......d",
+"dd....ddddd..aaaaaa..ddddd....dd",
+"dddddddddddd.anwwna.dddddddddddd",
+"ddddddddddddaallllaaddddddddddd.",
+".dddddddddddaappppaadddddddddd..",
+"..ddddd.ddddaaaaaaaaddd.ddddd...",
+"...dd....dd..aaaaaa..dd....dd...",
+".............dd..dd............."]},
+sprout: { pal:{a:[34,40,58], c:[34,40,75], d:[30,40,30], x:[110,55,40]}, rows:[
+"..........H.H.H.................",
+"......xx...HHH...xx.............",
+".....xxxx..xxx..xxxx............",
+"......xxxx.xxx.xxxx.............",
+"........xxxxxxxxx...............",
+"..WW......xaaax.........WW......",
+".WWWW....aaaaaaa.......WWWW.....",
+"WWWWWW..aaaaeaaea.....WWWWWW....",
+".WWWWW.aaaaaaaaaaa...WWWWW......",
+"..WWW..aaaaannaaaa....WWW.......",
+"......aaaaaallllaaaa............",
+".....a.aaaapppppaaa.a...........",
+"....a..aaaaapppaaaa..a..........",
+"........aaaaaaaaaa..............",
+".........aa....aa...............",
+"........aa......aa..............",
+".......dd........dd............."]},
+mimic: { pal:{a:[28,50,38], c:[30,45,55], d:[0,0,10], x:[45,80,58]}, rows:[
+"...HH....................HH.....",
+"....HH..................HH......",
+".....aaaaaaaaaaaaaaaaaaaaa......",
+"....aaxaaaaaaaaaaaaaaaaaxaa.....",
+"....acccccccccccccccccccccca....",
+"....apppppppppppxxppppppppa.....",
+"....wdwdwdwdwdwdwdwdwdwdwdw.....",
+"....nnnnnnennnxxxxxnnnennnn.....",
+"....wdwdwdwdwdwdwdwdwdwdwdw.....",
+"....appppppppppppppppppppa......",
+"WW..acccccccccccccccccccca..WW..",
+"WWW.aaxaaaaaaaaaaaaaaaaaxa.WWW..",
+"WWWWaaaaaaaaaaaaaaaaaaaaaaWWWW..",
+".WW.aaaaaaaaaaaaaaaaaaaaaa.WW...",
+"......aa....aa....aa....aa......",
+".....dd....dd....dd....dd......."]},
 };
+const RARE_HUE = { hound:195, drake:285, owl:225, songbird:320, fox:172, hare:258, slime:45, bat:350, sprout:50, mimic:200 };
 
-const PET_SPECIES = {
-  hound:   {h:24,  s:62, x:'#3b2230', r:190},
-  drake:   {h:200, s:22, x:'#e0893a', r:285},
-  owl:     {h:30,  s:40, x:'#e3a23b', r:225},
-  songbird:{h:46,  s:85, x:'#d9533b', r:320},
-  fox:     {h:18,  s:78, x:'#fff4e6', r:172},
-  hare:    {h:36,  s:22, x:'#ef8f8f', r:258},
-  slime:   {h:140, s:55, x:'#ffffff', r:45},
-  bat:     {h:272, s:32, x:'#e8b84a', r:350},
-  sprout:  {h:96,  s:52, x:'#3f8a2c', r:50},
-  mimic:   {h:28,  s:48, x:'#d9ad55', r:200},
-};
-function hsl(h,s,l){ return `hsl(${Math.round(h)} ${Math.round(Math.max(0,Math.min(100,s)))}% ${Math.round(Math.max(0,Math.min(100,l)))}%)`; }
-function petPalette(sp, form){
-  const {h,s} = sp;
-  const base = { e:'#151019', w:'#ffffff', n:'#3b2230', k:'#ef8f8f', g:'#e8b84a' };
-  const r = sp.r;
-  if(form==='rare') return Object.assign(base,{ o:hsl(r,55,16), a:hsl(r,85,74), b:hsl(r,70,58), c:hsl(r,90,92), x:'#fff1a8', g:'#fff1a8', n:hsl(r,50,28), k:hsl(r+30,90,85) });
-  if(form==='elder') return Object.assign(base,{ o:hsl(h,s*.5,10), a:hsl(h-8,s+8,40), b:hsl(h-8,s+8,29), c:hsl(h,s*.7,66), x: sp.x, g:'#e8b84a' });
-  return Object.assign(base,{ o:hsl(h,s*.5,14), a:hsl(h,s,58), b:hsl(h,s,44), c:hsl(h,s*.6,82), x:sp.x });
+function hslc(h,s,l){ return `hsl(${Math.round(h)} ${Math.round(Math.max(0,Math.min(100,s)))}% ${Math.round(Math.max(0,Math.min(100,l)))}%)`; }
+function pet2Grid(species, form){
+  const sp = PET2[species] || PET2.slime, W = 32, H = 24;
+  const rows = sp.rows, top = H - 2 - rows.length;           // feet sit on row 21
+  const g = Array.from({length:H}, ()=>Array(W).fill('.'));
+  // centre on the body (ignore wings/horns) so forms line up
+  let minX = W, maxX = 0;
+  rows.forEach(r=>[...r].forEach((ch,x)=>{ if(ch!=='.' && ch!=='W' && ch!=='H'){ minX=Math.min(minX,x); maxX=Math.max(maxX,x); } }));
+  const shift = Math.round((W - 1 - maxX - minX)/2);
+  rows.forEach((r,y)=>[...r].forEach((ch,x)=>{
+    if(ch==='.') return;
+    if(ch==='W' && form!=='rare') return;
+    if(ch==='H' && form==='base') return;
+    if(ch==='p') ch = form==='elder' ? 'p' : 'a';
+    const X = x + shift, Y = y + top;
+    if(X>=0 && X<W && Y>=0 && Y<H) g[Y][X] = ch;
+  }));
+  return g;
 }
-function petSVG(species, form, size, locked){
-  const rows = PET_SPRITES[species] || PET_SPRITES.slime, pal = petPalette(PET_SPECIES[species]||PET_SPECIES.slime, form);
-  const px = [];
-  rows.forEach((r,y)=>{ const full = (r.padEnd(8,'.').slice(0,8)); const line = full + full.split('').reverse().join('');
-    [...line].forEach((ch,x)=>{ if(ch!=='.') px.push([x,y,ch]); }); });
-  // elder: little crown; rare: sparkles
-  const extra = [];
-  const occupied = new Set(px.map(([x,y])=>x+','+y));
-  if(form==='elder'){ [[6,0],[8,0],[6,1],[7,1],[8,1],[9,1],[9,0]].forEach(([x,y])=>{ if(!occupied.has(x+','+y)) extra.push([x,y,'g']); }); }
-  if(form==='rare'){ [[1,1],[14,3],[0,12],[15,9],[13,0]].forEach(([x,y])=>{ if(!occupied.has(x+','+y)) extra.push([x,y,'g']); }); }
-  const all = px.concat(extra);
-  const fill = ch => locked ? (ch==='o' ? '#000' : '#2a2320') : pal[ch] || pal.a;
-  const rects = all.map(([x,y,ch])=>`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${fill(ch)}"/>`).join('');
-  const gid = 'pg' + (++petSVG.n), gc = pal.a;
-  const glow = form==='rare' && !locked ? `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${gc}" stop-opacity=".5"/><stop offset="1" stop-color="${gc}" stop-opacity="0"/></radialGradient></defs><circle cx="8" cy="8.5" r="8" fill="url(#${gid})"/>` : '';
-  return `<svg viewBox="0 0 16 16" width="${size}" height="${size}" shape-rendering="crispEdges" aria-hidden="true">${glow}${rects}</svg>`;
+function pet2Palette(species, form){
+  const sp = PET2[species] || PET2.slime, P = {};
+  const tone = ([h,s,l]) => [hslc(h,s,l+13), hslc(h,s,l), hslc(h,s,l-13)];
+  let pal = sp.pal;
+  if(form==='rare'){ const r = sp.rareHue!=null ? sp.rareHue : RARE_HUE[species]; pal = { a:[r,70,60], c:[r,80,82], d:[r,50,34], x:[(r+40)%360,90,70] }; }
+  for(const k of ['a','c','d','x']) P[k] = tone(pal[k]);
+  P.p = tone([215,14,50]);                             // steel barding
+  P.g = tone([44,75,58]);                              // gold trim on armor
+  P.H = form==='rare' ? tone([48,90,72]) : tone([40,30,80]);   // horn: bone, or gold on the rare form
+  P.W = form==='rare' ? tone([(sp.rareHue!=null?sp.rareHue:RARE_HUE[species]),90,80]) : P.a;
+  P.l = form==='base' ? tone([4,60,40]) : form==='elder' ? tone([45,80,55]) : tone([(RARE_HUE[species]+40)%360,90,70]);
+  P.e = form==='rare' ? '#fffbe0' : form==='elder' ? '#e8452e' : '#120c0a';
+  P.n = '#1a1110'; P.w = '#f4efe6';
+  P.o = form==='rare' ? hslc((sp.rareHue!=null?sp.rareHue:RARE_HUE[species]),50,12) : '#120c0a';
+  return P;
 }
+function pet2SVG(species, form, w, locked){
+  const g = pet2Grid(species, form), P = pet2Palette(species, form), H = g.length, W = g[0].length;
+  const solid = (x,y) => y>=0 && y<H && x>=0 && x<W && g[y][x] !== '.';
+  const rects = []; let minX=W, maxX=0, maxY=0;
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+    const ch = g[y][x];
+    if(ch==='.'){
+      if(solid(x-1,y)||solid(x+1,y)||solid(x,y-1)||solid(x,y+1)) rects.push([x,y, locked ? '#000' : P.o]);
+      continue;
+    }
+    minX=Math.min(minX,x); maxX=Math.max(maxX,x); maxY=Math.max(maxY,y);
+    let col;
+    if(locked) col = '#2c2522';
+    else if(ch==='p' && y+1<H && g[y+1][x]!=='p'){ col = P.g[1]; }
+    else if(ch==='W'){ const t = P.W; col = !solid(x,y-1) ? t[0] : (x%2 ? t[1] : t[2]); }
+    else if(Array.isArray(P[ch])){ const t = P[ch]; col = !solid(x,y-1) ? t[0] : (!solid(x,y+1) || !solid(x,y+2)) ? t[2] : t[1]; }
+    else col = P[ch] || P.a[1];
+    rects.push([x,y,col]);
+  }
+  const cx = (minX+maxX+1)/2, rw = (maxX-minX+1)*0.42;
+  const shadow = `<ellipse cx="${cx}" cy="${maxY+1.6}" rx="${rw}" ry="1.1" fill="#000" opacity=".35"/>`;
+  const gid = 'pg' + (++pet2SVG.n);
+  const glow = form==='rare' && !locked ? `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${P.W[1]}" stop-opacity=".45"/><stop offset="1" stop-color="${P.W[1]}" stop-opacity="0"/></radialGradient></defs><ellipse cx="16" cy="12" rx="16" ry="12" fill="url(#${gid})"/>` : '';
+  return `<svg viewBox="0 0 ${W} ${H}" width="${w}" height="${Math.round(w*H/W)}" shape-rendering="crispEdges" aria-hidden="true">${glow}${shadow}${rects.map(([x,y,c])=>`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${c}"/>`).join('')}</svg>`;
+}
+pet2SVG.n = 0;
 
-petSVG.n = 0;
 
 const SKILL_SPECIES = { running:'hound', climbing:'drake', reading:'owl', guitar:'songbird', yoga:'fox', stretching:'hare', social:'slime', cinema:'bat', plants:'sprout', housekeeping:'mimic' };
 const PET_NAMES = {
@@ -670,20 +707,24 @@ const PET_NAMES = {
   sprout:  [['Seedling Mandrake','Screams softly when thirsty. Quite polite about it.'],['Bloom Mandrake','Flowers whenever it is watered on time.'],['Starbloom Mandrake','Grows only in gardens tended under a full moon.']],
   mimic:   [['Dustpan Mimic','Eats crumbs. Only crumbs. Probably.'],['Coffer Mimic','Keeps your home in order and your valuables safe.'],['Gilded Mimic','Lined with gold, and it only bites clutter.']],
 };
-const FORMS = [['5','base','Reach skill level 5'],['10','elder','Reach skill level 10'],['rare','rare','1 in 10,000 chance per quest']];
+const FORMS = [['5','base','Reach skill level 5'],['10','elder','Reach skill level 10'],['rare','rare','1 in 1,000 chance per quest']];
 function petDefs(){
   const out = [];
   for(const s of state.skills){
     let sp = SKILL_SPECIES[s.id], names = PET_NAMES[sp];
     if(!sp){ sp = 'slime'; names = [[`${s.name} Slime`,`A small slime that loves ${s.name.toLowerCase()} as much as you do.`],[`Grand ${s.name} Slime`,`It has grown wise in the ways of ${s.name.toLowerCase()}.`],[`Star ${s.name} Slime`,'A shimmering slime few adventurers ever see.']]; }
-    FORMS.forEach(([key,form,how],i)=>out.push({ id:`p_${s.id}_${key}`, skill:s.id, species:sp, form, name:names[i][0], desc:names[i][1], how: key==='rare' ? `Rare: 1 in 10,000 chance with each ${s.name.toLowerCase()} quest` : `${s.name} level ${key}`, rare:key==='rare' }));
+    FORMS.forEach(([key,form,how],i)=>out.push({ id:`p_${s.id}_${key}`, skill:s.id, species:sp, form, name:names[i][0], desc:names[i][1], how: key==='rare' ? `Rare: 1 in 1,000 chance with each ${s.name.toLowerCase()} quest` : `${s.name} level ${key}`, rare:key==='rare' }));
   }
   return out;
 }
-function petArt(def, size, locked){
+function petArt(def, width, locked){
   // custom skills get a slime tinted by their name
-  if(!SKILL_SPECIES[def.skill] && def.species==='slime'){ let h=0; for(const c of def.skill) h=(h*31+c.charCodeAt(0))%360; const keep = PET_SPECIES.slime; PET_SPECIES.slime = Object.assign({}, keep, {h, r:(h+160)%360}); const out = petSVG('slime', def.form, size, locked); PET_SPECIES.slime = keep; return out; }
-  return petSVG(def.species, def.form, size, locked);
+  if(!SKILL_SPECIES[def.skill] && def.species==='slime'){
+    let h=0; for(const c of def.skill) h=(h*31+c.charCodeAt(0))%360;
+    const keep = PET2.slime; PET2.slime = Object.assign({}, keep, {pal:{a:[h,50,52], c:[h,50,78], d:[h,45,28], x:[0,0,95]}, rareHue:(h+160)%360});
+    const out = pet2SVG('slime', def.form, width, locked); PET2.slime = keep; return out;
+  }
+  return pet2SVG(def.species, def.form, width, locked);
 }
 const DEFAULT_CONDITIONS = () => [
   { id:'poisoned',  name:'Poisoned',  desc:'Sick today',                icon:'drop', kind:'bad'  },
@@ -957,17 +998,18 @@ function condBar(k){
   return `<details class="conds" id="conds" ${condOpen?'open':''}><summary><span class="label">Conditions</span><span class="condchips">${chips}</span>${svg('chevron','class="chev"')}</summary>
     <div class="condlist">${defs.map(c=>`<button class="condopt ${c.kind} ${on.includes(c.id)?'on':''}" data-act="cond" data-id="${c.id}" aria-pressed="${on.includes(c.id)}">${svg(c.icon)}<span><b>${esc(c.name)}</b>${c.desc?`<small>${esc(c.desc)}</small>`:''}</span></button>`).join('') || '<p class="hint" style="margin:0">Add conditions from the Hero tab.</p>'}</div></details>`;
 }
+function currentCompanion(){ const id = state.profile.pet; if(!id || !R.pets[id]) return null; return petDefs().find(p=>p.id===id) || null; }
 function companionHTML(){
-  const id = state.profile.pet; if(!id || !R.pets[id]) return '';
-  const def = petDefs().find(p=>p.id===id); if(!def) return '';
-  return `<div class="companion" title="${esc(def.name)}">${petArt(def, 34)}</div>`;
+  const def = currentCompanion(); if(!def) return '';
+  return `<button class="compstrip ${def.form}" data-act="pet" data-id="${def.id}"><span class="compart">${petArt(def, 96)}</span><span class="comptext"><span class="label">Traveling with</span><b>${esc(def.name)}</b><span class="muted">${esc(skillById(def.skill).name)} companion</span></span></button>`;
 }
 function heroHeader(opts){
   const ch = R.char; opts = opts || {};
   return `<section class="frame gold hero"><div class="in">
-    <div class="pwrap">${portraitHTML()}${companionHTML()}</div>
+    <div class="pwrap">${portraitHTML()}</div>
     <div class="hero-name"><h1>${esc(state.profile.name || 'Unnamed Hero')}</h1><div class="title">${esc(currentTitle(R))}</div></div>
     <div class="lvl-shield" aria-label="Level ${ch.level}"><span><span class="l">LEVEL</span><span class="n num">${ch.level}</span></span></div>
+    ${companionHTML()}
     <div class="xp">${bar('char', ch.into/ch.need*100)}
       <div class="xp-row num"><span><b>${fmt(ch.into)}</b> / ${fmt(ch.need)} XP</span><span>${fmt(ch.need-ch.into)} to Level ${ch.level+1}</span></div></div>
     ${opts.conditions ? condBar(opts.conditions) : ''}
@@ -1150,7 +1192,7 @@ function viewTrophies(){
   }).join('');
   const pets = petDefs(); const ownedN = pets.filter(p=>R.pets[p.id]).length;
   const petCards = pets.map(p=>{ const got = !!R.pets[p.id];
-    return `<button class="pet ${got?'got':''} ${p.form}" data-act="pet" data-id="${p.id}"><div class="petart">${petArt(p, 56, !got)}</div><div class="pn">${got ? esc(p.name) : '???'}</div><div class="ph">${got ? esc(skillById(p.skill).name) : esc(p.how)}</div></button>`; }).join('');
+    return `<button class="pet ${got?'got':''} ${p.form}" data-act="pet" data-id="${p.id}"><div class="petart">${petArt(p, 88, !got)}</div><div class="pn">${got ? esc(p.name) : '???'}</div><div class="ph">${got ? esc(skillById(p.skill).name) : esc(p.how)}</div></button>`; }).join('');
   return `<div class="rule">Medals</div>
   <div class="medalcount">
     ${['bronze','silver','gold'].map(m=>`<div class="frame mc"><div class="in"><span class="coin ${m}">${m[0].toUpperCase()}</span><b class="num">${c.medals[m]}</b><span class="label">${m} days</span></div></div>`).join('')}
@@ -1162,7 +1204,7 @@ function viewTrophies(){
     <p class="hint" style="margin:0">Days earn Bronze at 50%, Silver at 75% and Gold at 90% of the XP available that day, before streak bonuses. Weeks are rated the same way, Monday to Sunday.</p>
   </div></section>
   <div class="rule">Companions · ${ownedN}/${pets.length}</div>
-  <p class="hint" style="margin:-8px 0 0;text-align:center">Each skill has three: one at level 5, one at level 10, and a rare one with a 1 in 10,000 chance every time you complete one of its quests.</p>
+  <p class="hint" style="margin:-8px 0 0;text-align:center">Each skill has three: one at level 5, one at level 10, and a rare one with a 1 in 1,000 chance every time you complete one of its quests.</p>
   <div class="pets">${petCards}</div>
   <div class="rule">Achievements · ${got}/${defs.length}</div>
   <div class="achs">${achs}</div>`;
@@ -1193,6 +1235,10 @@ function viewHero(){
   <div class="rule">Skills</div>
   <div class="mlist">${skillRows}</div>
   <button class="btn block" data-act="new-skill">Add a skill</button>
+  <div class="rule">Companion</div>
+  ${(()=>{ const owned = petDefs().filter(x=>R.pets[x.id]);
+    if(!owned.length) return `<p class="hint" style="margin:0;text-align:center">No companions yet. Your first arrives when a skill reaches level 5, or by rare chance on any quest. Once you have one, choose it here to show it on your Quests page.</p>`;
+    return `<div class="pickpets"><button class="pick ${!state.profile.pet?'sel':''}" data-act="pick-pet" data-id=""><span class="pickart muted">None</span><span>No companion</span></button>${owned.map(x=>`<button class="pick ${state.profile.pet===x.id?'sel':''}" data-act="pick-pet" data-id="${x.id}"><span class="pickart">${petArt(x, 80)}</span><span>${esc(x.name)}</span></button>`).join('')}</div>`; })()}
   <div class="rule">Conditions</div>
   <div class="mlist">${state.conditionDefs.map(c=>`<div class="mrow"><div class="sigil cond-${c.kind}">${svg(c.icon)}</div><div class="mm"><b>${esc(c.name)}</b><span>${c.kind==='good'?'Positive':'Negative'}${c.desc?' · '+esc(c.desc):''}</span></div><button class="btn" data-act="edit-cond" data-id="${c.id}">Edit</button></div>`).join('') || '<div class="mrow"><span class="muted">No conditions yet.</span></div>'}</div>
   <button class="btn block" data-act="new-cond">Add a condition</button>
@@ -1232,7 +1278,7 @@ function celebrate(before){
     }
   }
   const newPets = petDefs().filter(p=>R.pets[p.id] && !before.pets.has(p.id));
-  for(const p of newPets) showCelebration(p.rare ? 'A rare companion appears' : 'New companion', '', p.name, null, `<div class="petbig ${p.form}">${petArt(p, 128)}</div>`, `<p class="petdesc">${esc(p.desc)}</p>`);
+  for(const p of newPets) showCelebration(p.rare ? 'A rare companion appears' : 'New companion', '', p.name, null, `<div class="petbig ${p.form}">${petArt(p, 220)}</div>`, `<p class="petdesc">${esc(p.desc)}</p>`);
   const order = {'':0,bronze:1,silver:2,gold:3};
   if(order[after.medal] > order[before.medal]) toast(`${after.medal} day`, after.medal==='gold'?'A day worthy of legend.':after.medal==='silver'?'Silver tier reached today.':'Bronze tier reached today.', 'shield');
   for(const d of R.defs) if(R.ach[d.id] && !before.ach.has(d.id)) toast('Achievement', d.name, d.icon);
@@ -1410,9 +1456,9 @@ function petSheet(id){
   const p = petDefs().find(x=>x.id===id); if(!p) return;
   const got = R.pets[p.id], isComp = state.profile.pet===p.id;
   openSheet(`<div class="label" style="color:var(--gold)">${got ? (p.rare?'Rare companion':'Companion') : 'Not yet found'}</div><h2>${got ? esc(p.name) : '???'}</h2>
-    <div class="petbig ${p.form}" style="align-self:center">${petArt(p, 160, !got)}</div>
+    <div class="petbig ${p.form}" style="align-self:center">${petArt(p, 240, !got)}</div>
     ${got ? `<p style="margin:0">${esc(p.desc)}</p><p class="hint" style="margin:0">${esc(skillById(p.skill).name)} · found ${esc(niceDate(got))}</p>` : `<p class="hint" style="margin:0">How to find it: ${esc(p.how)}.</p>`}
-    ${got ? `<button class="btn ${isComp?'':'primary'} block" id="f-comp">${isComp ? 'Stop traveling together' : 'Travel together'}</button><p class="hint" style="margin:0">Your traveling companion sits beside your portrait.</p>` : ''}
+    ${got ? `<button class="btn ${isComp?'':'primary'} block" id="f-comp">${isComp ? 'Stop traveling together' : 'Travel together'}</button><p class="hint" style="margin:0">Your traveling companion appears on your character card.</p>` : ''}
     <button class="btn block" id="f-cancel">Close</button>`, root=>{
     root.querySelector('#f-cancel').onclick = closeSheet;
     const c = root.querySelector('#f-comp'); if(c) c.onclick = ()=>{ state.profile.pet = isComp ? '' : p.id; save(); closeSheet(); render(); };
@@ -1518,6 +1564,7 @@ document.addEventListener('click', e=>{
   else if(a==='tier'){ const t = state.tasks.find(x=>x.id===id), amt = +b.dataset.amt, cur = ((state.log[viewDate]||{})[id])||0, sel = tierFor(t, cur); mutate(()=>setVal(id, sel && sel.amt===amt ? 0 : amt), e); }
   else if(a==='cond'){ const on = state.conditions[viewDate] || []; const i = on.indexOf(id); if(i>=0) on.splice(i,1); else on.push(id); if(on.length) state.conditions[viewDate] = on; else delete state.conditions[viewDate]; condOpen = true; save(); render(); }
   else if(a==='pet') petSheet(id);
+  else if(a==='pick-pet'){ state.profile.pet = id; save(); render(); }
   else if(a==='edit-cond') condSheet(id);
   else if(a==='new-cond') condSheet(null);
   else if(a==='ability'){ e.preventDefault(); const el = document.getElementById('ab-'+id); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); else toast(ABILITY_NAME[id], 'No skills here yet. Add one from the Hero tab.', 'skills'); }
