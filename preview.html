@@ -1,5 +1,5 @@
 <script>window.XP_DEMO=true</script>
-<title>Hero's Ledger</title>
+<title>Hero's Codex</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -911,7 +911,7 @@ function skillSheet(id){
 }
 function exportSheet(){
   const data = JSON.stringify(state);
-  const fname = `heros-ledger-backup-${todayKey()}.json`;
+  const fname = `heros-codex-backup-${todayKey()}.json`;
   openSheet(`<h2>Save backup</h2>
     <p class="hint" style="margin:0">Save the file to the Files app or iCloud Drive, or copy the text and keep it in a note.</p>
     <div class="btnrow"><button class="btn primary" id="f-share">Save file</button><button class="btn gold" id="f-copy">Copy text</button></div>
@@ -964,7 +964,7 @@ function resetSheet(){
   });
 }
 function welcomeSheet(){
-  openSheet(`<div class="label" style="color:var(--gold)">A new ledger opens</div><h2>Who is our hero?</h2>
+  openSheet(`<div class="label" style="color:var(--gold)">A new codex opens</div><h2>Who is our hero?</h2>
     <p class="hint" style="margin:0">Check off your daily quests to earn XP. Every quest trains a skill, and every skill levels up your character.</p>
     <div class="field"><label for="f-wname">Your name</label><input id="f-wname" placeholder="Name" autocomplete="off"></div>
     <button class="btn primary block" id="f-begin">Begin</button>`, root=>{

@@ -7,14 +7,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Ledger">
+<meta name="apple-mobile-web-app-title" content="Codex">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
 <body>
-<title>Hero's Ledger</title>
+<title>Hero's Codex</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -926,7 +926,7 @@ function skillSheet(id){
 }
 function exportSheet(){
   const data = JSON.stringify(state);
-  const fname = `heros-ledger-backup-${todayKey()}.json`;
+  const fname = `heros-codex-backup-${todayKey()}.json`;
   openSheet(`<h2>Save backup</h2>
     <p class="hint" style="margin:0">Save the file to the Files app or iCloud Drive, or copy the text and keep it in a note.</p>
     <div class="btnrow"><button class="btn primary" id="f-share">Save file</button><button class="btn gold" id="f-copy">Copy text</button></div>
@@ -979,7 +979,7 @@ function resetSheet(){
   });
 }
 function welcomeSheet(){
-  openSheet(`<div class="label" style="color:var(--gold)">A new ledger opens</div><h2>Who is our hero?</h2>
+  openSheet(`<div class="label" style="color:var(--gold)">A new codex opens</div><h2>Who is our hero?</h2>
     <p class="hint" style="margin:0">Check off your daily quests to earn XP. Every quest trains a skill, and every skill levels up your character.</p>
     <div class="field"><label for="f-wname">Your name</label><input id="f-wname" placeholder="Name" autocomplete="off"></div>
     <button class="btn primary block" id="f-begin">Begin</button>`, root=>{

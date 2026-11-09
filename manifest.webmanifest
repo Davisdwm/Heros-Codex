@@ -1,6 +1,6 @@
 {
-  "name": "Hero's Ledger",
-  "short_name": "Ledger",
+  "name": "Hero's Codex",
+  "short_name": "Codex",
   "description": "Daily quests, skills and levels.",
   "start_url": "./",
   "scope": "./",

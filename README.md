@@ -1,4 +1,4 @@
-# Hero's Ledger
+# Hero's Codex
 
 A personal XP tracker: daily quests, skill levels, streaks, medals, achievements and titles.
 
