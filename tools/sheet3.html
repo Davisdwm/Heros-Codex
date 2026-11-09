@@ -1,9 +1,13 @@
-<html><body style="background:#191514;margin:0;padding:8px;font:11px sans-serif;color:#ccc">
-<div id="g" style="display:grid;grid-template-columns:repeat(3,116px);gap:6px"></div>
+<html><body style="background:#191514;margin:0;padding:8px;font:10px sans-serif;color:#ccc">
+<h3 style="font:600 12px sans-serif;margin:4px 0 6px">Skills: level 5 &middot; 10 &middot; 20 &middot; shiny</h3>
+<div id="g" style="display:grid;grid-template-columns:repeat(4,88px);gap:4px"></div>
+<h3 style="font:600 12px sans-serif;margin:12px 0 6px">Abilities: level 5 &middot; 10 &middot; 20 &middot; and Cat</h3>
+<div id="a" style="display:grid;grid-template-columns:repeat(4,88px);gap:4px"></div>
 <script src="pets3.js"></script><script src="petrender3.js"></script>
 <script>
-const P = [['owl','golem'],['hound','nightmare'],['lizard','wyvern'],['finch','phoenix'],['fox','turtle'],['hare','boa'],['slime','kingslime'],['bat','beholder'],['mandrake','treant'],['mimic','gargoyle']];
-document.getElementById('g').insertAdjacentHTML('beforeend', `<div style="text-align:center">${sprSVG('cat',{width:112})}<br>cat (starter)</div><div></div><div></div>`);
-for(const [a,b] of P){ for(const [n,o,l] of [[a,{},a],[b,{},b],[a,{shiny:true},a+' shiny']])
-  document.getElementById('g').insertAdjacentHTML('beforeend', `<div style="text-align:center">${sprSVG(n,Object.assign({width:112},o))}<br>${l}</div>`); }
+const P = [['Guitar','finch','phoenix','thunderbird'],['Running','hound','nightmare','fenrir'],['Climbing','lizard','wyvern','elderdragon'],['Reading','owl','golem','sphinx'],['Yoga','fox','turtle','kitsune'],['Stretching','hare','boa','leviathan'],['Social','slime','kingslime','djinn'],['Cinema','bat','beholder','vampire'],['Plants','mandrake','treant','spiritstag'],['Housekeeping','mimic','gargoyle','colossus']];
+const cell = (n,o,l) => `<div style="text-align:center">${sprSVG(n,Object.assign({width:84},o))}<br>${l}</div>`;
+for(const [s,a,b,c] of P) document.getElementById('g').insertAdjacentHTML('beforeend', cell(a,{},s+' 5')+cell(b,{},s+' 10')+cell(c,{aura:'#f2cd78'},s+' 20')+cell(a,{shiny:true},'shiny'));
+const A = [['STR','werewolf','minotaur','titan'],['DEX','frog','jackalope','panther'],['CON','dog','unicorn','tortoise'],['INT','goblin','lich','mindflayer'],['WIS','parrot','naga','qilin'],['CHA','phantom','lion','griffin']];
+A.forEach(([ab,a,b,c],i)=>document.getElementById('a').insertAdjacentHTML('beforeend', cell(a,{},ab+' 5')+cell(b,{},ab+' 10')+cell(c,{aura:'#f2cd78'},ab+' 20')+(i===0?cell('cat',{},'Cat'):'<div></div>')));
 </script></body></html>

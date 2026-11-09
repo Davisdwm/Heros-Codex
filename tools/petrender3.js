@@ -31,6 +31,7 @@ function sprSVG(name, opts){
     out.push([x,y,col]);
   }
   let extra = '';
+  if(opts.aura && !locked){ const gid = 'la' + (++sprSVG.n); extra = `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${opts.aura}" stop-opacity=".42"/><stop offset="1" stop-color="${opts.aura}" stop-opacity="0"/></radialGradient></defs><ellipse cx="16" cy="17" rx="16" ry="15" fill="url(#${gid})"/>`; }
   if(shiny && !locked){
     const gid = 'sg' + (++sprSVG.n), gc = T.a ? T.a[0] : '#fff';
     extra = `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${gc}" stop-opacity=".5"/><stop offset="1" stop-color="${gc}" stop-opacity="0"/></radialGradient></defs><ellipse cx="16" cy="17" rx="16" ry="15" fill="url(#${gid})"/>`;

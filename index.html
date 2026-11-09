@@ -193,6 +193,28 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .sidedone summary::-webkit-details-marker{display:none}
 .sidedone .chev{width:18px;height:18px;color:var(--gold);transition:transform .2s}
 .sidedone[open] .chev{transform:rotate(180deg)}
+.quests.daily{gap:16px}
+.quests.daily .abhead{margin-top:14px}
+.quests.daily .abhead:first-child{margin-top:0}
+.qsection{border-top:1px solid var(--line-hi);border-bottom:1px solid var(--line-hi);background:linear-gradient(180deg,rgba(217,173,85,.06),rgba(0,0,0,0))}
+.qsection>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 4px;cursor:pointer;min-height:52px}
+.qsection>summary::-webkit-details-marker{display:none}
+.qsection .sectitle{color:var(--gold);font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.qsection .seccount{flex:1;text-align:right;font-size:13px;color:var(--muted)}
+.qsection .seccount b{color:var(--gold)}
+.qsection>summary .chev{width:20px;height:20px;color:var(--gold);transition:transform .2s;flex:none}
+.qsection[open]>summary .chev{transform:rotate(180deg)}
+.qsection>.secbody{display:flex;flex-direction:column;gap:10px;padding:0 0 16px}
+.qsection+.qsection{margin-top:-18px;border-top:0}
+.abgroup{border:1px solid var(--line);background:rgba(0,0,0,.18)}
+.abgroup>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;min-height:48px}
+.abgroup>summary::-webkit-details-marker{display:none}
+.abgroup .abname{font-family:var(--display);font-weight:700;font-size:15px}
+.abgroup .abcount{flex:1;text-align:right;font-size:13px;color:var(--muted)}
+.abgroup .abcount b{color:var(--gold)}
+.abgroup .chev{width:18px;height:18px;color:var(--gold);transition:transform .2s;flex:none}
+.abgroup[open] .chev{transform:rotate(180deg)}
+.abgroup>.quests{padding:0 10px 10px}
 .verrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .pickpets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .pick{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1px solid var(--line);background:var(--panel);font-size:12px;font-weight:700;text-align:center;line-height:1.15}
@@ -224,7 +246,14 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .pet{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border:1px solid var(--line);background:var(--panel);text-align:center;width:100%}
 .pet .petart{width:84px;height:84px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.04),rgba(0,0,0,0) 70%)}
 .pet.got.rare{border-color:rgba(242,205,120,.6);box-shadow:inset 0 0 18px rgba(242,205,120,.12)}
+.pets4{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.pets4 .pet{padding:8px 3px}
+.pets4 .pet .petart{width:64px;height:64px}
+.pets4 .pet .petart svg{width:64px;height:64px}
+.pets4 .pet .pn{font-size:12px}
+.pets4 .pet .ph{font-size:10px}
 .pet.got.elder{border-color:rgba(217,173,85,.45)}
+.pet.got.legend{border-color:var(--gold-hi);box-shadow:inset 0 0 22px rgba(242,205,120,.18),0 0 0 1px rgba(242,205,120,.35)}
 .pet:not(.got) .petart{opacity:.55}
 .pet .pn{font-size:13px;font-weight:700;line-height:1.15}
 .pet:not(.got) .pn{color:var(--faint);letter-spacing:.2em}
@@ -396,7 +425,7 @@ const RULES = {
   rarePetChance: 1/1000  // per quest completed, for that skill's rare companion
 };
 const DEMO = !!window.XP_DEMO;
-const APP_VERSION = '2026.11.09-1944';
+const APP_VERSION = '2026.11.09-2042';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -495,6 +524,578 @@ const GROUP_NAME = { exercise:'Exercise' };
 // Sprites: 32x32 canvas. Rows of 16 chars are mirrored; rows of 32 are used as-is.
 // Region letters (auto-shaded): a c d x y z.  Flat: e eye, w white, n dark/mouth.
 const SPR = {
+griffin: { pal:{a:[40,20,90], c:[25,55,42], x:[40,70,55], y:[45,90,55], d:[30,40,25]}, e:'#120c0a', rows:[
+"...........cc...................",
+"..........cccc...........aaa....",
+".........ccccc..........aaaaa...",
+"........cccccc.........aaaeaayy.",
+".......ccccccc.........aaaaaayy.",
+"......cccccccc........aaaaaa.y..",
+".....ccccccccc.......aaaaa......",
+"....ccccccccc......xxxxaa.......",
+"...ccccccc....xxxxxxxxxx........",
+"..xx.....xxxxxxxxxxxxxx.........",
+".x......xxxxxxxxxxxxxxx.........",
+".x......xxxxxxxxxxxxxx..........",
+"..x.....xxx.xx....xx.xx.........",
+"........xx...x....x...yy........",
+".......xx...xx...x.....y........",
+"......dd...dd....yy............."]},
+mindflayer: { pal:{a:[300,30,62], x:[265,45,28], y:[45,85,55], d:[265,40,15]}, e:'#ffffff', rows:[
+"..........aaaaaa",
+"........aaaaaaaa",
+".......aaaaaaaaa",
+".......aaaaaaaaa",
+"........aaaaeeaa",
+"........aaaaaaaa",
+".........aa.a.aa",
+".........a..a.a.",
+"........aa.a..a.",
+"....xxxxxxa.a.a.",
+"...xxxxxxxxxxxxx",
+"..xxxxxxxxxxyxxx",
+"..xxxxxxxxxxyxxx",
+".xxxxxxxxxxxyxxx",
+".xaaxxxxxxxxyxxx",
+".xaxxxxxxxxxyxxx",
+".xxxxxxxxxxxyxxx",
+"xxxxxxxxxxxxyxxx",
+"dddddddddddddddd"]},
+tortoise: { pal:{a:[95,25,40], c:[30,35,38], z:[35,40,55], x:[110,55,40], y:[330,70,72], d:[25,40,25]}, e:'#120c0a', rows:[
+"............xx.xx...............",
+"...........xxxxxxx..............",
+"..........xxxyxxxxx.............",
+"...........xxxxxxx..............",
+"..............d.................",
+"..............d.................",
+"..........ccccdcccc.............",
+"........ccczcccczcccc...........",
+".......cczzzcccczzzccc......aaa.",
+"......ccczcccczccczcccc....aaaea",
+".....cccccccccccccccccc...aaaaaa",
+".....zzzzzzzzzzzzzzzzzzaaaaaann.",
+"......aaaa.........aaaaaaa......",
+"......aaaa..........aaaa........",
+".....aaaaa..........aaaaa......."]},
+panther: { pal:{a:[270,20,20], c:[270,25,36]}, e:'#ffe14a', rows:[
+"......................a..a......",
+".....................aaaaaa.....",
+"....................aaaaeaaa....",
+"a...................aaaaaaaaccn.",
+"aa.................aaaaaaaaww...",
+".aa....aaaaaaaaaaaaaaaaaa.......",
+"..aaaaaaaaaaaaaaaaaaaaaa........",
+"...aaaaaaaaaaaaaaaaaaaa.........",
+"....aaaaaaaaaaaaaaaaaa..........",
+"....aaa.aaa.....aaa.aaa.........",
+"...aaa...aa.....aa...aaa........",
+"..aaa....aa.....aa....aaa.......",
+".www.....ww.....ww.....www......"]},
+titan: { pal:{a:[25,50,48], y:[45,85,55], c:[30,10,85], x:[355,70,45], z:[210,40,35]}, e:'#9ff0ff', rows:[
+"...............x",
+"..............xx",
+"...........yyyyy",
+"..........yyyyyy",
+"..........yaaaaa",
+"..........aaaeaa",
+"..........aaaaaa",
+"..........cccccc",
+"...........ccccc",
+"....aaaaaaaacccc",
+"..aaaaaaaaaaaaaa",
+".ayyyaaaaaaaaaaa",
+".aaa.aaaaaaaaaaa",
+".aaa..aaaaaaaaaa",
+".aaa..zzzzzzzzzz",
+".aaa..zzzzzzzzzz",
+"......zzzzzzzzzz",
+".......aaaa.....",
+".......aaaa.....",
+"......yyyyy....."]},
+colossus: { pal:{a:[210,15,48], d:[210,20,28], x:[25,95,52], y:[48,100,70]}, e:'#7ff3ff', rows:[
+"..........dddddd",
+".........ddaaaaa",
+".........daaaaaa",
+".........daaaeee",
+".........daaaaaa",
+"..dddddd.ddddddd",
+".ddaaaaddaaaaaaa",
+".daaaaaadaaaaaaa",
+".daaaaaadaaaxxxx",
+".daaaaaadaaaxxyy",
+".daaaaaadaaaxxxx",
+".daaaaaadaaaaaaa",
+".ddaaaad.daaaaaa",
+".daaaaad.ddddddd",
+".dddddd..daaaaa.",
+".........daaaa..",
+".........daaaa..",
+"........ddddddd."]},
+qilin: { pal:{a:[150,45,42], x:[40,95,58], y:[55,100,68], z:[45,90,60]}, e:'#ffe14a', rows:[
+"......................xx.....z..",
+".....................xyx.x..z...",
+"....................xyyxxyxz....",
+"...................xyyxaaaz.....",
+"..................xyyxaaaaaa....",
+"..................xyxaaaeaaaa...",
+".................xyxaaaaaaaaaa..",
+".................xyaaaa...aaaan.",
+".................xaaaa.....aaa..",
+"................aaaaa...........",
+"....xx.......aaaaaaa............",
+"...xyyx..aaaaaaaaaaa............",
+"..xyyxaaaaaaaaaaaaaa............",
+".xyyx.aaaaaaaaaaaaaa............",
+".xyx..aaaaaaaaaaaaaa............",
+"xyx...aaaaaaaaaaaaa.............",
+"xx.....aaa.aa...aa.aa...........",
+".......aa..aa...aa..aa..........",
+"......aa...aa...aa...aa.........",
+"......aa...aa...aa...aa.........",
+".....xx...xx....xx...xx.........",
+".....yx...yx....yx...yx........."]},
+spiritstag: { pal:{a:[150,25,80], y:[120,70,50], z:[330,70,72]}, e:'#7dff6a', rows:[
+"....................y.y.z..y.y..",
+".....................yyy...yzy..",
+"......................y...y.....",
+"......................yy.yy.....",
+"......................aa........",
+".....................aaa.a......",
+"....................aaaaaaa.....",
+"...................aaaaaaaa.....",
+"..................aaaaaaaaaa....",
+"..................aaaaaaeaaaa...",
+".................aaaaaaaaaaaaa..",
+".................aaaaaa...aaaan.",
+".................aaaaa.....aaa..",
+"................aaaaa...........",
+"....aa.......aaaaaaa............",
+"...aaaa..aaaaaaaaaaa............",
+"..aaaaaaaaaaaaaaaaaa............",
+".aaaa.aaaaaaaaaaaaaa............",
+".aaa..aaaaaaaaaaaaaa............",
+"aaa...aaaaaaaaaaaaa.............",
+"aa.....aaa.aa...aa.aa...........",
+".......aa..aa...aa..aa..........",
+"......aa...aa...aa...aa.........",
+"......aa...aa...aa...aa.........",
+".....aa...aa....aa...aa.........",
+".....aa...aa....aa...aa........."]},
+vampire: { pal:{a:[220,15,85], d:[260,25,16], x:[355,75,40], y:[45,85,55], c:[0,0,92]}, e:'#ff2a2a', rows:[
+"........dddddddd",
+".......ddddddddd",
+".......ddaaaaadd",
+"....xx.ddaaaaaaa",
+"...xxx..aaaaeaaa",
+"..xxxx..aaaaaaaa",
+"..xxxx...aaannwn",
+"..xxxd....aaaaaa",
+"..xxdddd..dddddd",
+".xxddddddddccccc",
+".xxdddddddcccccy",
+".xxddddddddccccc",
+"xxxdddddddddcccc",
+"xxxddddddddddddd",
+"xxdddddddddddddd",
+"xddddddddddddddd",
+"dddddddddddddddd",
+"..dddddd....dd.."]},
+djinn: { pal:{a:[210,60,52], y:[45,90,55], x:[350,80,50], z:[280,50,40], c:[200,40,75], d:[215,40,25]}, e:'#ffffff', rows:[
+"..........yyyyyy",
+".........yyyyyyx",
+"........yyyyyyyy",
+"........yaaaaaaa",
+".........aaaaeaa",
+".........aaaaaaa",
+"..........aaaaaa",
+"..........aaaadd",
+".....aaaaaaaaaaa",
+"...aaaaaaaaaaaaa",
+"..aaaaaaaaaaaaaa",
+"..aay.aaaaaaaaaa",
+"..aay..aaaaaaaaa",
+"..aa...zzzzzzzzz",
+"..aa....cccccccc",
+".........ccccccc",
+"..........cccccc",
+"...........ccccc",
+"............cccc",
+".............ccc"]},
+leviathan: { pal:{a:[175,55,35], x:[190,70,55], c:[205,70,52]}, e:'#ffe14a', rows:[
+".......................xx.......",
+"......................xaaa......",
+".....................xaaaaa.....",
+".....................aaeaaaa....",
+".....................aaaaaaaaa..",
+"......................aaaawnwn..",
+"......................aaaaaaa...",
+".....................aaaa.......",
+".......xx...........aaaa........",
+"......xaaa.........aaaa.........",
+".....xaaaaa.......aaaa..........",
+"....aaa..aaa.....aaa............",
+"...aaa....aaa...aaa.............",
+"..aaa......aaa.aaa..............",
+"cccccccccccccccccccccccccccccccc",
+".cwcccwccccwcccccwcccwccccwcccc.",
+"cccccccccccccccccccccccccccccccc"]},
+kitsune: { pal:{a:[45,40,88], c:[195,80,82], d:[30,40,40], x:[195,90,62]}, e:'#3ad6ff', rows:[
+".....xx...............d...d.....",
+".....xaa..xx.........dad.dad....",
+"......aa..xa........daaaaaad....",
+".xx....aa.aa........aaaaaaaa....",
+".xaa...aa.aa..xx...aaaaaeaaacc..",
+"...aa...aa.aa.xa...aaaaaaaccccn.",
+"....aa..aa.aa.aa....aaacccccc...",
+".....aa..aaaaaa....xxaaaccw.....",
+"......aaaaaaaaa...aaxxaccc......",
+"........aaaaaaa..aaaaacccc......",
+".........aaaaaa.aaaaaacccc......",
+"..........aaaa.aaaaaaacccc......",
+"..aa.......aaaaaaaaaaccc........",
+".acca.......aaaaaaaaacccc.......",
+".acaa.......aaaaaaaaccccc.......",
+"..acaa.....aaaaaaaa.aa.cc.......",
+"...acaaaaaaaaaaaaaa..aa.cc......",
+"....ccaaaaaaaaaaaad..dd.dd......"]},
+sphinx: { pal:{a:[38,55,55], c:[40,40,75], y:[45,85,55], z:[220,65,40], x:[350,75,50], d:[30,15,35]}, e:'#3ad6ff', rows:[
+"..........yyyyyy",
+"........yzyzyzyz",
+".......yzyzyyyyy",
+"......yzyzaaaaaa",
+"......yzyaaaaaaa",
+"......yzyaaaweaa",
+"......yzyaaaaaaa",
+"......yzyaaaaaaa",
+"......yzyyaaannn",
+".....yzyzyyyyyyy",
+".....yyyyyccxccc",
+"....aaaaaaccxccc",
+"...aaaaaaacccccc",
+"..aaaaaaaacccccc",
+".aaaaaaaaaaccccc",
+".aaaaaaaaaaaaaaa",
+".aaaaa....cccccc",
+"dddddddddddddddd"]},
+elderdragon: { pal:{a:[150,45,30], d:[140,40,20], y:[45,65,60], x:[30,70,60]}, e:'#ffd23a', rows:[
+"..........x.....",
+"d.........xx....",
+"dd.........xaaaa",
+"dad.......aaaaaa",
+"daad.....aaaaeaa",
+"daaad....aaaaaaa",
+"daaaad....aaayyy",
+"daaaaad...aannyy",
+"daaaaaad..aaaaaa",
+"d.d.d.dadaaaaaaa",
+".......aaaaayyyy",
+"......aaaaayyyyy",
+".....aaaaaayyyyy",
+"....aaaaaaayyyyy",
+"....aaa.aaayyyyy",
+"...www..aaaayyyy",
+"........aaaaaaaa",
+".......aaaa..aaa",
+"......aaaa...aa.",
+".....wwww....ww."]},
+fenrir: { pal:{a:[215,15,40], c:[210,15,70], d:[215,20,20], y:[45,80,55]}, e:'#5ff3ff', rows:[
+"....d...........",
+"....dd..........",
+"....dad.........",
+"....daad...aaaaa",
+".....aaaaaaaaaaa",
+"....aaaaaaaaaaaa",
+"...aaaaaeeaaaaaa",
+"...aaaaaaaaacccc",
+"..aaaaaaaaacccnn",
+"..aaaaaaaaaacccc",
+".aaaaaaaaaanwnwn",
+".aaaaaaaaaaannnn",
+"aaaaaaaaaaaaaaaa",
+"aaaaaaaaaaaacccc",
+"aaaa.aaaaaaacccc",
+"aaa..aaaaaaacccc",
+"aa...aaaaaaaaccc",
+".....yyyaaaaaaaa",
+"......aaa...aaa.",
+"......aaa...aaa.",
+".....wwww..wwww."]},
+thunderbird: { pal:{a:[225,55,35], c:[200,60,70], y:[50,100,60]}, e:'#ffe14a', rows:[
+"...............y",
+"..............yy",
+".............aaa",
+"............aaaa",
+"aa..........aaea",
+"aaa.........aaac",
+"aaaa.......aaaac",
+"caaaa.....aaaaaa",
+"ccaaaa...aaaaccc",
+".ccaaaa.aaaacccc",
+"..ccaaaaaaaccccc",
+"...ccaaaaaaccccc",
+"....ccaaaaaacccc",
+".....ccaaaaacccc",
+"......c.aaaaaccc",
+"........aaaaaacc",
+".........aaaaaaa",
+".........yaa.aaa",
+"........yy...aa.",
+".......y........"]},
+werewolf: { pal:{a:[30,12,38], c:[35,15,62], d:[30,12,22], y:[90,25,32]}, e:'#ff4a2a', rows:[
+"................",
+".......d........",
+".......dd.......",
+".......dad..aaaa",
+"........aaaaaaaa",
+".......aaaaaaaaa",
+".......aaeeaaaaa",
+".......aaaaaaccc",
+"........aaaaccnn",
+"........aawwcccc",
+"....aaaaaaaacccc",
+"..aaaaaaaacccccc",
+".aaaaaaaaacccccc",
+".aaa.aaaaaaccccc",
+".aaa..aaaaaaccca",
+".aaa..aaaaaaaaaa",
+".aaa...yyyyyyyyy",
+".www...yyyyyyyyy",
+".w.w...yyyyyyyyy",
+"........yyyy....",
+"........aaaa....",
+"........aaaa....",
+".......aaaaa....",
+"......wwwww....."]},
+minotaur: { pal:{a:[22,45,32], c:[28,40,50], y:[40,30,82], x:[45,90,58], z:[0,55,32], d:[20,30,15]}, e:'#ff3a2a', rows:[
+"..y.............",
+"..yy............",
+"...yyy...aaaaaaa",
+"....yyyaaaaaaaaa",
+"......aaaaeaaaaa",
+"......aaaaaaaaaa",
+".......aaaaacccc",
+".......aaaaccncc",
+"........aaaccccx",
+"....aaaaaaaaaaaa",
+"..aaaaaaaacccccc",
+".aaaaaaaaacccccc",
+".aaa.aaaaacccccc",
+".aaa.aaaaaaccccc",
+".aaa..aaaaaaaaaa",
+".aaa..zzzzzzzzzz",
+"......zzzzzzzzzz",
+".......aaaa.....",
+".......aaaa.....",
+"......aaaaa.....",
+"......ddddd....."]},
+goblin: { pal:{a:[95,45,42], c:[220,70,45], y:[48,95,62], x:[265,40,35], d:[25,25,20]}, e:'#ff3a2a', rows:[
+"...............c",
+"..............cc",
+".............ccc",
+"............cccc",
+"...........ccycc",
+"..........cccccc",
+".........cccyccc",
+"......cccccccccc",
+"........aaaaaaaa",
+"........aaaaaaaa",
+"....aa..aaeeaaaa",
+".....aaaaaaaaaaa",
+"........aaaawnnn",
+"........aaaaaaaa",
+".......xxxxxxxxx",
+"......xxxxxxyxxx",
+".....axxxxxxxxxx",
+".....axxxxxxyxxx",
+"......xxxxxxxxxx",
+"......xxxxxxxxxx",
+".......dddd....."]},
+lich: { pal:{a:[275,45,38], d:[275,45,20], y:[45,85,55], x:[160,80,50]}, e:'#7dff6a', rows:[
+"...........y...y",
+"........y..yy.yy",
+"........yyyyyyyy",
+".......ddwwwwwww",
+"......ddwwwwwwww",
+"......ddwnenwwww",
+"......ddwwwwwwww",
+"......dddwwwwnww",
+".......ddwnwnwnw",
+"......ddddwwwwww",
+".....ddaaaaaaaaa",
+"....ddaaaaaxaaaa",
+"...ddaaaaaaxaaaa",
+"..ddaaaaaaaxaaaa",
+"..dwwaaaaaaxaaaa",
+"..dwaaaaaaaxaaaa",
+"...daaaaaaaxaaaa",
+"...daaaaaaaxaaaa",
+"..ddaaaaaaaxaaaa",
+".ddaaaaaaaaxaaaa",
+"dddddddddddddddd"]},
+naga: { pal:{a:[150,55,36], c:[52,80,58], y:[55,60,72], x:[350,80,55]}, e:'#ffd23a', rows:[
+"............aaaa",
+"...........aaaaa",
+"...........aaeaa",
+"......aa...aaaaa",
+".....aaca..aaaax",
+"....aacca...aaax",
+"....acccaa..aaaa",
+"....aacccaaaaaaa",
+"....aaccaaaayyyy",
+".....aacaaaayyyy",
+"......aaaaaayyyy",
+"........aaaayyyy",
+"..........aayyyy",
+"..........ayyyyy",
+".........aayyyyy",
+".......aaaayyyyy",
+".....aaaaaaaaaaa",
+"....aaccaaaaccaa",
+"...aaaaaaaaaaaaa",
+"...aacaaaaaacaaa",
+"....aaaaaaaaaaaa"]},
+jackalope: { pal:{a:[30,30,55], c:[35,25,86], d:[25,25,30], x:[350,60,75], y:[35,25,80]}, e:'#120c0a', rows:[
+"....................y.y..y.y....",
+".....................yy..yy.....",
+"......................y..y......",
+"...................aa..aa.......",
+"..................adaa.aadd.....",
+"...................adaaaada.....",
+".....................aaaaaaa....",
+"...................aaaaaeaacc...",
+"..................aaaaaaaacccn..",
+".................aaaaaaaacccc...",
+"..cc...........aaaaaaaaxxxcw....",
+".cccaaaaaaaaaaaaaaaaaaaacc......",
+"..ccaaaaaaaaaaaaaaaaaaaacc......",
+"....aaaaacccccccccaaaaaccdd.....",
+"...aaaaa..cccccc......aaaaadd...",
+"..aaaa....................aaadd.",
+".ddd............................"]},
+lion: { pal:{a:[40,70,55], x:[20,65,35], c:[42,50,80]}, e:'#120c0a', rows:[
+"........xxxxxxxx",
+"......xxxxxxxxxx",
+".....xxxxxxxxxxx",
+"....xxxxaaaaaaaa",
+"....xxxaaaaaaaaa",
+"...xxxaaaaweaaaa",
+"...xxxaaaaeeaaaa",
+"...xxxaaaaaaaccc",
+"...xxxxaaaaacccn",
+"....xxxaaaaacccc",
+"....xxxxxaaaaaaa",
+".....xxxxxxaaaaa",
+"......xxxxaaaccc",
+".......aaaaaaccc",
+"......aaaaaaaccc",
+"......aaaaaaaccc",
+".....aaaaaaaaacc",
+".....aaa.aaaaaaa",
+".....ccc...cccc."]},
+frog: { pal:{a:[150,55,42], c:[55,60,78], x:[150,55,30]}, e:'#120c0a', rows:[
+"................",
+"..w.............",
+".w.w............",
+"..w......aaa....",
+"........awwaa...",
+"........aweaa...",
+".......aaaaaaaaa",
+"......aaaaaaaaaa",
+"......aaaaaaaaaa",
+"......aannnnnnnn",
+"......aaaaaaaaaa",
+".....aaaaacccccc",
+"....aaaaaccccccc",
+"...aaaaaaccccccc",
+"...aaa.aaccccccc",
+"..aaaa.aaacccccc",
+".aaaaa..aaaaaaaa",
+".aaaa....aaaaaa.",
+"aaaaaa..aaaa...."]},
+unicorn: { pal:{a:[40,25,90], x:[330,70,74], y:[270,60,76], z:[45,90,60]}, e:'#5b3a8a', rows:[
+"......................xx.....z..",
+".....................xyx.x..z...",
+"....................xyyxxyxz....",
+"...................xyyxaaaz.....",
+"..................xyyxaaaaaa....",
+"..................xyxaaaeaaaa...",
+".................xyxaaaaaaaaaa..",
+".................xyaaaa...aaaan.",
+".................xaaaa.....aaa..",
+"................aaaaa...........",
+"....xx.......aaaaaaa............",
+"...xyyx..aaaaaaaaaaa............",
+"..xyyxaaaaaaaaaaaaaa............",
+".xyyx.aaaaaaaaaaaaaa............",
+".xyx..aaaaaaaaaaaaaa............",
+"xyx...aaaaaaaaaaaaa.............",
+"xx.....aaa.aa...aa.aa...........",
+".......aa..aa...aa..aa..........",
+"......aa...aa...aa...aa.........",
+"......aa...aa...aa...aa.........",
+".....xx...xx....xx...xx.........",
+".....yx...yx....yx...yx........."]},
+phantom: { pal:{a:[200,25,82], c:[0,0,90], d:[260,25,18], x:[355,70,40]}, e:'#9ff0ff', rows:[
+"........dddddddd",
+"........dddddddd",
+"........dddddddd",
+"........xxxxxxxx",
+"......dddddddddd",
+".........wwwwwww",
+"........wwwwwwww",
+"........wweewwww",
+"........wwwwwwww",
+".........wwwwwww",
+"..........wwwwww",
+"......ddddcccccc",
+".....dxxxdcccccc",
+"....dxxxxdcccxcc",
+"...dxxxxxdcccccc",
+"..dxxxxxxdcccccc",
+"..dxxxxxxdcccccc",
+".dxxxxxxxddddddd",
+".dxxxxxx.aaaaaaa",
+"ddxxxxx...aaaaaa",
+"dddd.......aaaa.",
+".............aa."]},
+dog: { pal:{a:[30,50,58], d:[25,45,30], c:[35,30,90], x:[355,70,48], y:[48,90,60]}, e:'#120c0a', rows:[
+".........aaaaaaa",
+"......ddaaaaaaaa",
+".....dddaaaaaaaa",
+".....dddaaweaaaa",
+".....dddaaeeaaaa",
+".....dddaaaaaccc",
+"......ddaaaacccn",
+".......daaaacccc",
+"........aaaaaaaa",
+"........xxxxxxxx",
+".......aaaaaaacy",
+"......aaaaaacccc",
+"......aaaaaacccc",
+"......aaaaaacccc",
+".....aaaaaaacccc",
+".....aaaaacc.ccc"]},
+parrot: { pal:{a:[2,80,50], x:[48,95,58], z:[215,80,50], c:[40,30,88], d:[28,40,30]}, e:'#120c0a', rows:[
+"....................aaaa........",
+"...................aaaaaa.......",
+"..................aacccea.......",
+"..................aacccaacc.....",
+"..................aaaaaaaccc....",
+"..................aaaaaa.cnc....",
+".................aaaaaa..nn.....",
+"................aaaaaaa.........",
+"...............aaxxxaaa.........",
+"..............aaxxxxaaa.........",
+".............azzxxxaaaa.........",
+"............azzzzxaaaa..........",
+"...........azzzzzzaaa...........",
+"..........azzzzzzaaa............",
+".........azzzzzzaaa.............",
+"........aazzzzzaaa..............",
+".......aaz..dd.dd...............",
+"......aazddddddddddddd..........",
+".....aazz.......................",
+"....aazz........................"]},
 nightmare: { pal:{a:[265,18,20], x:[16,95,52], y:[46,100,62]}, e:'#ff5a1f', rows:[
 "......................xx........",
 ".....................xyx.x......",
@@ -944,6 +1545,7 @@ function sprSVG(name, opts){
     out.push([x,y,col]);
   }
   let extra = '';
+  if(opts.aura && !locked){ const gid = 'la' + (++sprSVG.n); extra = `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${opts.aura}" stop-opacity=".42"/><stop offset="1" stop-color="${opts.aura}" stop-opacity="0"/></radialGradient></defs><ellipse cx="16" cy="17" rx="16" ry="15" fill="url(#${gid})"/>`; }
   if(shiny && !locked){
     const gid = 'sg' + (++sprSVG.n), gc = T.a ? T.a[0] : '#fff';
     extra = `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${gc}" stop-opacity=".5"/><stop offset="1" stop-color="${gc}" stop-opacity="0"/></radialGradient></defs><ellipse cx="16" cy="17" rx="16" ry="15" fill="url(#${gid})"/>`;
@@ -957,36 +1559,50 @@ sprSVG.n = 0;
 
 
 
-const SKILL_PETS = { reading:['owl','golem'], running:['hound','nightmare'], climbing:['lizard','wyvern'], guitar:['finch','phoenix'], yoga:['fox','turtle'], stretching:['hare','boa'], social:['slime','kingslime'], cinema:['bat','beholder'], plants:['mandrake','treant'], housekeeping:['mimic','gargoyle'] };
+// Companions: each skill has pets at levels 5, 10 and 20, plus a shiny level 5 (1 in 1,000 per quest).
+// Each ability has pets at levels 5, 10 and 20. Everyone starts with Cat.
+const SKILL_PETS = { reading:['owl','golem','sphinx'], running:['hound','nightmare','fenrir'], climbing:['lizard','wyvern','elderdragon'], guitar:['finch','phoenix','thunderbird'], yoga:['fox','turtle','kitsune'], stretching:['hare','boa','leviathan'], social:['slime','kingslime','djinn'], cinema:['bat','beholder','vampire'], plants:['mandrake','treant','spiritstag'], housekeeping:['mimic','gargoyle','colossus'] };
 const PET_NAMES = {
-  reading:     [['Wisened Owl','Peers over its spectacles at anything you have not finished reading.'],['Tome Golem','A guardian stitched from a hundred books. It remembers every page.']],
-  running:     [['Trail Hound','Knows every path for miles and wants to run all of them.'],['Infernal Stallion','A nightmare of smoke and flame. Its hoofprints smolder for hours after a run.']],
-  climbing:    [['Crag Lizard','Sticks to any rock face. Judges your grip.'],['Ancient Wyvern','Has nested on the highest peaks for a thousand years. Respects a good climb.']],
-  guitar:      [['Lyre Finch','Hums your last practice back to you, slightly off-key.'],['Phoenix','Its song catches fire on the high notes.']],
-  yoga:        [['Lotus Fox','Naps in perfect balance on one paw.'],['Turtle Monk','Has held the same pose for three hundred years. Still breathing deeply.']],
-  stretching:  [['Limber Hare','Can touch its toes. Can also touch your toes.'],['Lithe Boa','Ties itself in knots on purpose. Untangles with a sigh of relief.']],
-  social:      [['Chatter Slime','Wobbles happily whenever someone says hello.'],['King Slime','Rules a kingdom of friends. Its crown has a jewel for each one.']],
-  cinema:      [['Matinee Bat','Watches from the rafters. Shushes no one.'],['Beholder','Never blinks during a film. Has a dozen eyes for every scene.']],
-  plants:      [['Mandrake Sprout','Screams softly when thirsty. Quite polite about it.'],['Ancient Treant','Has watched forests rise and fall. Approves of your ferns.']],
-  housekeeping:[['Dust Mimic','Eats crumbs. Only crumbs. Probably.'],['Gargoyle Sentinel','Guards your home from its perch. Nothing gets past it, especially clutter.']],
+  reading:     [['Wisened Owl','Peers over its spectacles at anything you have not finished reading.'],['Tome Golem','A guardian stitched from a hundred books. It remembers every page.'],['Riddle Sphinx','Guards the greatest library in the world. Asks a riddle before every chapter.']],
+  running:     [['Trail Hound','Knows every path for miles and wants to run all of them.'],['Infernal Stallion','A nightmare of smoke and flame. Its hoofprints smolder for hours after a run.'],['Fenrir','The great wolf of legend. No chain has ever held it, and no road is too long.']],
+  climbing:    [['Crag Lizard','Sticks to any rock face. Judges your grip.'],['Ancient Wyvern','Has nested on the highest peaks for a thousand years. Respects a good climb.'],['Elder Dragon','Sleeps on the roof of the world. Wakes only for climbers who have earned it.']],
+  guitar:      [['Lyre Finch','Hums your last practice back to you, slightly off-key.'],['Phoenix','Its song catches fire on the high notes.'],['Thunderbird','Every beat of its wings is a drumroll. Every note it sings is thunder.']],
+  yoga:        [['Lotus Fox','Naps in perfect balance on one paw.'],['Turtle Monk','Has held the same pose for three hundred years. Still breathing deeply.'],['Nine-Tailed Kitsune','A tail for every century of practice. Perfectly still, perfectly aware.']],
+  stretching:  [['Limber Hare','Can touch its toes. Can also touch your toes.'],['Lithe Boa','Ties itself in knots on purpose. Untangles with a sigh of relief.'],['Leviathan','Stretches from one horizon to the other. Never once pulled a muscle.']],
+  social:      [['Chatter Slime','Wobbles happily whenever someone says hello.'],['King Slime','Rules a kingdom of friends. Its crown has a jewel for each one.'],['Djinn','Grants three wishes, but only to people who show up for their friends.']],
+  cinema:      [['Matinee Bat','Watches from the rafters. Shushes no one.'],['Beholder','Never blinks during a film. Has a dozen eyes for every scene.'],['Vampire Lord','Has seen every film ever made, at midnight, from the best seat in the house.']],
+  plants:      [['Mandrake Sprout','Screams softly when thirsty. Quite polite about it.'],['Ancient Treant','Has watched forests rise and fall. Approves of your ferns.'],['Spirit Stag','Flowers bloom wherever it walks. Its antlers are a living garden.']],
+  housekeeping:[['Dust Mimic','Eats crumbs. Only crumbs. Probably.'],['Gargoyle Sentinel','Guards your home from its perch. Nothing gets past it, especially clutter.'],['Iron Colossus','A forge-hearted guardian. Your home has never been safer, or tidier.']],
 };
+const ABILITY_PETS = {
+  STR: [['werewolf','Werewolf','Strong enough to carry you home, and it would.'],['minotaur','Minotaur','Lifts boulders for fun. Has never skipped leg day.'],['titan','Titan','Holds up the sky on bad days so you do not have to.']],
+  DEX: [['frog','Leaping Frog','Clears ten lily pads in a single hop and lands without a splash.'],['jackalope','Jackalope','Gone before you finish saying its name.'],['panther','Shadow Panther','Moves without a sound. Lands every jump.']],
+  CON: [['dog','Stalwart Pup','Never tired, never sick, never leaves your side.'],['unicorn','Healing Unicorn','Its horn glows when you take good care of yourself.'],['tortoise','World Tortoise','Carries a whole forest on its back and has never once needed a rest.']],
+  INT: [['goblin','Goblin Hexer','Knows exactly one spell and casts it with total confidence. Very proud of the hat.'],['lich','Lich','Spent a thousand years studying. Still has questions.'],['mindflayer','Mind Flayer','Reads minds, books and maps with equal ease.']],
+  WIS: [['parrot','Sage Parrot','Repeats only the advice worth hearing twice.'],['naga','Naga Oracle','Sees a little further down the road than everyone else.'],['qilin','Qilin','Appears only to the wise. Walks on clouds without bending a blade of grass.']],
+  CHA: [['phantom','Opera Phantom','Owns every stage it walks onto.'],['lion','Lion','Walks into a room and everyone turns to look. Roars only when it matters.'],['griffin','Griffin','Half lion, half eagle, and all charm. Kings have bowed to less.']],
+};
+const PET_LEVELS = [[5,'base'],[10,'elder'],[20,'legend']];
 function petDefs(){
-  const out = [{ id:'p_cat', skill:null, sprite:'cat', form:'base', starter:true, name:'Cat', desc:'An orange tabby who followed you out the door one morning and never left.', how:'Starter companion' }];
+  const out = [{ id:'p_cat', group:'starter', skill:null, sprite:'cat', form:'base', starter:true, name:'Cat', desc:'An orange tabby who followed you out the door one morning and never left.', how:'Starter companion' }];
   for(const s of state.skills){
-    let pair = SKILL_PETS[s.id], names = PET_NAMES[s.id], pal = null;
-    if(!pair){
-      pair = ['slime','gargoyle']; let h=0; for(const ch of s.id) h=(h*31+ch.charCodeAt(0))%360;
-      pal = { a:[h,50,45], c:[h,45,68], d:[h,40,26], y:[(h+40)%360,40,70] };
-      names = [[`${s.name} Slime`,`A small slime that loves ${s.name.toLowerCase()} as much as you do.`],[`${s.name} Gargoyle`,`A stone guardian sworn to your ${s.name.toLowerCase()}.`]];
+    let trio = SKILL_PETS[s.id], names = PET_NAMES[s.id], pal = null;
+    if(!trio){
+      trio = ['slime','gargoyle','elderdragon']; let h=0; for(const ch of s.id) h=(h*31+ch.charCodeAt(0))%360;
+      pal = { a:[h,50,45], c:[h,45,68], d:[h,40,26], x:[(h+120)%360,45,45], y:[(h+40)%360,40,60], z:[(h+200)%360,45,50] };
+      names = [[`${s.name} Slime`,`A small slime that loves ${s.name.toLowerCase()} as much as you do.`],[`${s.name} Gargoyle`,`A stone guardian sworn to your ${s.name.toLowerCase()}.`],[`${s.name} Dragon`,`A legend of ${s.name.toLowerCase()}, born from years of practice.`]];
     }
-    out.push({ id:`p_${s.id}_5`,    skill:s.id, sprite:pair[0], form:'base',  pal, name:names[0][0], desc:names[0][1], how:`${s.name} level 5` });
-    out.push({ id:`p_${s.id}_10`,   skill:s.id, sprite:pair[1], form:'elder', pal, name:names[1][0], desc:names[1][1], how:`${s.name} level 10` });
-    out.push({ id:`p_${s.id}_rare`, skill:s.id, sprite:pair[0], form:'rare',  pal, rare:true, name:`Shiny ${names[0][0]}`, desc:`A rare, shimmering ${names[0][0].toLowerCase()}. Few adventurers ever see one.`, how:`Shiny: 1 in 1,000 chance with each ${s.name.toLowerCase()} quest` });
+    PET_LEVELS.forEach(([lv,form],i)=>out.push({ id:`p_${s.id}_${lv}`, group:'skill', skill:s.id, sprite:trio[i], form, pal, name:names[i][0], desc:names[i][1], how:`${s.name} level ${lv}` }));
+    out.push({ id:`p_${s.id}_rare`, group:'skill', skill:s.id, sprite:trio[0], form:'rare', pal, rare:true, name:`Shiny ${names[0][0]}`, desc:`A rare, shimmering ${names[0][0].toLowerCase()}. Few adventurers ever see one.`, how:`Shiny: 1 in 1,000 chance with each ${s.name.toLowerCase()} quest` });
+  }
+  for(const [ab,abName] of ABILITIES){
+    ABILITY_PETS[ab].forEach(([sprite,name,desc],i)=>{ const [lv,form] = PET_LEVELS[i];
+      out.push({ id:`p_ab_${ab}_${lv}`, group:'ability', ability:ab, sprite, form, name, desc, how:`${abName} level ${lv}` }); });
   }
   return out;
 }
-const petOrigin = p => p.starter ? 'Starter companion' : skillById(p.skill).name;
-function petArt(def, width, locked){ return sprSVG(def.sprite, {width, locked, shiny: !!def.rare, pal: def.pal || undefined}); }
+const petOrigin = p => p.starter ? 'Starter companion' : p.group==='ability' ? `${ABILITY_NAME[p.ability]} companion` : skillById(p.skill).name;
+function petArt(def, width, locked){ return sprSVG(def.sprite, {width, locked, shiny: !!def.rare, aura: def.form==='legend' ? '#f2cd78' : '', pal: def.pal || undefined}); }
 const DEFAULT_CONDITIONS = () => [
   { id:'poisoned',  name:'Poisoned',  desc:'Sick today',                icon:'drop', kind:'bad'  },
   { id:'exhausted', name:'Exhausted', desc:'Didn’t sleep well',     icon:'moon', kind:'bad'  },
@@ -1184,7 +1800,10 @@ function compute(){
       }
     }
     for(const g in gEarn) earned += Math.min(gEarn[g], gCap[g]||0);
-    for(const sid of hit){ const lv = levelInfo(skillXP[sid]||0, RULES.skillBase).level; if(lv>=5 && !petDates[`p_${sid}_5`]) petDates[`p_${sid}_5`] = k; if(lv>=10 && !petDates[`p_${sid}_10`]) petDates[`p_${sid}_10`] = k; }
+    for(const sid of hit){ const lv = levelInfo(skillXP[sid]||0, RULES.skillBase).level; if(lv>=5 && !petDates[`p_${sid}_5`]) petDates[`p_${sid}_5`] = k; if(lv>=10 && !petDates[`p_${sid}_10`]) petDates[`p_${sid}_10`] = k; if(lv>=20 && !petDates[`p_${sid}_20`]) petDates[`p_${sid}_20`] = k; }
+    { const abHit = new Set([...hit].map(abilityOf));
+      for(const ab of abHit){ const xp = state.skills.filter(x=>x.ability===ab).reduce((a,x)=>a+(skillXP[x.id]||0),0), lv = levelInfo(xp, RULES.abilityBase).level;
+        for(const L of [5,10,20]) if(lv>=L && !petDates[`p_ab_${ab}_${L}`]) petDates[`p_ab_${ab}_${L}`] = k; } }
     // skill-level streaks (any quest of that skill)
     for(const s of state.skills){ skillStreak[s.id] = hit.has(s.id) ? (skillStreak[s.id]||0)+1 : (k===today ? skillStreak[s.id] : 0); skillBest[s.id] = Math.max(skillBest[s.id]||0, skillStreak[s.id]); }
     c.bestStreak = Math.max(c.bestStreak, ...tasks.map(t=>best[t.id]), 0);
@@ -1281,7 +1900,7 @@ function condBar(k){
 function currentCompanion(){ const id = state.profile.pet; if(!id || !R.pets[id]) return null; return petDefs().find(p=>p.id===id) || null; }
 function companionHTML(){
   const def = currentCompanion(); if(!def) return '';
-  return `<button class="compstrip ${def.form}" data-act="pet" data-id="${def.id}"><span class="compart">${petArt(def, 80)}</span><span class="comptext"><span class="label">Traveling with</span><b>${esc(def.name)}</b><span class="muted">${def.starter ? 'Starter companion' : esc(skillById(def.skill).name)+' companion'}</span></span></button>`;
+  return `<button class="compstrip ${def.form}" data-act="pet" data-id="${def.id}"><span class="compart">${petArt(def, 80)}</span><span class="comptext"><span class="label">Traveling with</span><b>${esc(def.name)}</b><span class="muted">${def.group==='skill' ? esc(skillById(def.skill).name)+' companion' : esc(petOrigin(def))}</span></span></button>`;
 }
 function heroHeader(opts){
   const ch = R.char; opts = opts || {};
@@ -1339,16 +1958,29 @@ function viewToday(){
     ${isToday ? '' : `<button class="linkbtn" data-act="today" style="align-self:center">Back to today</button>`}
   </div></section>
   <div class="rule">Daily Quests</div>
-  <div class="quests">${rows || `<p class="muted">No quests yet. Add one from the Hero tab.</p>`}</div>
-  ${weekly.length ? `<div class="rule">Weekly Quests</div>
-  <p class="hint" style="margin:-8px 0 0;text-align:center">Aim for a few times a week. They earn XP but don\u2019t count toward day medals.</p>
-  <div class="quests">${weeklyRows}</div>` : ''}
-  <div class="rule">Side Quests</div>
-  <p class="hint" style="margin:-8px 0 0;text-align:center">One-time adventures. Complete each once for XP. They don\u2019t count toward day medals.</p>
-  <div class="quests">${sides.map(t=>questRow(t, k, d, {side:true})).join('') || `<p class="hint" style="text-align:center;margin:0">No side quests yet.</p>`}</div>
-  <button class="btn gold block" data-act="new-side">Add a side quest</button>
+  <div class="quests daily">${rows || `<p class="muted">No quests yet. Add one from the Hero tab.</p>`}</div>
+  ${section('weekly', 'Weekly Quests', weekly, k, `<p class="hint" style="margin:0;text-align:center">Aim for a few times a week. They earn XP but don\u2019t count toward day medals.</p>
+    ${abGroups('weekly', weekly, t=>questRow(t, k, d, {week:weekCount(t.id)}), k) || `<p class="hint" style="text-align:center;margin:0">No weekly quests yet.</p>`}
+    <button class="btn gold block" data-act="new-weekly">Add a weekly quest</button>`)}
+  ${section('side', 'Side Quests', sides, k, `<p class="hint" style="margin:0;text-align:center">One-time adventures. Complete each once for XP. They don\u2019t count toward day medals.</p>
+    ${abGroups('side', sides, t=>questRow(t, k, d, {side:true}), k) || `<p class="hint" style="text-align:center;margin:0">No side quests waiting.</p>`}
+    <button class="btn gold block" data-act="new-side">Add a side quest</button>
   ${sidesDone.length ? `<details class="sidedone"><summary><span class="label">Completed side quests \u00b7 ${sidesDone.length}</span>${svg('chevron','class="chev"')}</summary>
-    <div class="list">${sidesDone.map(t=>`<div><span>${esc(t.name)}<br><span class="muted" style="font-size:13px">${esc(skillById(t.skill).name)} \u00b7 ${esc(niceDate(R.sideDone[t.id]))}</span></span><span style="display:flex;align-items:center;gap:12px"><b class="num" style="color:var(--gold)">+${fmt(t.xp)}</b><button class="linkbtn" data-act="side-undo" data-id="${t.id}">Undo</button></span></div>`).join('')}</div></details>` : ''}`;
+    <div class="list">${sidesDone.map(t=>`<div><span>${esc(t.name)}<br><span class="muted" style="font-size:13px">${esc(skillById(t.skill).name)} \u00b7 ${esc(niceDate(R.sideDone[t.id]))}</span></span><span style="display:flex;align-items:center;gap:12px"><b class="num" style="color:var(--gold)">+${fmt(t.xp)}</b><button class="linkbtn" data-act="side-undo" data-id="${t.id}">Undo</button></span></div>`).join('')}</div></details>` : ''}`)}`;
+}
+// Collapsible quest sections (weekly, side) and ability groups inside them. Open ones stay open across re-renders.
+const openGroups = new Set();
+function section(kind, title, list, k, inner){
+  const e = state.log[k] || {}, done = list.filter(t=>e[t.id]).length, key = 'sec-'+kind;
+  return `<details class="qsection" data-g="${key}" ${openGroups.has(key)?'open':''}><summary><span class="sectitle">${title}</span><span class="seccount">${list.length} quest${list.length===1?'':'s'}${done?` \u00b7 <b>${done} done</b>`:''}</span>${svg('chevron','class="chev"')}</summary><div class="secbody">${inner}</div></details>`;
+}
+function abGroups(kind, list, row, k){
+  const e = state.log[k] || {};
+  return ABILITIES.map(([ab,name])=>{
+    const items = list.filter(t=>abilityOf(t.skill)===ab); if(!items.length) return '';
+    const done = items.filter(t=>e[t.id]).length, key = kind+'-'+ab;
+    return `<details class="abgroup" data-g="${key}" ${openGroups.has(key)?'open':''}><summary><span class="abbr">${ab}</span><span class="abname">${name}</span><span class="abcount">${items.length} quest${items.length>1?'s':''}${done?` \u00b7 <b>${done} done</b>`:''}</span>${svg('chevron','class="chev"')}</summary><div class="quests">${items.map(row).join('')}</div></details>`;
+  }).join('');
 }
 function questRow(t, k, d, opt){
   opt = opt || {};
@@ -1385,7 +2017,7 @@ function questRow(t, k, d, opt){
   return `<article class="frame quest ${done?'done is-done':''} ${opt.dim?'dim':''}"><div class="in ${t.type==='tiers'?'tiered':''}">
     <div class="sigil">${svg(s.icon)}</div>
     <div class="qmain"><div class="qname">${esc(t.name)}</div>
-      <div class="qmeta">${meta}${isWeekly(t) ? `<span class="abbr sm">${abilityOf(t.skill)}</span>` : ''}<span>${esc(s.name)}</span>${goal}${t.oneOf && !opt.dim ? `<span class="tag">${esc(GROUP_NAME[t.oneOf]||t.oneOf)}</span>` : ''}${opt.dim ? `<span class="tag">Bonus only</span>` : ''}${isWeekly(t) ? `<span class="tag">${opt.week||0}\u00d7 this week</span>` : ''}${opt.side ? `<span class="abbr sm">${abilityOf(t.skill)}</span>` : streakHTML+bonusHTML}</div></div>
+      <div class="qmeta">${meta}<span>${esc(s.name)}</span>${goal}${t.oneOf && !opt.dim ? `<span class="tag">${esc(GROUP_NAME[t.oneOf]||t.oneOf)}</span>` : ''}${opt.dim ? `<span class="tag">Bonus only</span>` : ''}${isWeekly(t) ? `<span class="tag">${opt.week||0}\u00d7 this week</span>` : ''}${opt.side ? '' : streakHTML+bonusHTML}</div></div>
     ${ctrl}</div></article>`;
 }
 
@@ -1479,8 +2111,8 @@ function viewTrophies(){
     return `<div class="ach t-${d.tier} ${k?'got':''}"><div class="badge">${svg(d.icon)}</div><div class="an">${esc(d.name)}</div><div class="ad">${k ? 'Earned '+esc(MON[parseKey(k).getMonth()]+' '+parseKey(k).getDate()) : esc(d.desc)}</div></div>`;
   }).join('');
   const pets = petDefs(); const ownedN = pets.filter(p=>R.pets[p.id]).length;
-  const petCards = pets.map(p=>{ const got = !!R.pets[p.id];
-    return `<button class="pet ${got?'got':''} ${p.form}" data-act="pet" data-id="${p.id}"><div class="petart">${petArt(p, 80, !got)}</div><div class="pn">${got ? esc(p.name) : '???'}</div><div class="ph">${got ? esc(petOrigin(p)) : esc(p.how)}</div></button>`; }).join('');
+  const petCardHTML = p=>{ const got = !!R.pets[p.id];
+    return `<button class="pet ${got?'got':''} ${p.form}" data-act="pet" data-id="${p.id}"><div class="petart">${petArt(p, 80, !got)}</div><div class="pn">${got ? esc(p.name) : '???'}</div><div class="ph">${got ? esc(petOrigin(p)) : esc(p.how)}</div></button>`; };
   return `<div class="rule">Medals</div>
   <div class="medalcount">
     ${['bronze','silver','gold'].map(m=>`<div class="frame mc"><div class="in"><span class="coin ${m}">${m[0].toUpperCase()}</span><b class="num">${c.medals[m]}</b><span class="label">${m} days</span></div></div>`).join('')}
@@ -1492,8 +2124,8 @@ function viewTrophies(){
     <p class="hint" style="margin:0">Days earn Bronze at 50%, Silver at 75% and Gold at 90% of the XP available that day, before streak bonuses. Weeks are rated the same way, Monday to Sunday.</p>
   </div></section>
   <div class="rule">Companions · ${ownedN}/${pets.length}</div>
-  <p class="hint" style="margin:-8px 0 0;text-align:center">Each skill has three: one at level 5, a different one at level 10, and a shiny version of the first with a 1 in 1,000 chance every time you complete one of its quests.</p>
-  <div class="pets">${petCards}</div>
+  <p class="hint" style="margin:-8px 0 0;text-align:center">Each skill has companions at levels 5, 10 and 20, plus a shiny version of the first with a 1 in 1,000 chance every time you complete one of its quests. Each ability has its own companions at levels 5, 10 and 20.</p>
+  ${[['starter','Starter'],['skill','Skill companions'],['ability','Ability companions']].map(([g,label])=>`<div class="label" style="text-align:center">${label}</div><div class="pets ${g==='skill'?'pets4':''}">${pets.filter(p=>p.group===g).map(petCardHTML).join('')}</div>`).join('')}
   <div class="rule">Achievements · ${got}/${defs.length}</div>
   <div class="achs">${achs}</div>`;
 }
@@ -1525,7 +2157,7 @@ function viewHero(){
   <button class="btn block" data-act="new-skill">Add a skill</button>
   <div class="rule">Companion</div>
   ${(()=>{ const owned = petDefs().filter(x=>R.pets[x.id]);
-    if(!owned.length) return `<p class="hint" style="margin:0;text-align:center">No companions yet. Your first arrives when a skill reaches level 5, or by a lucky shiny drop on any quest. Once you have one, choose it here to show it on your Quests page.</p>`;
+    if(!owned.length) return `<p class="hint" style="margin:0;text-align:center">No companions yet. Your next arrives when a skill or ability reaches level 5, or by a lucky shiny drop on any quest. Once you have one, choose it here to show it on your Quests page.</p>`;
     return `<div class="pickpets"><button class="pick ${!state.profile.pet?'sel':''}" data-act="pick-pet" data-id=""><span class="pickart muted">None</span><span>No companion</span></button>${owned.map(x=>`<button class="pick ${state.profile.pet===x.id?'sel':''}" data-act="pick-pet" data-id="${x.id}"><span class="pickart">${petArt(x, 72)}</span><span>${esc(x.name)}</span></button>`).join('')}</div>`; })()}
   <div class="rule">Conditions</div>
   <div class="mlist">${state.conditionDefs.map(c=>`<div class="mrow"><div class="sigil cond-${c.kind}">${svg(c.icon)}</div><div class="mm"><b>${esc(c.name)}</b><span>${c.kind==='good'?'Positive':'Negative'}${c.desc?' · '+esc(c.desc):''}</span></div><button class="btn" data-act="edit-cond" data-id="${c.id}">Edit</button></div>`).join('') || '<div class="mrow"><span class="muted">No conditions yet.</span></div>'}</div>
@@ -1548,6 +2180,7 @@ function render(){
   $('#app').innerHTML = `<main class="wrap">${html}</main>`;
   renderTabs(); settleBars(); fitNames();
   const cd = $('#conds'); if(cd) cd.addEventListener('toggle', ()=>{ condOpen = cd.open; });
+  document.querySelectorAll('details[data-g]').forEach(el=>el.addEventListener('toggle', ()=>{ el.open ? openGroups.add(el.dataset.g) : openGroups.delete(el.dataset.g); }));
   const nameInput = $('#f-heroname');
   if(nameInput) nameInput.addEventListener('change', ()=>{ state.profile.name = nameInput.value.trim().slice(0,40); save(); R = compute(); });
   const photo = $('#f-photo');
@@ -1646,7 +2279,7 @@ function taskSheet(id, preset){
   const tierRow = i => `<div class="tierrow"><span class="label">Bubble ${i+1}</span>
       <input id="f-amt${i}" type="number" inputmode="numeric" min="1" value="${tiers[i]?tiers[i].amt:''}" aria-label="Bubble ${i+1} amount" placeholder="Amount">
       <input id="f-xp${i}" type="number" inputmode="numeric" min="1" value="${tiers[i]?tiers[i].xp:''}" aria-label="Bubble ${i+1} XP" placeholder="XP"></div>`;
-  openSheet(`<h2>${id ? (isSide(t)?'Edit side quest':'Edit quest') : (preset==='side'?'New side quest':'New quest')}</h2>
+  openSheet(`<h2>${id ? (isSide(t)?'Edit side quest':'Edit quest') : (preset==='side'?'New side quest':preset==='weekly'?'New weekly quest':'New quest')}</h2>
     <div class="field"><label for="f-tname">Quest</label><input id="f-tname" value="${esc(t.name)}" placeholder="${(preset==='side'||isSide(t)) ? 'e.g. Fix the leaky faucet' : 'e.g. Stretch'}" autocomplete="off"></div>
     <div class="field"><label for="f-tskill">Skill it trains</label><select id="f-tskill">${opts}</select></div>
     <div id="f-newskill-wrap" hidden style="display:flex;flex-direction:column;gap:10px">
@@ -1875,6 +2508,7 @@ document.addEventListener('click', e=>{
   else if(a==='edit-task') taskSheet(id);
   else if(a==='new-task') taskSheet(null);
   else if(a==='new-side') taskSheet(null, 'side');
+  else if(a==='new-weekly') taskSheet(null, 'weekly');
   else if(a==='side-undo'){ const k = R.sideDone[id]; if(k) mutate(()=>{ const e = state.log[k]; if(e){ delete e[id]; if(!Object.keys(e).length) delete state.log[k]; } }); }
   else if(a==='edit-skill') skillSheet(id);
   else if(a==='new-skill') skillSheet(null);
