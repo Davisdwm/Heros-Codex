@@ -5,9 +5,9 @@
 <div id="a" style="display:grid;grid-template-columns:repeat(4,88px);gap:4px"></div>
 <script src="pets3.js"></script><script src="petrender3.js"></script>
 <script>
-const P = [['Guitar','finch','phoenix','thunderbird'],['Running','hound','nightmare','fenrir'],['Climbing','lizard','wyvern','elderdragon'],['Reading','owl','golem','sphinx'],['Yoga','fox','turtle','kitsune'],['Stretching','hare','boa','leviathan'],['Social','slime','kingslime','djinn'],['Cinema','bat','beholder','vampire'],['Plants','mandrake','treant','spiritstag'],['Housekeeping','mimic','gargoyle','colossus']];
+const P = [['Guitar','finch','phoenix','thunderbird'],['Running','hound','nightmare','pegasus'],['Climbing','lizard','wyvern','kingape'],['Reading','owl','golem','lich'],['Yoga','fox','turtle','kitsune'],['Stretching','hare','boa','kraken'],['Social','slime','kingslime','emperorslime'],['Cinema','bat','beholder','vampire'],['Plants','mandrake','treant','elk'],['Housekeeping','mimic','gargoyle','hermitcrab']];
 const cell = (n,o,l) => `<div style="text-align:center">${sprSVG(n,Object.assign({width:84},o))}<br>${l}</div>`;
 for(const [s,a,b,c] of P) document.getElementById('g').insertAdjacentHTML('beforeend', cell(a,{},s+' 5')+cell(b,{},s+' 10')+cell(c,{aura:'#f2cd78'},s+' 15')+cell(a,{shiny:true},'shiny'));
-const A = [['STR','werewolf','minotaur','titan'],['DEX','frog','jackalope','panther'],['CON','dog','unicorn','tortoise'],['INT','goblin','lich','mindflayer'],['WIS','parrot','naga','qilin'],['CHA','phantom','lion','griffin']];
+const A = [['STR','rockgolem','minotaur','reddragon'],['DEX','frog','jackalope','panther'],['CON','dog','unicorn','tortoise'],['INT','goblin','octowizard','wingedeye'],['WIS','parrot','wisp','qilin'],['CHA','butterfly','lion','griffin']];
 A.forEach(([ab,a,b,c],i)=>document.getElementById('a').insertAdjacentHTML('beforeend', cell(a,{},ab+' 5')+cell(b,{},ab+' 10')+cell(c,{aura:'#f2cd78'},ab+' 15')+(i===0?cell('cat',{},'Cat'):'<div></div>')));
 </script></body></html>
