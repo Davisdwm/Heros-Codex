@@ -1,0 +1,1006 @@
+<script>window.XP_DEMO=true</script>
+<title>Hero's Ledger</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Roboto+Condensed:wght@400;500;700&display=swap">
+<style>
+/* Layout: a single-column character sheet — hero header, framed quest rows, bottom tab bar. Dark, single theme by choice. */
+:root{
+  --bg:#0f0d0c; --panel:#191514; --panel-hi:#231d1a; --inset:#0b0a09;
+  --line:#3a302b; --line-hi:#5c4a3e;
+  --fg:#f0e9df; --muted:#a8998b; --faint:#6f645a;
+  --red:#c9301c; --red-hi:#e5452e; --red-deep:#6e1a10;
+  --gold:#d9ad55; --gold-hi:#f2cd78;
+  --bronze:#c47b45; --silver:#c6ccd2; --goldm:#f0c24c;
+  --ok:#6fae6a;
+  --display:"Cinzel", "Trajan Pro", Georgia, "Times New Roman", serif;
+  --body:"Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --tab-h:64px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{
+  margin:0; background:
+    radial-gradient(140% 50% at 50% -8%, rgba(150,32,18,.38) 0%, rgba(150,32,18,0) 62%),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.012) 0 2px, rgba(0,0,0,0) 2px 6px),
+    var(--bg);
+  background-attachment:fixed;
+  color:var(--fg); font-family:var(--body); font-size:16px; line-height:1.4;
+  -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent;
+  min-height:100%;
+}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--fg)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:14px calc(var(--tab-h) + 28px + env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column;gap:18px}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:.02em}
+
+/* Notched frame — the character-sheet box */
+.frame{--n:10px;position:relative;background:var(--line);padding:1px;
+  clip-path:polygon(var(--n) 0,calc(100% - var(--n)) 0,100% var(--n),100% calc(100% - var(--n)),calc(100% - var(--n)) 100%,var(--n) 100%,0 calc(100% - var(--n)),0 var(--n))}
+.frame>.in{background:linear-gradient(180deg,var(--panel-hi),var(--panel));
+  clip-path:polygon(var(--n) 0,calc(100% - var(--n)) 0,100% var(--n),100% calc(100% - var(--n)),calc(100% - var(--n)) 100%,var(--n) 100%,0 calc(100% - var(--n)),0 var(--n))}
+.frame.gold{background:linear-gradient(180deg,var(--gold),#7a5a24)}
+.frame.done{background:linear-gradient(180deg,var(--red),var(--red-deep))}
+
+.label{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.rule{display:flex;align-items:center;gap:10px;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.rule::before,.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(217,173,85,0),var(--line-hi))}
+.rule::after{background:linear-gradient(270deg,rgba(217,173,85,0),var(--line-hi))}
+.muted{color:var(--muted)}
+
+/* Hero header */
+.hero .in{padding:16px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center}
+.portrait{width:76px;height:76px;border-radius:50%;padding:3px;background:conic-gradient(from 210deg,var(--gold),#7a5a24,var(--gold-hi),#7a5a24,var(--gold));flex:none}
+.portrait>div{width:100%;height:100%;border-radius:50%;background:#2a1714 center/cover no-repeat;display:grid;place-items:center;font-family:var(--display);font-size:30px;color:var(--gold);border:2px solid var(--inset)}
+.hero-name{min-width:0}
+.hero-name h1{font-size:22px;line-height:1.1;overflow-wrap:anywhere}
+.hero-name .title{margin-top:4px;color:var(--gold);font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.lvl-shield{width:64px;height:72px;display:grid;place-items:center;text-align:center;
+  background:linear-gradient(180deg,var(--red),var(--red-deep));
+  clip-path:polygon(50% 0,100% 14%,100% 62%,50% 100%,0 62%,0 14%);position:relative}
+.lvl-shield::before{content:"";position:absolute;inset:3px;background:var(--inset);clip-path:inherit}
+.lvl-shield span{position:relative;display:block}
+.lvl-shield .l{font-size:10px;letter-spacing:.16em;color:var(--muted);font-weight:700;margin-top:-6px}
+.lvl-shield .n{font-family:var(--display);font-size:28px;line-height:1;color:var(--fg)}
+.hero .xp{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
+.xp-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);gap:8px}
+.xp-row b{color:var(--fg);font-weight:700}
+
+.bar{height:12px;background:var(--inset);border:1px solid var(--line);border-radius:2px;position:relative;overflow:hidden}
+.bar>i{position:absolute;inset:0 auto 0 0;background:linear-gradient(180deg,var(--red-hi),var(--red) 55%,var(--red-deep));box-shadow:inset 0 1px 0 rgba(255,255,255,.25);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.bar>i::after{content:"";position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--gold-hi);opacity:.8}
+.bar.thin{height:8px}
+.bar.goldfill>i{background:linear-gradient(180deg,var(--gold-hi),var(--gold) 60%,#8c6a2b)}
+
+/* Day card */
+.day .in{padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px}
+.day-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.day-nav h2{font-size:18px;text-align:center;flex:1}
+.day-nav .sub{display:block;font-family:var(--body);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:2px}
+.iconbtn{width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);background:var(--inset);border-radius:2px;color:var(--gold)}
+.iconbtn:disabled{opacity:.3}
+.iconbtn svg{width:18px;height:18px}
+.medalbar{position:relative;padding-top:4px}
+.medalbar .bar{height:14px}
+.ticks{position:relative;height:22px;margin-top:4px}
+.tick{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:700;color:var(--faint);letter-spacing:.06em}
+.tick::before{content:"";width:1px;height:6px;background:var(--line-hi);margin-bottom:2px}
+.tick.hit{color:var(--fg)}
+.medal-line{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 6px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);background:var(--inset);color:var(--muted)}
+.chip .dot{width:12px;height:12px;border-radius:50%;background:var(--faint)}
+.chip.bronze{color:var(--bronze);border-color:#5d3a22}.chip.bronze .dot{background:var(--bronze)}
+.chip.silver{color:var(--silver);border-color:#4a4f54}.chip.silver .dot{background:var(--silver)}
+.chip.gold{color:var(--goldm);border-color:#6b5420}.chip.gold .dot{background:var(--goldm);box-shadow:0 0 8px rgba(240,194,76,.6)}
+
+.banner{border:1px dashed var(--line-hi);padding:10px 12px;font-size:14px;color:var(--muted);display:flex;gap:10px;align-items:center;justify-content:space-between;background:rgba(0,0,0,.25)}
+.banner b{color:var(--gold)}
+.linkbtn{color:var(--gold);font-weight:700;font-size:14px;text-decoration:underline;text-underline-offset:3px}
+
+/* Quest rows */
+.quests{display:flex;flex-direction:column;gap:10px}
+.quest .in{padding:12px 12px 12px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;min-height:76px}
+.sigil{width:42px;height:42px;display:grid;place-items:center;color:var(--gold);position:relative}
+.sigil::before{content:"";position:absolute;inset:5px;transform:rotate(45deg);border:1px solid var(--line-hi);background:var(--inset)}
+.sigil svg{position:relative;width:20px;height:20px}
+.quest.is-done .sigil{color:var(--fg)}
+.quest.is-done .sigil::before{background:var(--red-deep);border-color:var(--red)}
+.qmain{min-width:0}
+.qname{font-size:17px;font-weight:700;line-height:1.2}
+.qmeta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px;color:var(--muted);margin-top:3px;align-items:center}
+.streak{display:inline-flex;align-items:center;gap:3px;color:var(--gold)}
+.streak svg{width:13px;height:13px}
+.streak.hot{color:var(--red-hi)}
+.bonus{font-weight:700;color:var(--gold-hi)}
+.xpchip{font-family:var(--display);font-weight:700;font-size:15px;color:var(--gold)}
+.xpchip small{font-family:var(--body);font-size:11px;letter-spacing:.1em;color:var(--muted)}
+
+.check{width:48px;height:48px;display:grid;place-items:center;position:relative}
+.check::before{content:"";position:absolute;inset:9px;transform:rotate(45deg);border:2px solid var(--gold);background:var(--inset);transition:background .2s,border-color .2s}
+.check svg{position:relative;width:20px;height:20px;opacity:0;transform:scale(.4);transition:all .2s;color:#fff}
+.check[aria-pressed="true"]::before{background:var(--red);border-color:var(--red-hi);box-shadow:0 0 14px rgba(229,69,46,.5)}
+.check[aria-pressed="true"] svg{opacity:1;transform:scale(1)}
+.ctrlcol{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.stepper{display:flex;align-items:center;border:1px solid var(--line-hi);background:var(--inset);border-radius:2px}
+.stepper button{width:36px;height:36px;display:grid;place-items:center;color:var(--gold);font-size:22px;line-height:1}
+.stepper button:disabled{opacity:.3}
+.stepper output{min-width:58px;text-align:center;font-weight:700;font-size:15px}
+
+/* Tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:linear-gradient(180deg,#1b1513,#0d0b0a);border-top:1px solid var(--line-hi);
+  padding-bottom:env(safe-area-inset-bottom, 0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabs::before{content:"";position:absolute;top:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5}
+.tabs nav{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);height:var(--tab-h)}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.tab svg{width:22px;height:22px}
+.tab[aria-current="page"]{color:var(--gold)}
+.tab[aria-current="page"] svg{filter:drop-shadow(0 0 6px rgba(217,173,85,.5))}
+
+/* Skills */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.skillcard .in{padding:14px;display:flex;flex-direction:column;gap:10px;text-align:left;width:100%;height:100%}
+.skillcard{display:block;width:100%;text-align:left}
+.skillhead{display:flex;align-items:center;gap:10px}
+.skillhead .sigil{width:36px;height:36px}
+.skillhead .sigil svg{width:17px;height:17px}
+.skillname{font-family:var(--display);font-weight:700;font-size:15px;line-height:1.15;overflow-wrap:anywhere}
+.skilllvl{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted)}
+.skilllvl b{font-family:var(--display);font-size:22px;color:var(--fg)}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--gold);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;align-self:flex-start}
+.back svg{width:16px;height:16px}
+.detailhead .in{padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.detailhead .top{display:flex;align-items:center;gap:14px}
+.detailhead .sigil{width:58px;height:58px}
+.detailhead .sigil svg{width:26px;height:26px}
+.detailhead h1{font-size:24px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.stat{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--display);font-size:20px;font-weight:700}
+.stat span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.heat{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.heat i{aspect-ratio:1;border-radius:2px;background:var(--inset);border:1px solid var(--line);max-width:100%}
+.heat i.today{outline:1px solid var(--gold);outline-offset:1px}
+.heatlabels{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;font-size:10px;color:var(--faint);text-align:center;font-weight:700;letter-spacing:.1em}
+.list{display:flex;flex-direction:column;border:1px solid var(--line)}
+.list>div{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--line);background:var(--panel);font-size:14px}
+.list>div:first-child{border-top:0}
+.titlechips{display:flex;flex-wrap:wrap;gap:8px}
+.tchip{padding:6px 12px;border:1px solid var(--line);font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--faint);background:var(--inset)}
+.tchip.got{color:var(--gold);border-color:#6b5420}
+.tchip.sel{background:var(--red-deep);border-color:var(--red);color:var(--fg)}
+
+/* Trophies */
+.medalcount{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.mc .in{padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.mc b{font-family:var(--display);font-size:26px}
+.coin{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;color:#1b130b;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),inset 0 2px 0 rgba(255,255,255,.35)}
+.coin.bronze{background:radial-gradient(circle at 35% 30%,#e3a273,var(--bronze) 55%,#7a4524)}
+.coin.silver{background:radial-gradient(circle at 35% 30%,#f2f5f7,var(--silver) 55%,#7c848b)}
+.coin.gold{background:radial-gradient(circle at 35% 30%,#fff0b8,var(--goldm) 55%,#9c7319)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 30px;gap:5px;align-items:center}
+.cal .h{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--faint);text-align:center}
+.cal .d{aspect-ratio:1;max-width:100%;display:grid;place-items:center;font-size:12px;color:var(--faint);border:1px solid var(--line);background:var(--inset);border-radius:50%}
+.cal .d.bronze{background:var(--bronze);color:#1b130b;border-color:var(--bronze)}
+.cal .d.silver{background:var(--silver);color:#1b130b;border-color:var(--silver)}
+.cal .d.gold{background:var(--goldm);color:#1b130b;border-color:var(--goldm);box-shadow:0 0 8px rgba(240,194,76,.45)}
+.cal .d.some{border-color:var(--line-hi);color:var(--muted)}
+.cal .d.future{opacity:.35}
+.cal .d.today{outline:1px solid var(--gold);outline-offset:2px}
+.cal .w{display:grid;place-items:center}
+.cal .w .coin{width:22px;height:22px;font-size:9px}
+.cal .w .none{width:22px;height:22px;border-radius:50%;border:1px dashed var(--line)}
+.week .in{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.achs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ach{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:12px 6px;border:1px solid var(--line);background:var(--panel);width:100%}
+.ach .badge{width:52px;height:58px;display:grid;place-items:center;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--line);position:relative}
+.ach .badge::before{content:"";position:absolute;inset:3px;clip-path:inherit;background:var(--inset)}
+.ach .badge svg{position:relative;width:22px;height:22px;color:var(--faint)}
+.ach .an{font-size:13px;font-weight:700;line-height:1.15;color:var(--faint)}
+.ach .ad{font-size:11px;color:var(--faint);line-height:1.25}
+.ach.got .an{color:var(--fg)} .ach.got .ad{color:var(--muted)}
+.ach.got.t-bronze .badge{background:var(--bronze)} .ach.got.t-bronze svg{color:var(--bronze)}
+.ach.got.t-silver .badge{background:var(--silver)} .ach.got.t-silver svg{color:var(--silver)}
+.ach.got.t-gold .badge{background:var(--goldm)} .ach.got.t-gold svg{color:var(--goldm)}
+.ach.got.t-red .badge{background:var(--red)} .ach.got.t-red svg{color:var(--red-hi)}
+.ach:not(.got) .badge{opacity:.6}
+
+/* Hero screen */
+.profile .in{padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.profile .portrait{width:120px;height:120px}
+.profile .portrait>div{font-size:46px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid var(--line-hi);background:var(--inset);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:13px;color:var(--fg)}
+.btn.primary{background:linear-gradient(180deg,var(--red),var(--red-deep));border-color:var(--red-hi)}
+.btn.gold{color:var(--gold);border-color:#6b5420}
+.btn.danger{color:#ff8d7b;border-color:#6e2a20}
+.btn.block{width:100%}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px}
+.btnrow .btn{flex:1 1 140px}
+.field{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%}
+.field label{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select,.field textarea{width:100%;min-height:44px;padding:10px 12px;background:var(--inset);border:1px solid var(--line-hi);border-radius:2px;font-size:16px}
+.field textarea{min-height:120px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.hint{font-size:13px;color:var(--muted)}
+.mrow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid var(--line);background:var(--panel)}
+.mrow:first-child{border-top:0}
+.mrow .sigil{width:34px;height:34px}.mrow .sigil svg{width:16px;height:16px}
+.mrow .mm{flex:1;min-width:0}
+.mrow .mm b{display:block;font-size:15px}
+.mrow .mm span{font-size:13px;color:var(--muted)}
+.mrow .btn{min-height:36px;padding:0 12px;font-size:12px}
+.mlist{border:1px solid var(--line);display:flex;flex-direction:column}
+.retired{opacity:.5}
+
+/* Sheets & celebrations */
+.backdrop{position:fixed;inset:0;z-index:40;background:rgba(5,3,2,.72);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s ease}
+.sheet{width:100%;max-width:560px;max-height:88vh;overflow:auto;background:linear-gradient(180deg,#221b18,#151110);border-top:1px solid var(--gold);
+  padding:20px max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  display:flex;flex-direction:column;gap:14px;animation:rise .25s cubic-bezier(.2,.8,.2,1)}
+.sheet h2{font-size:20px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line-hi)}
+.seg button{min-height:44px;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--inset)}
+.seg button[aria-pressed="true"]{background:var(--red-deep);color:var(--fg)}
+.icons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.icons button{aspect-ratio:1;display:grid;place-items:center;border:1px solid var(--line);background:var(--inset);color:var(--muted)}
+.icons button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.icons svg{width:20px;height:20px}
+
+.celebrate{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,rgba(120,26,14,.85),rgba(5,3,2,.92) 70%);animation:fade .25s ease;padding:24px}
+.celebrate .box{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+.celebrate .kicker{color:var(--gold);font-weight:700;letter-spacing:.3em;text-transform:uppercase;font-size:13px}
+.celebrate .big{font-family:var(--display);font-size:64px;font-weight:700;line-height:1;color:var(--fg);text-shadow:0 0 30px rgba(242,205,120,.5)}
+.celebrate .what{font-family:var(--display);font-size:22px}
+.celebrate .rays{position:absolute;width:420px;height:420px;max-width:100%;border-radius:50%;background:repeating-conic-gradient(rgba(242,205,120,.14) 0 6deg,rgba(0,0,0,0) 6deg 18deg);animation:spin 14s linear infinite;z-index:-1;pointer-events:none}
+.celebrate .tap{margin-top:16px;font-size:12px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+.toasts{position:fixed;left:0;right:0;top:calc(10px + env(safe-area-inset-top, 0px));z-index:70;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px}
+.toast{max-width:420px;width:100%;display:flex;gap:12px;align-items:center;padding:10px 14px;background:linear-gradient(180deg,#2a201b,#171211);border:1px solid var(--gold);box-shadow:0 8px 30px rgba(0,0,0,.6);animation:drop .35s cubic-bezier(.2,1.2,.4,1)}
+.toast .badge{width:34px;height:38px;flex:none;display:grid;place-items:center;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--gold);color:#1b130b}
+.toast .badge svg{width:18px;height:18px}
+.toast b{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.toast span{font-size:15px;font-weight:700}
+.floatxp{white-space:nowrap;position:fixed;z-index:65;pointer-events:none;font-family:var(--display);font-weight:700;font-size:20px;color:var(--gold-hi);text-shadow:0 2px 8px rgba(0,0,0,.8);animation:floatup 1.1s ease-out forwards}
+@keyframes floatup{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-60px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes rise{from{transform:translateY(40px);opacity:0}}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+@keyframes drop{from{transform:translateY(-20px);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media (max-width:360px){.achs{grid-template-columns:repeat(2,minmax(0,1fr))}.hero .in{gap:10px}.portrait{width:64px;height:64px}}
+</style>
+
+<div id="app"></div>
+<div class="tabs"><nav id="tabs" aria-label="Main"></nav></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* ============ Rules (tweak here) ============ */
+const RULES = {
+  charBase: 300,        // XP from level 1 to 2
+  skillBase: 100,       // XP from skill level 1 to 2
+  growth: 1.5,          // each level needs 1.5x the previous...
+  roundTo: 50,          // ...rounded up to the nearest 50
+  streakShort: {days: 2, bonus: 0.10},
+  streakLong:  {days: 7, bonus: 0.20},
+  medals: {bronze: 0.50, silver: 0.75, gold: 0.90}
+};
+const DEMO = !!window.XP_DEMO;
+const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
+
+/* ============ Icons ============ */
+const ICONS = {
+  guitar:'<circle cx="8" cy="16" r="5"/><circle cx="8" cy="16" r="1.3"/><path d="M11.6 12.4 19.5 4.5"/><path d="M17.8 2.8l3.4 3.4"/>',
+  bolt:'<path d="M13 2.5 5.5 13.5h5.5l-1 8 7.5-11h-5.5z"/>',
+  mountain:'<path d="M2 20.5 9 8l4 6.5 2.8-4L22 20.5z"/><path d="m7.2 11.2 1.8 1.6 1.4-1.4"/>',
+  book:'<path d="M3.5 5.5c3-1.2 6-1.2 8.5.8 2.5-2 5.5-2 8.5-.8v13.2c-3-1.2-6-1.2-8.5.8-2.5-2-5.5-2-8.5-.8z"/><path d="M12 6.3v13.2"/>',
+  sword:'<path d="M20.5 3.5 9.5 14.5"/><path d="M20.5 3.5v4.2M20.5 3.5h-4.2"/><path d="m6.5 12.5 5 5"/><path d="m4 20 4-4"/>',
+  flame:'<path d="M12 2.8c.8 3.8 6 5.6 6 11.2a6 6 0 0 1-12 0c0-3 1.8-4.8 3-6 .2 2 1 3 2.2 3.2.2-3.2-.8-5.6.8-8.4z"/>',
+  heart:'<path d="M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.3a4.2 4.2 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z"/>',
+  star:'<path d="m12 2.8 2.7 5.7 6.2.8-4.6 4.3 1.2 6.2L12 16.8l-5.5 3 1.2-6.2-4.6-4.3 6.2-.8z"/>',
+  shield:'<path d="M12 2.8 20 6v6c0 5-3.4 8.2-8 9.2-4.6-1-8-4.2-8-9.2V6z"/>',
+  potion:'<path d="M9.5 2.8h5M10.2 2.8v5.4L5 17.2A3 3 0 0 0 7.6 21.5h8.8a3 3 0 0 0 2.6-4.3l-5.2-9V2.8"/><path d="M7 15h10"/>',
+  dumbbell:'<path d="M6.5 6.5v11M3.5 9v6M17.5 6.5v11M20.5 9v6M6.5 12h11"/>',
+  leaf:'<path d="M5 19.5C5 10.5 10.5 4.8 20.5 4c-.8 10-6.5 15.5-15.5 15.5z"/><path d="m5 19.5 8.5-8.5"/>',
+  // UI
+  check:'<path d="m5 12.5 4.5 4.5L19 7.5" stroke-width="3"/>',
+  left:'<path d="m15 5-7 7 7 7"/>', right:'<path d="m9 5 7 7-7 7"/>',
+  quests:'<path d="M6 3.5h10.5a2 2 0 0 1 2 2V19a1.5 1.5 0 0 0 3 0v-1.5H8.5"/><path d="M6 3.5a2.5 2.5 0 0 0-2.5 2.5v1h3"/><path d="M6 3.5v14a3 3 0 0 0 3 3h11"/><path d="M9.5 8h5.5M9.5 11.5h5.5"/>',
+  skills:'<path d="M12 2.8 20 7.4v9.2L12 21.2 4 16.6V7.4z"/><path d="M12 7.5v9M7.8 10l8.4 4M16.2 10l-8.4 4"/>',
+  trophy:'<path d="M7.5 3.5h9v5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 5.5H4.5a3 3 0 0 0 3 4M16.5 5.5h3a3 3 0 0 1-3 4"/><path d="M12 13v3.5M8.5 20.5h7l-1-4h-5z"/>',
+  hero:'<circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4.5 4-7 8-7s7.2 2.5 8 7"/>',
+  crown:'<path d="m3.5 8 4.5 4 4-7 4 7 4.5-4-2 11h-13z"/>',
+  hourglass:'<path d="M6.5 2.8h11M6.5 21.2h11M7.5 2.8c0 5 9 6 9 9.2s-9 4.2-9 9.2M16.5 2.8c0 5-9 6-9 9.2s9 4.2 9 9.2"/>',
+};
+const SKILL_ICONS = ['guitar','bolt','mountain','book','sword','flame','heart','star','shield','potion','dumbbell','leaf'];
+function svg(name, extra){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra||''}>${ICONS[name]||ICONS.star}</svg>`; }
+
+/* ============ Dates ============ */
+const pad = n => String(n).padStart(2,'0');
+const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseKey = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y, m-1, d); };
+const addDays = (k, n) => { const d = parseKey(k); d.setDate(d.getDate()+n); return keyOf(d); };
+const todayKey = () => keyOf(new Date());
+const weekStart = k => { const d = parseKey(k); const off = (d.getDay()+6)%7; d.setDate(d.getDate()-off); return keyOf(d); }; // Monday
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function niceDate(k){ const d=parseKey(k); return `${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]}, ${MON[d.getMonth()]} ${d.getDate()}`; }
+
+/* ============ Helpers ============ */
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Math.round(n).toLocaleString('en-US');
+function fmtMin(m){ m=m||0; const h=Math.floor(m/60), r=m%60; if(!h) return `${r}m`; return r? `${h}h ${r}m` : `${h}h`; }
+const uid = p => p + '_' + Math.random().toString(36).slice(2,8);
+const $ = s => document.querySelector(s);
+
+/* ============ Defaults ============ */
+function defaultState(){
+  const t = todayKey();
+  return {
+    v: 1, created: t,
+    profile: { name: '', portrait: '', title: '' },
+    skills: [
+      { id:'guitar',   name:'Guitar',        icon:'guitar',   titles:['Bard','Virtuoso'] },
+      { id:'running',  name:'Running',       icon:'bolt',     titles:['Fleetfoot','Windrunner'] },
+      { id:'climbing', name:'Rock Climbing', icon:'mountain', titles:['Cliffwalker','Mountain-Born'] },
+      { id:'reading',  name:'Reading',       icon:'book',     titles:['Scholar','Sage'] },
+    ],
+    tasks: [
+      { id:'t_guitar', name:'Practice guitar', skill:'guitar',   type:'timed', xp:10, unit:30, target:60, created:'2000-01-01' },
+      { id:'t_run',    name:'Go for a run',    skill:'running',  type:'once',  xp:30, created:'2000-01-01' },
+      { id:'t_climb',  name:'Rock climbing',   skill:'climbing', type:'once',  xp:30, created:'2000-01-01' },
+      { id:'t_read',   name:'Read',            skill:'reading',  type:'timed', xp:10, unit:30, target:30, created:'2000-01-01' },
+    ],
+    log: {}
+  };
+}
+function demoState(){
+  const s = defaultState(); const t = todayKey();
+  s.profile.name = 'Sample Hero';
+  let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+  const days = 26; s.created = addDays(t, -days);
+  for(let i=days; i>=1; i--){
+    const k = addDays(t, -i), e = {}, dow = parseKey(k).getDay();
+    if(i <= 9 || rnd() < .6) e.t_guitar = 30 * (1 + Math.floor(rnd()*3));
+    if(rnd() < .5 || (i<=4)) e.t_run = 1;
+    if(dow===2 || dow===6 || (dow===4 && rnd()<.5)) e.t_climb = 1;
+    if(rnd() < .75) e.t_read = 30 * (1 + Math.floor(rnd()*2));
+    s.log[k] = e;
+  }
+  s.log[t] = { t_guitar: 30 };
+  return s;
+}
+function migrate(s){
+  const d = defaultState();
+  s.profile = Object.assign({}, d.profile, s.profile||{});
+  s.skills = s.skills || d.skills; s.tasks = s.tasks || d.tasks; s.log = s.log || {};
+  s.created = s.created || todayKey();
+  return s;
+}
+function load(){ try{ const raw = localStorage.getItem(STORE_KEY); if(raw) return migrate(JSON.parse(raw)); }catch(e){} return null; }
+let saveWarned = false;
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){ if(!saveWarned){ saveWarned = true; toast('Not saved','This browser is blocking storage, so progress will reset when you close it.','shield'); } } }
+
+let state = load();
+let firstRun = false;
+if(!state){ state = DEMO ? demoState() : defaultState(); firstRun = !DEMO; save(); }
+
+/* ============ Engine ============ */
+function stepUp(r){ return Math.ceil(r*RULES.growth/RULES.roundTo)*RULES.roundTo; }
+function levelInfo(xp, base){ let lvl=1, rem=xp, req=base; while(rem>=req){ rem-=req; lvl++; req=stepUp(req); } return {level:lvl, into:rem, need:req, total:xp}; }
+function multFor(streak){ if(streak>=RULES.streakLong.days) return 1+RULES.streakLong.bonus; if(streak>=RULES.streakShort.days) return 1+RULES.streakShort.bonus; return 1; }
+function baseXP(t, val){ if(!val) return 0; return t.type==='once' ? t.xp : Math.floor(val/t.unit)*t.xp; }
+function possibleXP(t){ return t.type==='once' ? t.xp : Math.floor((t.target||t.unit)/t.unit)*t.xp; }
+function isActive(t, k){ return (t.created||'0000') <= k && (!t.retired || k < t.retired); }
+function medalFor(r){ const m=RULES.medals; return r>=m.gold?'gold':r>=m.silver?'silver':r>=m.bronze?'bronze':''; }
+const skillById = id => state.skills.find(s=>s.id===id) || {id, name:'Unknown', icon:'star', titles:[]};
+
+function achDefs(){
+  const L = [
+    {id:'first',     name:'First Steps',       desc:'Complete your first quest',          icon:'star',   tier:'bronze', test:c=>c.quests>=1},
+    {id:'streak3',   name:'Kindling',          desc:'Any streak reaches 3 days',          icon:'flame',  tier:'bronze', test:c=>c.bestStreak>=3},
+    {id:'streak7',   name:'Steady Flame',      desc:'Any streak reaches 7 days',          icon:'flame',  tier:'silver', test:c=>c.bestStreak>=7},
+    {id:'streak14',  name:'Hearthfire',        desc:'Any streak reaches 14 days',         icon:'flame',  tier:'silver', test:c=>c.bestStreak>=14},
+    {id:'streak30',  name:'The Unbroken',      desc:'Any streak reaches 30 days',         icon:'flame',  tier:'gold',   test:c=>c.bestStreak>=30},
+    {id:'streak100', name:'Eternal Flame',     desc:'Any streak reaches 100 days',        icon:'flame',  tier:'red',    test:c=>c.bestStreak>=100},
+    {id:'bronze1',   name:'Bronze Day',        desc:'Earn your first bronze day',         icon:'shield', tier:'bronze', test:c=>c.medals.bronze+c.medals.silver+c.medals.gold>=1},
+    {id:'silver1',   name:'Silver Day',        desc:'Earn your first silver day',         icon:'shield', tier:'silver', test:c=>c.medals.silver+c.medals.gold>=1},
+    {id:'gold1',     name:'Golden Hour',       desc:'Earn your first gold day',           icon:'shield', tier:'gold',   test:c=>c.medals.gold>=1},
+    {id:'gold7',     name:'Seven Suns',        desc:'Earn 7 gold days',                   icon:'star',   tier:'gold',   test:c=>c.medals.gold>=7},
+    {id:'gold30',    name:'The Gilded',        desc:'Earn 30 gold days',                  icon:'crown',  tier:'red',    test:c=>c.medals.gold>=30},
+    {id:'perfect',   name:'Flawless',          desc:'Earn 100% of a day’s XP',       icon:'star',   tier:'gold',   test:c=>c.perfect>=1},
+    {id:'weekgold',  name:'Week of Legends',   desc:'Earn a gold week',                   icon:'crown',  tier:'gold',   test:c=>c.weekMedals.gold>=1},
+    {id:'weeksilver',name:'Silver Week',       desc:'Earn a silver week or better',       icon:'crown',  tier:'silver', test:c=>c.weekMedals.gold+c.weekMedals.silver>=1},
+    {id:'allskills', name:'Of Many Talents',   desc:'Train every skill in one day',       icon:'skills', tier:'silver', test:c=>c.allSkillsDay},
+    {id:'lvl5',      name:'Rising Star',       desc:'Reach character level 5',            icon:'hero',   tier:'bronze', test:c=>c.level>=5},
+    {id:'lvl10',     name:'Seasoned',          desc:'Reach character level 10',           icon:'hero',   tier:'silver', test:c=>c.level>=10},
+    {id:'lvl15',     name:'Paragon',           desc:'Reach character level 15',           icon:'hero',   tier:'gold',   test:c=>c.level>=15},
+    {id:'xp1k',      name:'Thousandfold',      desc:'Earn 1,000 total XP',                icon:'potion', tier:'bronze', test:c=>c.total>=1000},
+    {id:'xp10k',     name:'Hoard of Ages',     desc:'Earn 10,000 total XP',               icon:'potion', tier:'gold',   test:c=>c.total>=10000},
+  ];
+  for(const s of state.skills){
+    const timed = state.tasks.some(t=>t.skill===s.id && t.type==='timed');
+    const marks = timed ? [[10,'bronze'],[50,'silver'],[100,'gold']] : [[10,'bronze'],[50,'silver'],[100,'gold']];
+    for(const [n,tier] of marks){
+      L.push(timed
+        ? {id:`h_${s.id}_${n}`, name:`${s.name}: ${n} Hours`, desc:`Log ${n} hours of ${s.name.toLowerCase()}`, icon:s.icon, tier, test:c=>(c.skillMin[s.id]||0)>=n*60}
+        : {id:`n_${s.id}_${n}`, name:`${s.name} ×${n}`, desc:`Complete ${n} ${s.name.toLowerCase()} sessions`, icon:s.icon, tier, test:c=>(c.skillCount[s.id]||0)>=n});
+    }
+  }
+  return L;
+}
+
+function compute(){
+  const today = todayKey();
+  let start = state.created || today;
+  for(const k in state.log) if(k < start) start = k;
+  const tasks = state.tasks, defs = achDefs();
+  const streak = {}, best = {}, prevStreak = {};
+  tasks.forEach(t=>{ streak[t.id]=0; best[t.id]=0; });
+  const skillXP = {}, skillMin = {}, skillCount = {}, skillBest = {}, skillStreak = {};
+  state.skills.forEach(s=>{ skillXP[s.id]=0; skillMin[s.id]=0; skillCount[s.id]=0; skillBest[s.id]=0; skillStreak[s.id]=0; });
+  const days = {}, ach = {};
+  const c = { quests:0, bestStreak:0, medals:{bronze:0,silver:0,gold:0}, weekMedals:{bronze:0,silver:0,gold:0}, perfect:0, allSkillsDay:false, level:1, total:0, skillMin, skillCount };
+  let wkE=0, wkP=0; const weeks = {};
+  for(let k = start; k <= today; k = addDays(k,1)){
+    if(parseKey(k).getDay()===1){ wkE=0; wkP=0; }
+    const e = state.log[k] || {};
+    let earned=0, possible=0, xp=0; const items = {}; const hit = new Set();
+    for(const t of tasks){
+      const val = e[t.id] || 0, active = isActive(t,k);
+      if(active) possible += possibleXP(t);
+      prevStreak[t.id] = streak[t.id];
+      streak[t.id] = val>0 ? streak[t.id]+1 : 0;
+      best[t.id] = Math.max(best[t.id], streak[t.id]);
+      const b = baseXP(t,val), m = val>0 ? multFor(streak[t.id]) : 1, x = Math.round(b*m);
+      items[t.id] = {val, base:b, xp:x, streak:streak[t.id], mult:m};
+      if(val>0){
+        if(active) earned += Math.min(b, possibleXP(t));
+        xp += x; c.total += x; c.quests++;
+        if(skillXP[t.skill]==null){ skillXP[t.skill]=0; skillMin[t.skill]=0; skillCount[t.skill]=0; }
+        skillXP[t.skill] += x; skillCount[t.skill]++; if(t.type==='timed') skillMin[t.skill] += val;
+        hit.add(t.skill);
+      }
+    }
+    // skill-level streaks (any quest of that skill)
+    for(const s of state.skills){ skillStreak[s.id] = hit.has(s.id) ? (skillStreak[s.id]||0)+1 : (k===today ? skillStreak[s.id] : 0); skillBest[s.id] = Math.max(skillBest[s.id]||0, skillStreak[s.id]); }
+    c.bestStreak = Math.max(c.bestStreak, ...tasks.map(t=>best[t.id]), 0);
+    const ratio = possible ? earned/possible : 0, medal = medalFor(ratio);
+    days[k] = {earned, possible, xp, ratio, medal, items};
+    if(k !== today && medal) c.medals[medal]++;
+    if(k === today && medal) c.medals[medal]++; // today's medal counts as soon as it's earned
+    if(ratio>=1) c.perfect++;
+    if(state.skills.length && state.skills.every(s=>hit.has(s.id))) c.allSkillsDay = true;
+    wkE += earned; wkP += possible;
+    if(parseKey(k).getDay()===0){ const wr = wkP? wkE/wkP:0, wm = medalFor(wr); weeks[weekStart(k)] = {ratio:wr, medal:wm}; if(wm) c.weekMedals[wm]++; }
+    c.level = levelInfo(c.total, RULES.charBase).level;
+    for(const d of defs) if(!ach[d.id] && d.test(c)) ach[d.id] = k;
+  }
+  // current streaks: alive if done today or yesterday
+  const cur = {}, nextMult = {};
+  const todayDone = id => (state.log[today]||{})[id] > 0;
+  for(const t of tasks){
+    const s = todayDone(t.id) ? streak[t.id] : prevStreak[t.id] || 0;
+    cur[t.id] = s;
+    nextMult[t.id] = todayDone(t.id) ? days[today].items[t.id].mult : multFor((prevStreak[t.id]||0)+1);
+  }
+  const skills = {};
+  for(const s of state.skills) skills[s.id] = Object.assign(levelInfo(skillXP[s.id]||0, RULES.skillBase), {minutes:skillMin[s.id]||0, count:skillCount[s.id]||0, best:skillBest[s.id]||0, streak:skillStreak[s.id]||0});
+  return { today, start, days, weeks, char: levelInfo(c.total, RULES.charBase), skills, cur, best, nextMult, ach, defs, c };
+}
+
+function titleDefs(R){
+  const T = [
+    {id:'L1', name:'Wanderer', how:'Level 1', ok:R.char.level>=1},
+    {id:'L3', name:'Adventurer', how:'Level 3', ok:R.char.level>=3},
+    {id:'L5', name:'Pathfinder', how:'Level 5', ok:R.char.level>=5},
+    {id:'L7', name:'Wayfarer of Renown', how:'Level 7', ok:R.char.level>=7},
+    {id:'L10', name:'Champion', how:'Level 10', ok:R.char.level>=10},
+    {id:'L13', name:'Hero of the Realm', how:'Level 13', ok:R.char.level>=13},
+    {id:'L16', name:'Legend', how:'Level 16', ok:R.char.level>=16},
+    {id:'L20', name:'Mythic', how:'Level 20', ok:R.char.level>=20},
+  ];
+  for(const s of state.skills){
+    const lv = (R.skills[s.id]||{level:1}).level;
+    const [a,b] = s.titles && s.titles.length ? s.titles : [`Adept of ${s.name}`, `Master of ${s.name}`];
+    T.push({id:`S5_${s.id}`, name:a, how:`${s.name} level 5`, ok:lv>=5, skill:s.id});
+    T.push({id:`S10_${s.id}`, name:b, how:`${s.name} level 10`, ok:lv>=10, skill:s.id});
+  }
+  T.push({id:'A_streak30', name:'the Unbroken', how:'30-day streak', ok:!!R.ach.streak30});
+  T.push({id:'A_gold30', name:'the Gilded', how:'30 gold days', ok:!!R.ach.gold30});
+  T.push({id:'A_perfect', name:'the Flawless', how:'A 100% day', ok:!!R.ach.perfect});
+  T.push({id:'A_all', name:'of Many Talents', how:'Every skill in one day', ok:!!R.ach.allskills});
+  return T;
+}
+function currentTitle(R){
+  const T = titleDefs(R);
+  const chosen = T.find(t=>t.id===state.profile.title && t.ok);
+  if(chosen) return chosen.name;
+  return T.filter(t=>t.id[0]==='L' && t.ok).pop().name;
+}
+
+/* ============ UI state ============ */
+let R = compute();
+let view = 'today', viewDate = R.today, skillView = null;
+try{ const v = sessionStorage.getItem('hl-view'); if(v && ['today','skills','trophies','hero'].includes(v)) view = v; }catch(e){}
+const barMem = {};
+
+function bar(id, pct, cls){
+  pct = Math.max(0, Math.min(100, pct));
+  const from = barMem[id]!=null ? barMem[id] : pct;
+  return `<div class="bar ${cls||''}"><i data-bar="${id}" data-w="${pct}" style="width:${from}%"></i></div>`;
+}
+function settleBars(){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('[data-bar]').forEach(el=>{ el.style.width = el.dataset.w + '%'; barMem[el.dataset.bar] = +el.dataset.w; });
+  }));
+}
+function portraitHTML(){
+  const p = state.profile;
+  const init = esc((p.name||'?').trim().charAt(0).toUpperCase() || '?');
+  return p.portrait ? `<div class="portrait"><div style="background-image:url('${p.portrait}')" role="img" aria-label="Portrait"></div></div>` : `<div class="portrait"><div aria-hidden="true">${init}</div></div>`;
+}
+function heroHeader(){
+  const ch = R.char;
+  return `<section class="frame gold hero"><div class="in">
+    ${portraitHTML()}
+    <div class="hero-name"><h1>${esc(state.profile.name || 'Unnamed Hero')}</h1><div class="title">${esc(currentTitle(R))}</div></div>
+    <div class="lvl-shield" aria-label="Level ${ch.level}"><span><span class="l">LEVEL</span><span class="n num">${ch.level}</span></span></div>
+    <div class="xp">${bar('char', ch.into/ch.need*100)}
+      <div class="xp-row num"><span><b>${fmt(ch.into)}</b> / ${fmt(ch.need)} XP</span><span>${fmt(ch.need-ch.into)} to Level ${ch.level+1}</span></div></div>
+  </div></section>`;
+}
+
+/* ============ Views ============ */
+function viewToday(){
+  const k = viewDate, d = R.days[k] || {earned:0, possible:0, xp:0, ratio:0, medal:'', items:{}};
+  const isToday = k === R.today;
+  const pct = d.possible ? Math.min(100, d.ratio*100) : 0;
+  const m = RULES.medals;
+  let next = '';
+  if(!d.possible) next = 'No quests scheduled';
+  else if(d.ratio < m.bronze) next = `${fmt(Math.ceil(m.bronze*d.possible - d.earned))} XP to Bronze`;
+  else if(d.ratio < m.silver) next = `${fmt(Math.ceil(m.silver*d.possible - d.earned))} XP to Silver`;
+  else if(d.ratio < m.gold)   next = `${fmt(Math.ceil(m.gold*d.possible - d.earned))} XP to Gold`;
+  else next = d.ratio>=1 ? 'Flawless day' : 'Gold secured';
+  const medalChip = d.medal ? `<span class="chip ${d.medal}"><span class="dot"></span>${d.medal} day</span>` : `<span class="chip"><span class="dot"></span>No medal yet</span>`;
+  const tasks = state.tasks.filter(t=>isActive(t,k));
+  const rows = tasks.map(t=>questRow(t, k, d)).join('');
+  return `
+  ${DEMO ? `<div class="banner"><span>You’re viewing <b>sample progress</b>.</span><button class="linkbtn" data-act="reset-ask">Start fresh</button></div>` : ''}
+  ${heroHeader()}
+  <section class="frame day"><div class="in">
+    <div class="day-nav">
+      <button class="iconbtn" data-act="day" data-n="-1" aria-label="Previous day">${svg('left')}</button>
+      <h2>${isToday ? 'Today' : esc(niceDate(k).split(',')[0])}<span class="sub">${esc(niceDate(k).split(', ')[1])}${isToday?'':' · past day'}</span></h2>
+      <button class="iconbtn" data-act="day" data-n="1" aria-label="Next day" ${isToday?'disabled':''}>${svg('right')}</button>
+    </div>
+    <div class="medal-line"><span class="num"><b>${fmt(d.earned)}</b> <span class="muted">of ${fmt(d.possible)} XP</span></span>${medalChip}</div>
+    <div class="medalbar">${bar('day-'+k, pct, 'goldfill')}
+      <div class="ticks">${['bronze','silver','gold'].map(x=>`<span class="tick ${d.ratio>=m[x]?'hit':''}" style="left:${m[x]*100}%">${x==='bronze'?'B':x==='silver'?'S':'G'}</span>`).join('')}</div>
+    </div>
+    <div class="medal-line"><span class="muted" style="font-size:13px">${esc(next)}</span>${d.xp ? `<span class="num" style="font-size:13px"><b style="color:var(--gold)">+${fmt(d.xp)}</b> <span class="muted">XP with bonuses</span></span>`:''}</div>
+    ${isToday ? '' : `<button class="linkbtn" data-act="today" style="align-self:center">Back to today</button>`}
+  </div></section>
+  <div class="rule">Daily Quests</div>
+  <div class="quests">${rows || `<p class="muted">No quests yet. Add one from the Hero tab.</p>`}</div>`;
+}
+function questRow(t, k, d){
+  const it = d.items[t.id] || {val:0, xp:0, streak:0, mult:1};
+  const s = skillById(t.skill), done = it.val>0;
+  const isToday = k===R.today;
+  const streakN = isToday ? R.cur[t.id] : it.streak;
+  const mult = isToday ? (done ? it.mult : R.nextMult[t.id]) : it.mult;
+  const bonusPct = Math.round((mult-1)*100);
+  const streakHTML = streakN>0 ? `<span class="streak ${streakN>=7?'hot':''}">${svg('flame')}<span class="num">${streakN}-day</span></span>` : '';
+  const bonusHTML = bonusPct && (done || isToday) ? `<span class="bonus">+${bonusPct}%</span>` : '';
+  const shownXP = done ? it.xp : Math.round((t.type==='once'?t.xp:t.xp)*mult);
+  let ctrl;
+  if(t.type==='once'){
+    ctrl = `<div class="ctrlcol"><button class="check" data-act="toggle" data-id="${t.id}" aria-pressed="${done}" aria-label="${esc(t.name)}: ${done?'done':'not done'}">${svg('check')}</button></div>`;
+  } else {
+    ctrl = `<div class="ctrlcol"><div class="stepper">
+      <button data-act="step" data-id="${t.id}" data-n="-1" aria-label="Less time" ${it.val?'':'disabled'}>−</button>
+      <output class="num">${fmtMin(it.val)}</output>
+      <button data-act="step" data-id="${t.id}" data-n="1" aria-label="More time">+</button></div></div>`;
+  }
+  const meta = t.type==='once'
+    ? `<span class="xpchip num">${fmt(shownXP)}<small> XP</small></span>`
+    : `<span class="xpchip num">${done ? fmt(it.xp) : fmt(Math.round(t.xp*mult))}<small> XP${done?'':' / '+t.unit+'m'}</small></span>`;
+  const goal = t.type==='timed' ? `<span>Goal ${fmtMin(t.target)}</span>` : '';
+  return `<article class="frame quest ${done?'done is-done':''}"><div class="in">
+    <div class="sigil">${svg(s.icon)}</div>
+    <div class="qmain"><div class="qname">${esc(t.name)}</div>
+      <div class="qmeta">${meta}<span>${esc(s.name)}</span>${goal}${streakHTML}${bonusHTML}</div></div>
+    ${ctrl}</div></article>`;
+}
+
+function viewSkills(){
+  if(skillView) return viewSkill(skillView);
+  const cards = state.skills.map(s=>{
+    const L = R.skills[s.id];
+    return `<button class="frame skillcard" data-act="skill" data-id="${s.id}"><div class="in">
+      <div class="skillhead"><div class="sigil">${svg(s.icon)}</div><div class="skillname">${esc(s.name)}</div></div>
+      <div class="skilllvl"><span class="label">Level</span><b class="num">${L.level}</b></div>
+      ${bar('sk-'+s.id, L.into/L.need*100, 'thin')}
+      <div class="xp-row num" style="font-size:12px"><span>${fmt(L.into)} / ${fmt(L.need)}</span><span>${fmt(L.total)} total</span></div>
+    </div></button>`;
+  }).join('');
+  return `${heroHeader()}<div class="rule">Skills</div><div class="grid2">${cards}</div>
+  <p class="hint" style="text-align:center">Skill XP also counts toward your character level.</p>`;
+}
+function viewSkill(id){
+  const s = skillById(id), L = R.skills[id] || levelInfo(0,RULES.skillBase);
+  const tasks = state.tasks.filter(t=>t.skill===id);
+  const timed = tasks.some(t=>t.type==='timed');
+  // last 28 days heat, aligned to weeks
+  const end = R.today, startK = addDays(weekStart(end), -21);
+  const cells = []; let maxXP = 1;
+  for(let k=startK; k<=addDays(weekStart(end),6); k=addDays(k,1)){
+    const d = R.days[k]; let x = 0;
+    if(d) for(const t of tasks) x += (d.items[t.id]||{}).xp||0;
+    maxXP = Math.max(maxXP, x); cells.push([k,x]);
+  }
+  const heat = cells.map(([k,x])=>{
+    const fut = k > end, a = x ? .25 + .75*(x/maxXP) : 0;
+    return `<i class="${k===end?'today':''}" title="${k}: ${x} XP" style="${x?`background:rgba(201,48,28,${a.toFixed(2)});border-color:rgba(229,69,46,${a.toFixed(2)})`:''}${fut?';opacity:.3':''}"></i>`;
+  }).join('');
+  const recent = [];
+  for(let k=R.today; k>=R.start && recent.length<8; k=addDays(k,-1)){
+    const d = R.days[k]; if(!d) continue;
+    for(const t of tasks){ const it=d.items[t.id]; if(it && it.val) recent.push(`<div><span>${esc(niceDate(k))}<br><span class="muted" style="font-size:13px">${esc(t.name)}${t.type==='timed'?' · '+fmtMin(it.val):''}</span></span><b class="num" style="color:var(--gold)">+${it.xp}</b></div>`); }
+  }
+  const titles = titleDefs(R).filter(t=>t.skill===id);
+  return `<button class="back" data-act="skills-back">${svg('left')}All skills</button>
+  <section class="frame gold detailhead"><div class="in">
+    <div class="top"><div class="sigil">${svg(s.icon)}</div><div style="flex:1;min-width:0"><div class="label">Skill</div><h1>${esc(s.name)}</h1></div>
+      <div class="lvl-shield"><span><span class="l">LEVEL</span><span class="n num">${L.level}</span></span></div></div>
+    ${bar('skd-'+id, L.into/L.need*100)}
+    <div class="xp-row num"><span><b>${fmt(L.into)}</b> / ${fmt(L.need)} XP</span><span>${fmt(L.need-L.into)} to Level ${L.level+1}</span></div>
+  </div></section>
+  <div class="stats">
+    <div class="stat"><b class="num">${fmt(L.total)}</b><span>Total XP</span></div>
+    <div class="stat"><b class="num">${timed ? fmtMin(L.minutes) : fmt(L.count)}</b><span>${timed?'Time logged':'Sessions'}</span></div>
+    <div class="stat"><b class="num">${L.streak}</b><span>Current streak</span></div>
+    <div class="stat"><b class="num">${L.best}</b><span>Best streak</span></div>
+  </div>
+  <div class="rule">Last 4 weeks</div>
+  <div style="display:flex;flex-direction:column;gap:6px"><div class="heatlabels">${['M','T','W','T','F','S','S'].map(x=>`<span>${x}</span>`).join('')}</div><div class="heat">${heat}</div></div>
+  <div class="rule">Titles</div>
+  <div class="titlechips">${titles.map(t=>`<span class="tchip ${t.ok?'got':''}">${esc(t.name)} <span class="muted" style="font-weight:400">· ${esc(t.how)}</span></span>`).join('')}</div>
+  <div class="rule">Recent</div>
+  <div class="list">${recent.join('') || '<div><span class="muted">Nothing logged yet.</span></div>'}</div>`;
+}
+
+function viewTrophies(){
+  const c = R.c;
+  // current week
+  const ws = weekStart(R.today); let e=0, p=0;
+  const todayPossible = state.tasks.filter(t=>isActive(t,R.today)).reduce((a,t)=>a+possibleXP(t),0);
+  for(let i=0;i<7;i++){ const k=addDays(ws,i); const d=R.days[k]; if(d){ e+=d.earned; p+=d.possible; } else if(k>R.today) p+=todayPossible; }
+  const wr = p? e/p : 0, wm = medalFor(wr);
+  // calendar: 5 weeks
+  const calStart = addDays(ws, -28);
+  let cal = ['M','T','W','T','F','S','S',''].map(x=>`<span class="h">${x}</span>`).join('');
+  for(let w=0; w<5; w++){
+    const wk = addDays(calStart, w*7);
+    for(let i=0;i<7;i++){
+      const k = addDays(wk,i), d = R.days[k], fut = k>R.today;
+      const cls = fut ? 'future' : d && d.medal ? d.medal : d && d.earned ? 'some' : '';
+      cal += `<span class="d ${cls} ${k===R.today?'today':''}" title="${k}${d?': '+Math.round(d.ratio*100)+'%':''}">${parseKey(k).getDate()}</span>`;
+    }
+    const W = R.weeks[wk];
+    cal += `<span class="w">${W && W.medal ? `<span class="coin ${W.medal}" title="${W.medal} week">W</span>` : `<span class="none" title="${W?'No medal':'In progress'}"></span>`}</span>`;
+  }
+  const defs = R.defs;
+  const got = defs.filter(d=>R.ach[d.id]).length;
+  const achs = defs.map(d=>{
+    const k = R.ach[d.id];
+    return `<div class="ach t-${d.tier} ${k?'got':''}"><div class="badge">${svg(d.icon)}</div><div class="an">${esc(d.name)}</div><div class="ad">${k ? 'Earned '+esc(MON[parseKey(k).getMonth()]+' '+parseKey(k).getDate()) : esc(d.desc)}</div></div>`;
+  }).join('');
+  return `<div class="rule">Medals</div>
+  <div class="medalcount">
+    ${['bronze','silver','gold'].map(m=>`<div class="frame mc"><div class="in"><span class="coin ${m}">${m[0].toUpperCase()}</span><b class="num">${c.medals[m]}</b><span class="label">${m} days</span></div></div>`).join('')}
+  </div>
+  <section class="frame week"><div class="in">
+    <div class="medal-line"><span><span class="label">This week</span><br><b class="num">${fmt(e)}</b> <span class="muted">of ${fmt(p)} XP possible</span></span>${wm?`<span class="chip ${wm}"><span class="dot"></span>${wm} pace</span>`:`<span class="chip"><span class="dot"></span>${Math.round(wr*100)}%</span>`}</div>
+    ${bar('week', wr*100, 'goldfill')}
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px"><div class="cal">${cal}</div></div>
+    <p class="hint" style="margin:0">Days earn Bronze at 50%, Silver at 75% and Gold at 90% of the XP available that day, before streak bonuses. Weeks are rated the same way, Monday to Sunday.</p>
+  </div></section>
+  <div class="rule">Achievements · ${got}/${defs.length}</div>
+  <div class="achs">${achs}</div>`;
+}
+
+function viewHero(){
+  const p = state.profile, T = titleDefs(R), cur = currentTitle(R);
+  const totalTime = Object.values(R.skills).reduce((a,s)=>a+s.minutes,0);
+  const skillRows = state.skills.map(s=>`<div class="mrow"><div class="sigil">${svg(s.icon)}</div><div class="mm"><b>${esc(s.name)}</b><span>${state.tasks.filter(t=>t.skill===s.id && !t.retired).length} active quest(s)</span></div><button class="btn" data-act="edit-skill" data-id="${s.id}">Edit</button></div>`).join('');
+  const questRows = state.tasks.map(t=>`<div class="mrow ${t.retired?'retired':''}"><div class="sigil">${svg(skillById(t.skill).icon)}</div><div class="mm"><b>${esc(t.name)}</b><span>${t.type==='once' ? `${t.xp} XP, once a day` : `${t.xp} XP per ${t.unit} min · goal ${fmtMin(t.target)}`}${t.retired?' · retired':''}</span></div><button class="btn" data-act="edit-task" data-id="${t.id}">Edit</button></div>`).join('');
+  return `<section class="frame gold profile"><div class="in">
+    ${portraitHTML()}
+    <label class="btn gold" for="f-photo">Change portrait</label>
+    <input type="file" id="f-photo" accept="image/*" hidden>
+    <div class="field"><label for="f-heroname">Name</label><input id="f-heroname" value="${esc(p.name)}" placeholder="Your hero’s name" autocomplete="off"></div>
+    <div class="field"><label>Title</label><div class="titlechips">${T.filter(t=>t.ok).map(t=>`<button class="tchip got ${t.name===cur?'sel':''}" data-act="title" data-id="${t.id}">${esc(t.name)}</button>`).join('')}</div>
+      <span class="hint">${T.filter(t=>!t.ok).length} more titles to unlock through levels, skills and achievements.</span></div>
+  </div></section>
+  <div class="stats">
+    <div class="stat"><b class="num">${R.char.level}</b><span>Level</span></div>
+    <div class="stat"><b class="num">${fmt(R.char.total)}</b><span>Total XP</span></div>
+    <div class="stat"><b class="num">${fmtMin(totalTime)}</b><span>Time trained</span></div>
+    <div class="stat"><b class="num">${R.c.bestStreak}</b><span>Longest streak</span></div>
+  </div>
+  <div class="rule">Quests</div>
+  <div class="mlist">${questRows}</div>
+  <button class="btn primary block" data-act="new-task">Add a quest</button>
+  <div class="rule">Skills</div>
+  <div class="mlist">${skillRows}</div>
+  <button class="btn block" data-act="new-skill">Add a skill</button>
+  <div class="rule">Backup</div>
+  <p class="hint" style="margin:0">Your progress is saved on this phone only. Save a backup now and then so you can restore it if you ever delete the app.</p>
+  <div class="btnrow"><button class="btn gold" data-act="export">Save backup</button><button class="btn" data-act="import">Restore backup</button></div>
+  <button class="btn danger block" data-act="reset-ask">${DEMO?'Clear sample data and start fresh':'Reset all progress'}</button>
+  <p class="hint" style="text-align:center;margin:0">Leveling: ${RULES.charBase} XP to reach level 2, then each level needs 1.5× more, rounded up to the nearest 50. Skills start at ${RULES.skillBase}.</p>`;
+}
+
+/* ============ Render ============ */
+function renderTabs(){
+  const tabs = [['today','Quests','quests'],['skills','Skills','skills'],['trophies','Trophies','trophy'],['hero','Hero','hero']];
+  $('#tabs').innerHTML = tabs.map(([id,l,ic])=>`<button class="tab" data-act="tab" data-id="${id}" ${view===id?'aria-current="page"':''}>${svg(ic)}<span>${l}</span></button>`).join('');
+}
+function render(){
+  const html = view==='today' ? viewToday() : view==='skills' ? viewSkills() : view==='trophies' ? viewTrophies() : viewHero();
+  $('#app').innerHTML = `<main class="wrap">${html}</main>`;
+  renderTabs(); settleBars();
+  const nameInput = $('#f-heroname');
+  if(nameInput) nameInput.addEventListener('change', ()=>{ state.profile.name = nameInput.value.trim().slice(0,40); save(); R = compute(); });
+  const photo = $('#f-photo');
+  if(photo) photo.addEventListener('change', ()=>{ if(photo.files[0]) setPortrait(photo.files[0]); });
+}
+
+/* ============ Celebrations ============ */
+function snapshot(){ return { lvl:R.char.level, skills:Object.fromEntries(Object.entries(R.skills).map(([k,v])=>[k,v.level])), ach:new Set(Object.keys(R.ach)), medal:(R.days[R.today]||{}).medal||'', titles:new Set(titleDefs(R).filter(t=>t.ok).map(t=>t.id)) }; }
+function celebrate(before){
+  const after = snapshot(), T = titleDefs(R);
+  const newTitles = T.filter(t=>t.ok && !before.titles.has(t.id));
+  if(after.lvl > before.lvl){
+    showCelebration('Level up', String(after.lvl), 'Character level', newTitles.map(t=>t.name));
+  } else {
+    for(const s of state.skills){
+      if((after.skills[s.id]||1) > (before.skills[s.id]||1)){ showCelebration(`${s.name} improved`, String(after.skills[s.id]), `${s.name} level`, newTitles.filter(t=>t.skill===s.id).map(t=>t.name)); break; }
+    }
+  }
+  const order = {'':0,bronze:1,silver:2,gold:3};
+  if(order[after.medal] > order[before.medal]) toast(`${after.medal} day`, after.medal==='gold'?'A day worthy of legend.':after.medal==='silver'?'Silver tier reached today.':'Bronze tier reached today.', 'shield');
+  for(const d of R.defs) if(R.ach[d.id] && !before.ach.has(d.id)) toast('Achievement', d.name, d.icon);
+}
+function showCelebration(kicker, big, what, titles){
+  const el = document.createElement('div');
+  el.className = 'celebrate'; el.setAttribute('role','dialog'); el.setAttribute('aria-label', kicker);
+  el.innerHTML = `<div class="box"><div class="rays"></div><div class="kicker">${esc(kicker)}</div><div class="big num">${esc(big)}</div><div class="what">${esc(what)}</div>
+    ${titles && titles.length ? `<div class="chip gold" style="margin-top:8px"><span class="dot"></span>New title: ${esc(titles.join(', '))}</div>`:''}<div class="tap">Tap to continue</div></div>`;
+  el.addEventListener('click', ()=>el.remove());
+  document.body.appendChild(el);
+}
+function toast(head, text, icon){
+  const el = document.createElement('div'); el.className='toast';
+  el.innerHTML = `<div class="badge">${svg(icon||'star')}</div><div><b>${esc(head)}</b><span>${esc(text)}</span></div>`;
+  $('#toasts').appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .4s'; el.style.opacity='0'; setTimeout(()=>el.remove(),400); }, 3200);
+}
+function floatXP(x, y, n){
+  if(!n) return;
+  const el = document.createElement('div'); el.className='floatxp num';
+  el.textContent = (n>0?'+':'−') + Math.abs(n) + ' XP'; el.style.left = x+'px'; el.style.top = (y-20)+'px';
+  if(n<0) el.style.color = 'var(--muted)';
+  document.body.appendChild(el); setTimeout(()=>el.remove(), 1200);
+}
+
+/* ============ Mutations ============ */
+function mutate(fn, evt){
+  const before = snapshot(), xpBefore = R.char.total;
+  fn(); save(); R = compute(); render();
+  if(evt) floatXP(evt.clientX, evt.clientY, R.char.total - xpBefore);
+  celebrate(before);
+}
+function setVal(id, val){
+  const k = viewDate; const e = state.log[k] = state.log[k] || {};
+  if(val>0) e[id] = val; else delete e[id];
+  if(!Object.keys(e).length) delete state.log[k];
+}
+function setPortrait(file){
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = ()=>{
+    const S = 320, cv = document.createElement('canvas'); cv.width = cv.height = S;
+    const ctx = cv.getContext('2d'), m = Math.min(img.width, img.height);
+    ctx.drawImage(img, (img.width-m)/2, (img.height-m)/2, m, m, 0, 0, S, S);
+    state.profile.portrait = cv.toDataURL('image/jpeg', .85); URL.revokeObjectURL(url); save(); render();
+  };
+  img.onerror = ()=>toast('Portrait','That image could not be read. Try a JPG or PNG.','hero');
+  img.src = url;
+}
+
+/* ============ Sheets ============ */
+function openSheet(html, onMount){
+  closeSheet();
+  const bd = document.createElement('div'); bd.className='backdrop'; bd.id='sheet';
+  bd.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+  bd.addEventListener('click', e=>{ if(e.target===bd) closeSheet(); });
+  document.body.appendChild(bd); if(onMount) onMount(bd.firstChild);
+}
+function closeSheet(){ const s=$('#sheet'); if(s) s.remove(); }
+
+function iconPicker(sel){ return `<div class="icons" id="f-icons">${SKILL_ICONS.map(i=>`<button type="button" data-icon="${i}" aria-label="${i}" aria-pressed="${i===sel}">${svg(i)}</button>`).join('')}</div>`; }
+function wireIcons(root, cb){ root.querySelectorAll('[data-icon]').forEach(b=>b.addEventListener('click',()=>{ root.querySelectorAll('[data-icon]').forEach(x=>x.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true'); cb(b.dataset.icon); })); }
+
+function taskSheet(id){
+  const t = id ? state.tasks.find(x=>x.id===id) : {name:'', skill: state.skills[0] ? state.skills[0].id : '__new', type:'once', xp:30, unit:30, target:30};
+  let type = t.type, icon = 'star';
+  const opts = state.skills.map(s=>`<option value="${s.id}" ${s.id===t.skill?'selected':''}>${esc(s.name)}</option>`).join('') + `<option value="__new" ${!state.skills.length?'selected':''}>+ New skill…</option>`;
+  openSheet(`<h2>${id?'Edit quest':'New quest'}</h2>
+    <div class="field"><label for="f-tname">Quest</label><input id="f-tname" value="${esc(t.name)}" placeholder="e.g. Stretch for 10 minutes" autocomplete="off"></div>
+    <div class="field"><label for="f-tskill">Skill it trains</label><select id="f-tskill">${opts}</select></div>
+    <div id="f-newskill-wrap" hidden><div class="field"><label for="f-newskill">New skill name</label><input id="f-newskill" placeholder="e.g. Fitness" autocomplete="off"></div><div class="field" style="margin-top:10px"><label>Icon</label>${iconPicker(icon)}</div></div>
+    <div class="field"><label>How it counts</label><div class="seg"><button type="button" id="f-once" aria-pressed="${type==='once'}">Once a day</button><button type="button" id="f-timed" aria-pressed="${type==='timed'}">By time</button></div></div>
+    <div class="field" id="f-xp-wrap"><label for="f-txp" id="f-xp-label"></label><input id="f-txp" type="number" inputmode="numeric" min="5" step="5" value="${t.xp}"></div>
+    <div class="field" id="f-target-wrap"><label for="f-target">Daily goal (minutes)</label><input id="f-target" type="number" inputmode="numeric" min="30" step="30" value="${t.target||30}"><span class="hint">The goal sets how much this quest counts toward your bronze, silver and gold days. Time beyond the goal still earns XP.</span></div>
+    <p class="hint" id="f-err" style="color:#ff8d7b" hidden></p>
+    <button class="btn primary block" id="f-save">${id?'Save quest':'Add quest'}</button>
+    ${id ? `<button class="btn ${t.retired?'gold':'danger'} block" id="f-retire">${t.retired?'Bring back this quest':'Retire this quest'}</button><p class="hint" style="margin:0">Retiring hides a quest from your daily list. The XP you already earned from it stays.</p>`:''}
+    <button class="btn block" id="f-cancel">Cancel</button>`, root=>{
+    const sync = ()=>{
+      root.querySelector('#f-once').setAttribute('aria-pressed', type==='once');
+      root.querySelector('#f-timed').setAttribute('aria-pressed', type==='timed');
+      root.querySelector('#f-target-wrap').hidden = type!=='timed';
+      root.querySelector('#f-xp-label').textContent = type==='once' ? 'XP when done' : 'XP per 30 minutes';
+      root.querySelector('#f-newskill-wrap').hidden = root.querySelector('#f-tskill').value !== '__new';
+    };
+    root.querySelector('#f-once').onclick = ()=>{ type='once'; if(!id) root.querySelector('#f-txp').value = 30; sync(); };
+    root.querySelector('#f-timed').onclick = ()=>{ type='timed'; if(!id) root.querySelector('#f-txp').value = 10; sync(); };
+    root.querySelector('#f-tskill').onchange = sync;
+    wireIcons(root, i=>icon=i);
+    root.querySelector('#f-cancel').onclick = closeSheet;
+    const ret = root.querySelector('#f-retire');
+    if(ret) ret.onclick = ()=>{ mutate(()=>{ t.retired = t.retired ? '' : todayKey(); if(!t.retired) delete t.retired; }); closeSheet(); };
+    root.querySelector('#f-save').onclick = ()=>{
+      const err = root.querySelector('#f-err');
+      const name = root.querySelector('#f-tname').value.trim();
+      const xp = Math.max(1, parseInt(root.querySelector('#f-txp').value,10)||0);
+      const target = Math.max(30, Math.round((parseInt(root.querySelector('#f-target').value,10)||30)/30)*30);
+      let skill = root.querySelector('#f-tskill').value;
+      const newName = root.querySelector('#f-newskill').value.trim();
+      if(!name){ err.textContent='Give the quest a name.'; err.hidden=false; return; }
+      if(skill==='__new' && !newName){ err.textContent='Name the new skill.'; err.hidden=false; return; }
+      mutate(()=>{
+        if(skill==='__new'){ const s = {id:uid('s'), name:newName, icon, titles:[]}; state.skills.push(s); skill = s.id; }
+        if(id){ Object.assign(t, {name, skill, type, xp, unit:30, target}); }
+        else state.tasks.push({id:uid('t'), name, skill, type, xp, unit:30, target, created: todayKey()});
+      });
+      closeSheet();
+    };
+    sync();
+  });
+}
+function skillSheet(id){
+  const s = id ? state.skills.find(x=>x.id===id) : {name:'', icon:'star', titles:[]};
+  let icon = s.icon;
+  const [a,b] = s.titles||[];
+  openSheet(`<h2>${id?'Edit skill':'New skill'}</h2>
+    <div class="field"><label for="f-sname">Skill name</label><input id="f-sname" value="${esc(s.name)}" placeholder="e.g. Cooking" autocomplete="off"></div>
+    <div class="field"><label>Icon</label>${iconPicker(icon)}</div>
+    <div class="field"><label for="f-t5">Title at skill level 5</label><input id="f-t5" value="${esc(a||'')}" placeholder="e.g. Hearth Cook" autocomplete="off"></div>
+    <div class="field"><label for="f-t10">Title at skill level 10</label><input id="f-t10" value="${esc(b||'')}" placeholder="e.g. Master Chef" autocomplete="off"></div>
+    <p class="hint" id="f-err" style="color:#ff8d7b" hidden></p>
+    <button class="btn primary block" id="f-save">${id?'Save skill':'Add skill'}</button>
+    <button class="btn block" id="f-cancel">Cancel</button>`, root=>{
+    wireIcons(root, i=>icon=i);
+    root.querySelector('#f-cancel').onclick = closeSheet;
+    root.querySelector('#f-save').onclick = ()=>{
+      const name = root.querySelector('#f-sname').value.trim();
+      if(!name){ const e=root.querySelector('#f-err'); e.textContent='Give the skill a name.'; e.hidden=false; return; }
+      const titles = [root.querySelector('#f-t5').value.trim(), root.querySelector('#f-t10').value.trim()].filter(Boolean);
+      mutate(()=>{ if(id) Object.assign(s,{name,icon,titles}); else state.skills.push({id:uid('s'), name, icon, titles}); });
+      closeSheet();
+    };
+  });
+}
+function exportSheet(){
+  const data = JSON.stringify(state);
+  const fname = `heros-ledger-backup-${todayKey()}.json`;
+  openSheet(`<h2>Save backup</h2>
+    <p class="hint" style="margin:0">Save the file to the Files app or iCloud Drive, or copy the text and keep it in a note.</p>
+    <div class="btnrow"><button class="btn primary" id="f-share">Save file</button><button class="btn gold" id="f-copy">Copy text</button></div>
+    <div class="field"><label for="f-data">Backup text</label><textarea id="f-data" readonly>${esc(data)}</textarea></div>
+    <p class="hint" id="f-msg" hidden></p>
+    <button class="btn block" id="f-cancel">Done</button>`, root=>{
+    const msg = t=>{ const m=root.querySelector('#f-msg'); m.textContent=t; m.hidden=false; };
+    root.querySelector('#f-cancel').onclick = closeSheet;
+    root.querySelector('#f-copy').onclick = ()=>{
+      const ta = root.querySelector('#f-data');
+      (navigator.clipboard ? navigator.clipboard.writeText(data) : Promise.reject()).then(()=>msg('Copied. Paste it somewhere safe, like a note.')).catch(()=>{ ta.focus(); ta.select(); msg('Text selected. Use Copy from the menu.'); });
+    };
+    root.querySelector('#f-share').onclick = async ()=>{
+      try{
+        const file = new File([data], fname, {type:'application/json'});
+        if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Hero’s Ledger backup'}); msg('Backup shared.'); return; }
+        const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = fname; document.body.appendChild(a); a.click(); a.remove();
+        msg('If nothing downloaded, use Copy text instead.');
+      }catch(e){ if(e && e.name==='AbortError') return; msg('This browser can’t save files here. Use Copy text instead.'); }
+    };
+  });
+}
+function importSheet(){
+  openSheet(`<h2>Restore backup</h2>
+    <p class="hint" style="margin:0">Restoring replaces everything currently in the app with the backup.</p>
+    <label class="btn gold block" for="f-file">Choose backup file</label><input type="file" id="f-file" accept="application/json,.json,text/plain" hidden>
+    <div class="field"><label for="f-paste">Or paste backup text</label><textarea id="f-paste" placeholder="{&quot;v&quot;:1, ...}"></textarea></div>
+    <p class="hint" id="f-err" style="color:#ff8d7b" hidden></p>
+    <button class="btn primary block" id="f-go">Restore</button>
+    <button class="btn block" id="f-cancel">Cancel</button>`, root=>{
+    root.querySelector('#f-cancel').onclick = closeSheet;
+    root.querySelector('#f-file').onchange = e=>{ const f=e.target.files[0]; if(!f) return; f.text().then(t=>{ root.querySelector('#f-paste').value=t; }); };
+    root.querySelector('#f-go').onclick = ()=>{
+      const err = root.querySelector('#f-err');
+      try{
+        const s = JSON.parse(root.querySelector('#f-paste').value);
+        if(!s || !s.tasks || !s.log) throw 0;
+        state = migrate(s); save(); R = compute(); viewDate = R.today; closeSheet(); render(); toast('Restored','Your progress is back.','shield');
+      }catch(e){ err.textContent = 'That doesn’t look like a Hero’s Ledger backup. Check that you pasted the whole text.'; err.hidden=false; }
+    };
+  });
+}
+function resetSheet(){
+  openSheet(`<h2>${DEMO?'Start fresh?':'Reset all progress?'}</h2>
+    <p style="margin:0">${DEMO?'This clears the sample progress. Your quests and skills stay.':'This erases all XP, streaks, medals and history. Your quests, skills and profile stay. This can’t be undone unless you saved a backup.'}</p>
+    <button class="btn danger block" id="f-yes">${DEMO?'Clear sample data':'Erase progress'}</button>
+    <button class="btn block" id="f-cancel">Cancel</button>`, root=>{
+    root.querySelector('#f-cancel').onclick = closeSheet;
+    root.querySelector('#f-yes').onclick = ()=>{ state.log = {}; state.created = todayKey(); state.tasks.forEach(t=>t.created='2000-01-01'); if(DEMO) state.profile.name=''; save(); R = compute(); viewDate = R.today; closeSheet(); render(); };
+  });
+}
+function welcomeSheet(){
+  openSheet(`<div class="label" style="color:var(--gold)">A new ledger opens</div><h2>Who is our hero?</h2>
+    <p class="hint" style="margin:0">Check off your daily quests to earn XP. Every quest trains a skill, and every skill levels up your character.</p>
+    <div class="field"><label for="f-wname">Your name</label><input id="f-wname" placeholder="Name" autocomplete="off"></div>
+    <button class="btn primary block" id="f-begin">Begin</button>`, root=>{
+    root.querySelector('#f-begin').onclick = ()=>{ state.profile.name = root.querySelector('#f-wname').value.trim().slice(0,40); save(); closeSheet(); render(); };
+  });
+}
+
+/* ============ Events ============ */
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const a = b.dataset.act, id = b.dataset.id;
+  if(a==='tab'){ view = id; skillView = null; if(id==='today') viewDate = R.today; try{ sessionStorage.setItem('hl-view', id); }catch(_){} render(); window.scrollTo(0,0); }
+  else if(a==='toggle'){ const cur = ((state.log[viewDate]||{})[id])||0; mutate(()=>setVal(id, cur?0:1), e); }
+  else if(a==='step'){ const t = state.tasks.find(x=>x.id===id); const cur = ((state.log[viewDate]||{})[id])||0; mutate(()=>setVal(id, Math.max(0, cur + (+b.dataset.n)*t.unit)), e); }
+  else if(a==='day'){ const n = addDays(viewDate, +b.dataset.n); if(n<=R.today){ viewDate = n; render(); } }
+  else if(a==='today'){ viewDate = R.today; render(); }
+  else if(a==='skill'){ skillView = id; render(); window.scrollTo(0,0); }
+  else if(a==='skills-back'){ skillView = null; render(); }
+  else if(a==='title'){ state.profile.title = id; save(); render(); }
+  else if(a==='edit-task') taskSheet(id);
+  else if(a==='new-task') taskSheet(null);
+  else if(a==='edit-skill') skillSheet(id);
+  else if(a==='new-skill') skillSheet(null);
+  else if(a==='export') exportSheet();
+  else if(a==='import') importSheet();
+  else if(a==='reset-ask') resetSheet();
+});
+// roll over to a new day if the app stays open past midnight
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && R.today !== todayKey()){ const wasToday = viewDate===R.today; R = compute(); if(wasToday) viewDate = R.today; render(); } });
+
+render();
+if(firstRun) welcomeSheet();
+if(!DEMO){
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+window.__HL = { compute:()=>R, levelInfo, RULES };
+})();
+</script>
