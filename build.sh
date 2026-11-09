@@ -2,6 +2,7 @@
 # Builds index.html (the real app) and preview.html (same app with sample data) from src/app.html
 set -euo pipefail
 cd "$(dirname "$0")"
+VER=$(date -u +%Y.%m.%d-%H%M)
 {
 cat <<'HEAD'
 <!doctype html>
@@ -21,8 +22,11 @@ cat <<'HEAD'
 </head>
 <body>
 HEAD
-cat src/app.html
+sed "s/__APP_VERSION__/$VER/g" src/app.html
 printf '\n</body>\n</html>\n'
 } > index.html
-{ printf '<script>window.XP_DEMO=true</script>\n'; cat src/app.html; } > preview.html
-echo "built index.html and preview.html"
+{ printf '<script>window.XP_DEMO=true</script>\n'; sed "s/__APP_VERSION__/$VER/g" src/app.html; } > preview.html
+sed "s/__APP_VERSION__/$VER/g" src/sw.js > sw.js
+printf '{"version":"%s"}\n' "$VER" > version.json
+touch .nojekyll
+echo "built version $VER"

@@ -1,7 +1,0 @@
-<html><body style="background:#191514;margin:0;padding:8px;font:11px sans-serif;color:#ccc">
-<div id="g" style="display:grid;grid-template-columns:repeat(3,116px);gap:6px"></div>
-<script src="pets2.js"></script><script src="petrender2.js"></script>
-<script>
-for(const sp of Object.keys(PET2)) for(const f of ['base','elder','rare'])
-  document.getElementById('g').insertAdjacentHTML('beforeend', `<div style="text-align:center">${pet2SVG(sp,f,112)}<br>${sp} ${f}</div>`);
-</script></body></html>
