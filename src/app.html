@@ -926,7 +926,7 @@ function exportSheet(){
     root.querySelector('#f-share').onclick = async ()=>{
       try{
         const file = new File([data], fname, {type:'application/json'});
-        if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Hero’s Ledger backup'}); msg('Backup shared.'); return; }
+        if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Hero’s Codex backup'}); msg('Backup shared.'); return; }
         const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = fname; document.body.appendChild(a); a.click(); a.remove();
         msg('If nothing downloaded, use Copy text instead.');
       }catch(e){ if(e && e.name==='AbortError') return; msg('This browser can’t save files here. Use Copy text instead.'); }
@@ -949,7 +949,7 @@ function importSheet(){
         const s = JSON.parse(root.querySelector('#f-paste').value);
         if(!s || !s.tasks || !s.log) throw 0;
         state = migrate(s); save(); R = compute(); viewDate = R.today; closeSheet(); render(); toast('Restored','Your progress is back.','shield');
-      }catch(e){ err.textContent = 'That doesn’t look like a Hero’s Ledger backup. Check that you pasted the whole text.'; err.hidden=false; }
+      }catch(e){ err.textContent = 'That doesn’t look like a Hero’s Codex backup. Check that you pasted the whole text.'; err.hidden=false; }
     };
   });
 }
