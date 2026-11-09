@@ -432,7 +432,9 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 'use strict';
 /* ============ Rules (tweak here) ============ */
 const RULES = {
-  charBase: 300,        // XP from level 1 to 2
+  weeklyPerWeek: 3,     // weekly quests count toward a 'full day' as if done 3 times a week
+  minFullDay: 30,       // a skill with no daily or weekly quests still needs this much XP for a full day
+  charBase: 300,        // (old XP curve, no longer used for levels)
   skillBase: 100,       // XP from skill level 1 to 2
   abilityBase: 200,     // XP from ability level 1 to 2 (abilities pool their skills)
   growth: 1.5,          // each level needs 1.5x the previous...
@@ -446,7 +448,7 @@ const RULES = {
 };
 const DEMO = !!window.XP_DEMO;
 const APP_KIND = 'personal';
-const APP_VERSION = '2026.11.09-2132';
+const APP_VERSION = '2026.11.09-2231';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -1953,7 +1955,25 @@ if(!state){ state = DEMO ? demoState() : defaultState(); firstRun = !DEMO; save(
 
 /* ============ Engine ============ */
 function stepUp(r, lvl){ const g = lvl >= RULES.lateFrom ? RULES.lateGrowth : RULES.growth; return Math.ceil(r*g/RULES.roundTo)*RULES.roundTo; }
-function levelInfo(xp, base){ let lvl=1, rem=xp, req=base; while(rem>=req){ rem-=req; lvl++; req=stepUp(req, lvl); } return {level:lvl, into:rem, need:req, total:xp}; }
+// Levels are measured in "full days": a day where every daily quest for that skill, ability or
+// character is done (weekly quests count as if done 3 times a week). Days per level: 4, 6, 10, 13, 16, 19, 21, 23, ...
+function daysForLevel(L){ return L<=1 ? 4 : L===2 ? 6 : L<=6 ? 10 + 3*(L-3) : 21 + 2*(L-7); }
+function levelFromDays(u){ let lvl = 1, start = 0; while(u >= start + daysForLevel(lvl) - 1e-9){ start += daysForLevel(lvl); lvl++; } return { level:lvl, start, span:daysForLevel(lvl) }; }
+// Shown in XP: progress into the level and what the level needs, at today's full-day value.
+function levelView(units, pot, total){ const L = levelFromDays(units); return { level:L.level, into:Math.round((units-L.start)*pot), need:Math.max(1, Math.round(L.span*pot)), total, units }; }
+// XP in one full day for the quests matching pred, as they stood on day k. Exercise counts once.
+function fullDay(k, pred){
+  let p = 0; const g = {};
+  for(const t of state.tasks){
+    if(!isActive(t,k) || isSide(t) || !pred(t)) continue;
+    if(t.created && t.created >= k && k !== state.created && t.created !== '2000-01-01') continue;   // new quests count from the next day
+    const v = possibleXP(cfgAt(t,k)) * (isWeekly(t) ? RULES.weeklyPerWeek/7 : 1);
+    if(t.oneOf && !isWeekly(t)) g[t.oneOf] = Math.max(g[t.oneOf]||0, v); else p += v;
+  }
+  for(const x in g) p += g[x];
+  return p > 0 ? p : RULES.minFullDay;
+}
+function levelInfo(xp){ return levelView(xp / RULES.minFullDay, RULES.minFullDay, xp); }
 function multFor(streak){ if(streak>=RULES.streakLong.days) return 1+RULES.streakLong.bonus; if(streak>=RULES.streakShort.days) return 1+RULES.streakShort.bonus; return 1; }
 function tierFor(t, val){ let hit = null; for(const tr of t.tiers) if(val >= tr.amt && (!hit || tr.amt > hit.amt)) hit = tr; return hit; }
 function baseXP(t, val){ if(!val) return 0; if(t.type==='once') return t.xp; if(t.type==='tiers'){ const tr = tierFor(t,val); return tr ? tr.xp : 0; } return Math.floor(val/t.unit)*t.xp; }
@@ -1964,7 +1984,8 @@ function tierLabel(t, amt){
   return `${amt} ${t.unit}`;
 }
 function qtyText(u, n){ return u==='min' ? fmtMin(n) : `${fmt(n)} ${u}`; }
-const abilityOf = sid => (state.skills.find(s=>s.id===sid)||{}).ability || 'WIS';
+const abilityOf = sid => (state.skills.find(s=>s.id===sid)||{}).ability || (state.goneSkills||{})[sid] || 'WIS';
+function cfgAt(t, k){ if(t.hist) for(const h of t.hist) if(k < h.until) return Object.assign({}, t, h); return t; }
 function isActive(t, k){ return (t.created||'0000') <= k && (!t.retired || k < t.retired); }
 const isWeekly = t => t.cadence === 'weekly';
 const isSide = t => t.cadence === 'side';
@@ -1972,7 +1993,7 @@ const noMedal = t => isWeekly(t) || isSide(t);   // weekly & side quests never c
 // XP a day can count toward its medal: weekly quests never count; a group (e.g. exercise) counts once, at its best quest
 function dayPossible(k){
   let p = 0; const g = {};
-  for(const t of state.tasks){ if(!isActive(t,k) || noMedal(t)) continue; if(t.oneOf) g[t.oneOf] = Math.max(g[t.oneOf]||0, possibleXP(t)); else p += possibleXP(t); }
+  for(const t of state.tasks){ if(!isActive(t,k) || noMedal(t)) continue; if(t.oneOf) g[t.oneOf] = Math.max(g[t.oneOf]||0, possibleXP(cfgAt(t,k))); else p += possibleXP(cfgAt(t,k)); }
   return p + Object.values(g).reduce((a,b)=>a+b,0);
 }
 function medalFor(r){ const m=RULES.medals; return r>=m.gold?'gold':r>=m.silver?'silver':r>=m.bronze?'bronze':''; }
@@ -2031,34 +2052,49 @@ function compute(){
   const skillXP = {}, skillQty = {}, skillCount = {}, skillBest = {}, skillStreak = {};
   state.skills.forEach(s=>{ skillXP[s.id]=0; skillQty[s.id]={}; skillCount[s.id]=0; skillBest[s.id]=0; skillStreak[s.id]=0; });
   const days = {}, ach = {}, petDates = {}, sideDone = {};
+  let uChar = 0; const uSkill = {}, uAb = {};   // progress in full days, earned day by day
   const c = { quests:0, bestStreak:0, medals:{bronze:0,silver:0,gold:0}, weekMedals:{bronze:0,silver:0,gold:0}, perfect:0, sideDone:0, allSkillsDay:false, level:1, total:0, skillQty, skillCount };
   let wkE=0, wkP=0; const weeks = {};
   for(let k = start; k <= today; k = addDays(k,1)){
     if(parseKey(k).getDay()===1){ wkE=0; wkP=0; }
+    if(k === today){
+      // Progress earned before today never goes down, even if quests are edited later.
+      const F = state.levelFloor || (state.levelFloor = { char:0, skills:{}, abilities:{} });
+      uChar = Math.max(uChar, F.char||0); F.char = uChar;
+      for(const sk of state.skills){ uSkill[sk.id] = Math.max(uSkill[sk.id]||0, F.skills[sk.id]||0); F.skills[sk.id] = uSkill[sk.id]; }
+      for(const [ab] of ABILITIES){ uAb[ab] = Math.max(uAb[ab]||0, F.abilities[ab]||0); F.abilities[ab] = uAb[ab]; }
+    }
     const e = state.log[k] || {};
-    let earned=0, possible=dayPossible(k), xp=0; const items = {}; const hit = new Set(); const gEarn = {}, gCap = {};
+    let earned=0, possible=dayPossible(k), xp=0; const items = {}; const hit = new Set(); const gEarn = {}, gCap = {}, dayX = {};
     for(const t of tasks){
-      const val = e[t.id] || 0, active = isActive(t,k), counts = active && !noMedal(t);
-      if(counts && t.oneOf) gCap[t.oneOf] = Math.max(gCap[t.oneOf]||0, possibleXP(t));
+      const val = e[t.id] || 0, active = isActive(t,k), counts = active && !noMedal(t), tc = cfgAt(t,k);
+      if(counts && t.oneOf) gCap[t.oneOf] = Math.max(gCap[t.oneOf]||0, possibleXP(tc));
       prevStreak[t.id] = streak[t.id];
       streak[t.id] = val>0 ? streak[t.id]+1 : 0;
       best[t.id] = Math.max(best[t.id], streak[t.id]);
-      const b = baseXP(t,val), m = val>0 ? multFor(streak[t.id]) : 1, x = Math.round(b*m);
+      const b = baseXP(tc,val), m = val>0 ? multFor(streak[t.id]) : 1, x = Math.round(b*m);
       items[t.id] = {val, base:b, xp:x, streak:streak[t.id], mult:m};
       if(val>0){
-        if(counts){ const got = Math.min(b, possibleXP(t)); if(t.oneOf) gEarn[t.oneOf] = Math.max(gEarn[t.oneOf]||0, got); else earned += got; }
+        if(counts){ const got = Math.min(b, possibleXP(tc)); if(t.oneOf) gEarn[t.oneOf] = Math.max(gEarn[t.oneOf]||0, got); else earned += got; }
         xp += x; c.total += x; c.quests++;
         if(skillXP[t.skill]==null){ skillXP[t.skill]=0; skillQty[t.skill]={}; skillCount[t.skill]=0; }
-        skillXP[t.skill] += x; skillCount[t.skill]++;
+        skillXP[t.skill] += x; skillCount[t.skill]++; dayX[t.skill] = (dayX[t.skill]||0) + x;
         const u = unitOf(t); if(u) skillQty[t.skill][u] = (skillQty[t.skill][u]||0) + val;
         hit.add(t.skill);
         if(isSide(t)){ c.sideDone++; sideDone[t.id] = k; }
       }
     }
     for(const g in gEarn) earned += Math.min(gEarn[g], gCap[g]||0);
-    for(const sid of hit){ const lv = levelInfo(skillXP[sid]||0, RULES.skillBase).level; if(lv>=5 && !petDates[`p_${sid}_5`]) petDates[`p_${sid}_5`] = k; if(lv>=10 && !petDates[`p_${sid}_10`]) petDates[`p_${sid}_10`] = k; if(lv>=15 && !petDates[`p_${sid}_15`]) petDates[`p_${sid}_15`] = k; }
+    // Each day's XP becomes progress measured against that day's own quests, so earned levels never drop.
+    if(xp > 0){
+      uChar += xp / fullDay(k, ()=>true);
+      const abX = {};
+      for(const sid in dayX){ uSkill[sid] = (uSkill[sid]||0) + dayX[sid] / fullDay(k, t=>t.skill===sid); const ab = abilityOf(sid); abX[ab] = (abX[ab]||0) + dayX[sid]; }
+      for(const ab in abX) uAb[ab] = (uAb[ab]||0) + abX[ab] / fullDay(k, t=>abilityOf(t.skill)===ab);
+    }
+    for(const sid of hit){ const lv = levelFromDays(uSkill[sid]||0).level; if(lv>=5 && !petDates[`p_${sid}_5`]) petDates[`p_${sid}_5`] = k; if(lv>=10 && !petDates[`p_${sid}_10`]) petDates[`p_${sid}_10`] = k; if(lv>=15 && !petDates[`p_${sid}_15`]) petDates[`p_${sid}_15`] = k; }
     { const abHit = new Set([...hit].map(abilityOf));
-      for(const ab of abHit){ const xp = state.skills.filter(x=>x.ability===ab).reduce((a,x)=>a+(skillXP[x.id]||0),0), lv = levelInfo(xp, RULES.abilityBase).level;
+      for(const ab of abHit){ const xp = state.skills.filter(x=>x.ability===ab).reduce((a,x)=>a+(skillXP[x.id]||0),0), lv = levelFromDays(uAb[ab]||0).level;
         for(const L of [5,10,15]) if(lv>=L && !petDates[`p_ab_${ab}_${L}`]) petDates[`p_ab_${ab}_${L}`] = k; } }
     // skill-level streaks (any quest of that skill)
     for(const s of state.skills){ skillStreak[s.id] = hit.has(s.id) ? (skillStreak[s.id]||0)+1 : (k===today ? skillStreak[s.id] : 0); skillBest[s.id] = Math.max(skillBest[s.id]||0, skillStreak[s.id]); }
@@ -2071,7 +2107,7 @@ function compute(){
     if(hit.size >= 5) c.allSkillsDay = true;
     wkE += earned; wkP += possible;
     if(parseKey(k).getDay()===0){ const wr = wkP? wkE/wkP:0, wm = medalFor(wr); weeks[weekStart(k)] = {ratio:wr, medal:wm}; if(wm) c.weekMedals[wm]++; }
-    c.level = levelInfo(c.total, RULES.charBase).level;
+    c.level = levelFromDays(uChar).level;
     for(const d of defs) if(!ach[d.id] && d.test(c)) ach[d.id] = k;
   }
   // current streaks: alive if done today or yesterday
@@ -2083,12 +2119,12 @@ function compute(){
     nextMult[t.id] = todayDone(t.id) ? days[today].items[t.id].mult : multFor((prevStreak[t.id]||0)+1);
   }
   const skills = {};
-  for(const s of state.skills) skills[s.id] = Object.assign(levelInfo(skillXP[s.id]||0, RULES.skillBase), {qty:skillQty[s.id]||{}, minutes:(skillQty[s.id]||{}).min||0, count:skillCount[s.id]||0, best:skillBest[s.id]||0, streak:skillStreak[s.id]||0});
+  for(const s of state.skills) skills[s.id] = Object.assign(levelView(uSkill[s.id]||0, fullDay(today, t=>t.skill===s.id), skillXP[s.id]||0), {qty:skillQty[s.id]||{}, minutes:(skillQty[s.id]||{}).min||0, count:skillCount[s.id]||0, best:skillBest[s.id]||0, streak:skillStreak[s.id]||0});
   const abilities = {};
-  for(const [ab] of ABILITIES){ const xp = state.skills.filter(s=>s.ability===ab).reduce((a,s)=>a+(skillXP[s.id]||0),0); abilities[ab] = levelInfo(xp, RULES.abilityBase); }
+  for(const [ab] of ABILITIES){ const xp = state.skills.filter(s=>s.ability===ab).reduce((a,s)=>a+(skillXP[s.id]||0),0); abilities[ab] = levelView(uAb[ab]||0, fullDay(today, t=>abilityOf(t.skill)===ab), xp); }
   petDates.p_cat = start;
   for(const id in state.pets) if(!petDates[id]) petDates[id] = state.pets[id].date || today;
-  return { today, start, days, weeks, char: levelInfo(c.total, RULES.charBase), skills, abilities, cur, best, nextMult, ach, defs, c, pets: petDates, sideDone };
+  return { today, start, days, weeks, char: levelView(uChar, fullDay(today, ()=>true), c.total), skills, abilities, cur, best, nextMult, ach, defs, c, pets: petDates, sideDone };
 }
 
 function titleDefs(R){
@@ -2187,7 +2223,7 @@ function viewToday(){
   const all = state.tasks.filter(t=>isActive(t,k));
   const tasks = all.filter(t=>!noMedal(t)), weekly = all.filter(isWeekly);
   const sides = state.tasks.filter(t=>isSide(t) && !t.retired && (!R.sideDone[t.id] || R.sideDone[t.id]===k));
-  const sidesDone = state.tasks.filter(t=>isSide(t) && R.sideDone[t.id] && R.sideDone[t.id]!==k).sort((a,b)=>R.sideDone[b.id].localeCompare(R.sideDone[a.id]));
+  const sidesDone = state.tasks.filter(t=>isSide(t) && !t.deleted && R.sideDone[t.id] && R.sideDone[t.id]!==k).sort((a,b)=>R.sideDone[b.id].localeCompare(R.sideDone[a.id]));
   const e0 = state.log[k] || {};
   const groupDone = {}; tasks.forEach(t=>{ if(t.oneOf && e0[t.id]) groupDone[t.oneOf] = true; });
   const wk = weekStart(k), weekCount = id => { let n=0; for(let i=0;i<7;i++){ const kk = addDays(wk,i); if(kk<=R.today && (state.log[kk]||{})[id]) n++; } return n; };
@@ -2298,7 +2334,7 @@ function viewSkills(){
   <p class="hint" style="text-align:center">Skill XP counts toward its ability and your character level.</p>`;
 }
 function viewSkill(id){
-  const s = skillById(id), L = R.skills[id] || levelInfo(0,RULES.skillBase);
+  const s = skillById(id), L = R.skills[id] || levelInfo(0);
   const tasks = state.tasks.filter(t=>t.skill===id);
   const unitsHere = [...new Set(tasks.map(unitOf).filter(Boolean))];
   // last 28 days heat, aligned to weeks
@@ -2390,7 +2426,7 @@ function viewHero(){
   const p = state.profile, T = titleDefs(R), cur = currentTitle(R);
   const totalTime = Object.values(R.skills).reduce((a,s)=>a+s.minutes,0);
   const skillRows = state.skills.map(s=>`<div class="mrow"><div class="sigil">${svg(s.icon)}</div><div class="mm"><b>${esc(s.name)}</b><span>${esc(ABILITY_NAME[s.ability]||'')} · ${state.tasks.filter(t=>t.skill===s.id && !t.retired).length} active quest(s)</span></div><button class="btn" data-act="edit-skill" data-id="${s.id}">Edit</button></div>`).join('');
-  const questRows = state.tasks.map(t=>`<div class="mrow ${t.retired?'retired':''}"><div class="sigil">${svg(skillById(t.skill).icon)}</div><div class="mm"><b>${esc(t.name)}</b><span>${t.type==='once' ? `${t.xp} XP, once a day` : t.type==='tiers' ? t.tiers.map(x=>`${tierLabel(t,x.amt)}: ${x.xp} XP`).join(' · ') : `${t.xp} XP per ${t.unit} min · goal ${fmtMin(t.target)}`}${isWeekly(t)?' · weekly':''}${isSide(t)?' · side quest'+(R.sideDone[t.id]?' (done)':''):''}${t.oneOf?' · '+(GROUP_NAME[t.oneOf]||t.oneOf).toLowerCase():''}${t.retired?' · retired':''}</span></div><button class="btn" data-act="edit-task" data-id="${t.id}">Edit</button></div>`).join('');
+  const questRows = state.tasks.filter(t=>!t.deleted).map(t=>`<div class="mrow ${t.retired?'retired':''}"><div class="sigil">${svg(skillById(t.skill).icon)}</div><div class="mm"><b>${esc(t.name)}</b><span>${t.type==='once' ? `${t.xp} XP, once a day` : t.type==='tiers' ? t.tiers.map(x=>`${tierLabel(t,x.amt)}: ${x.xp} XP`).join(' · ') : `${t.xp} XP per ${t.unit} min · goal ${fmtMin(t.target)}`}${isWeekly(t)?' · weekly':''}${isSide(t)?' · side quest'+(R.sideDone[t.id]?' (done)':''):''}${t.oneOf?' · '+(GROUP_NAME[t.oneOf]||t.oneOf).toLowerCase():''}${t.retired?' · retired':''}</span></div><button class="btn" data-act="edit-task" data-id="${t.id}">Edit</button></div>`).join('');
   return `<section class="frame gold profile"><div class="in">
     ${portraitHTML()}
     <label class="btn gold" for="f-photo">Change portrait</label>
@@ -2428,7 +2464,7 @@ function viewHero(){
   <div class="btnrow"><button class="btn gold" data-act="export">Save backup</button><button class="btn" data-act="import">Restore backup</button></div>
   <button class="btn danger block" data-act="reset-ask">${DEMO?'Clear sample data and start fresh':'Reset all progress'}</button>
   <div class="verrow"><span class="hint">App version ${esc(APP_VERSION)}</span><button class="linkbtn" data-act="check-update">Check for updates</button></div>
-  <p class="hint" style="text-align:center;margin:0">Leveling: ${RULES.charBase} XP to reach level 2, then each level needs 1.5× more (1.2× from level 10 on), rounded up to the nearest 50. Skills start at ${RULES.skillBase}, abilities at ${RULES.abilityBase}.</p>`;
+  <p class="hint" style="text-align:center;margin:0">Leveling is measured in full days: a day where you complete every daily quest for that skill, ability or your character (weekly quests count as 3 times a week). Level 2 takes 4 full days, then 6, 10, 13, 16, 19, then 2 more days each level. Partial days, streak bonuses, weekly and side quests all count, and adding quests raises what future levels need without taking away levels you have earned.</p>`;
 }
 
 /* ============ Friends: shared hero cards (Supabase) ============ */
@@ -2714,7 +2750,7 @@ function taskSheet(id, preset){
     };
     q('#f-side').onclick = ()=>{ cadence='side'; sync(); };
     const del = q('#f-del');
-    if(del) del.onclick = ()=>{ mutate(()=>{ state.tasks = state.tasks.filter(x=>x.id!==id); for(const k in state.log){ delete state.log[k][id]; if(!Object.keys(state.log[k]).length) delete state.log[k]; } }); closeSheet(); };
+    if(del) del.onclick = ()=>{ mutate(()=>{ t.deleted = todayKey(); if(!t.retired) t.retired = todayKey(); }); closeSheet(); }   // hidden, but its XP and history stay;
     q('#f-daily').onclick = ()=>{ cadence='daily'; sync(); };
     q('#f-weekly').onclick = ()=>{ cadence='weekly'; sync(); };
     q('#f-once').onclick = ()=>{ type='once'; sync(); };
@@ -2742,7 +2778,9 @@ function taskSheet(id, preset){
       mutate(()=>{
         if(skill==='__new'){ const s = {id:uid('s'), name:newName, icon, ability:q('#f-newab').value, titles:[]}; state.skills.push(s); skill = s.id; }
         Object.assign(fields, cadence!=='daily' ? {cadence} : {}, cadence==='daily' && q('#f-ex').checked ? {oneOf:'exercise'} : {});
-        if(id){ ['xp','unit','tiers','target','cadence','oneOf'].forEach(k=>delete t[k]); Object.assign(t, {name, skill}, fields); }
+        if(id){ const snap = x=>JSON.stringify({type:x.type, xp:x.xp, unit:x.unit, tiers:x.tiers, target:x.target}); const before = snap(t), old = {type:t.type, xp:t.xp, unit:t.unit, tiers:t.tiers, target:t.target};
+          ['xp','unit','tiers','target','cadence','oneOf'].forEach(k=>delete t[k]); Object.assign(t, {name, skill}, fields);
+          if(snap(t) !== before) (t.hist = t.hist || []).push(Object.assign({ until: todayKey() }, old)); }
         else state.tasks.push(Object.assign({id:uid('t'), name, skill, created: todayKey()}, fields));
       });
       closeSheet();
@@ -2943,6 +2981,6 @@ if(!DEMO){
   try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
   if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
-window.__HL = { compute:()=>R, levelInfo, RULES };
+window.__HL = { compute:()=>R, levelInfo, levelFromDays, daysForLevel, fullDay, RULES };
 })();
 </script>
