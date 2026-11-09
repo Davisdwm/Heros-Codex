@@ -2,144 +2,169 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Kalam:wght@300;400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Roboto+Condensed:wght@400;500;700&display=swap">
 <style>
-/* Layout: a single-column field journal on parchment — hero header, inked quest rows, bottom tab bar. Light parchment, single theme by choice. */
+/* Layout: a single-column character sheet — hero header, framed quest rows, bottom tab bar. Dark, single theme by choice. */
 :root{
-  --bg:#ecdfc3; --panel:#f5ecd6; --panel-hi:#f8f1df; --inset:#e7d8b6;
-  --line:#c2a87f; --line-hi:#9c8158;
-  --fg:#33241a; --muted:#6f5a43; --faint:#9a8467;
-  --red:#8f3a22; --red-hi:#a8492c; --red-deep:#6b2817;
-  --gold:#9a6c27; --gold-hi:#b9853a;
-  --bronze:#a8673a; --silver:#8e969c; --goldm:#c99a2e;
-  --on-accent:#fbf4e4;
-  --err:#9b2c1a;
-  --display:"Caveat", "Segoe Script", "Bradley Hand", cursive;
-  --body:"Kalam", "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive;
+  --bg:#0f0d0c; --panel:#191514; --panel-hi:#231d1a; --inset:#0b0a09;
+  --line:#3a302b; --line-hi:#5c4a3e;
+  --fg:#f0e9df; --muted:#a8998b; --faint:#6f645a;
+  --red:#c9301c; --red-hi:#e5452e; --red-deep:#6e1a10;
+  --gold:#d9ad55; --gold-hi:#f2cd78;
+  --bronze:#c47b45; --silver:#c6ccd2; --goldm:#f0c24c;
+  --ok:#6fae6a; --err:#ff8d7b;
+  --display:"Cinzel", "Trajan Pro", Georgia, "Times New Roman", serif;
+  --body:"Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
   --tab-h:64px;
-  --paper: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.006 0.32' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.25  0 0 0 0 0.12  0 0 0 0.28 -0.1'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>");
-  color-scheme:light;
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{
-  margin:0;
-  background:
-    var(--paper),
-    radial-gradient(130% 90% at 50% 40%, rgba(255,250,235,.55) 0%, rgba(255,250,235,0) 60%),
-    radial-gradient(160% 120% at 50% 50%, rgba(0,0,0,0) 55%, rgba(120,84,40,.22) 100%),
+  margin:0; background:
+    radial-gradient(140% 50% at 50% -8%, rgba(150,32,18,.38) 0%, rgba(150,32,18,0) 62%),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.012) 0 2px, rgba(0,0,0,0) 2px 6px),
     var(--bg);
   background-attachment:fixed;
-  color:var(--fg); font-family:var(--body); font-size:17px; line-height:1.4; font-weight:400;
+  color:var(--fg); font-family:var(--body); font-size:16px; line-height:1.4;
   -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent;
   min-height:100%;
 }
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 input,select,textarea{font:inherit;color:var(--fg)}
-:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .wrap{max-width:560px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:14px calc(var(--tab-h) + 28px + env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column;gap:18px}
 .num{font-variant-numeric:tabular-nums}
-h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:0;line-height:1}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:.02em}
 
-/* Inked frame with clipped corners, like a cut page */
-.frame{--n:8px;position:relative;background:var(--line-hi);padding:1.5px;
-  clip-path:polygon(var(--n) 0,calc(100% - var(--n)) 0,100% var(--n),100% calc(100% - var(--n)),calc(100% - var(--n)) 100%,var(--n) 100%,0 calc(100% - var(--n)),0 var(--n))}
-.frame>.in{background:var(--paper),linear-gradient(180deg,var(--panel-hi),var(--panel));
-  clip-path:polygon(var(--n) 0,calc(100% - var(--n)) 0,100% var(--n),100% calc(100% - var(--n)),calc(100% - var(--n)) 100%,var(--n) 100%,0 calc(100% - var(--n)),0 var(--n))}
-.frame.gold{background:var(--fg)}
-.frame.done{background:var(--red)}
-.frame.done>.in{background:var(--paper),linear-gradient(180deg,#f6e6d0,#efdcc0)}
+/* Gold-leaf frame: thin double gilt rule with filigree corners */
+.frame{position:relative;background:linear-gradient(180deg,var(--panel-hi),var(--panel));
+  border:1px solid rgba(217,173,85,.42);box-shadow:0 6px 18px rgba(0,0,0,.35),inset 0 0 0 3px var(--panel),inset 0 0 0 4px rgba(217,173,85,.16)}
+.frame::after{content:"";position:absolute;inset:-2px;pointer-events:none;z-index:1;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dc96'/%3E%3Cstop offset='.45' stop-color='%23c9973f'/%3E%3Cstop offset='.7' stop-color='%23f2cd78'/%3E%3Cstop offset='1' stop-color='%238a6326'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='' fill='none' stroke='url(%23g)'%3E%3Cpath d='M1.5 31V9.5L9.5 1.5H31' stroke-width='2'/%3E%3Cpath d='M5.5 26V12L12 5.5H26' stroke-width='.9' opacity='.75'/%3E%3Cpath d='M10 10l4.5-4.5L19 10l-4.5 4.5zM10 10l-4.5 4.5L10 19l4.5-4.5z' fill='url(%23g)' stroke='none' opacity='.0'/%3E%3Cpath d='M9.5 9.5l3.5-3.5 3.5 3.5-3.5 3.5z' fill='url(%23g)' stroke='none'/%3E%3Ccircle cx='22' cy='4' r='1.3' fill='url(%23g)' stroke='none'/%3E%3Ccircle cx='4' cy='22' r='1.3' fill='url(%23g)' stroke='none'/%3E%3C/g%3E%3C/svg%3E") top left/30px 30px no-repeat,url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dc96'/%3E%3Cstop offset='.45' stop-color='%23c9973f'/%3E%3Cstop offset='.7' stop-color='%23f2cd78'/%3E%3Cstop offset='1' stop-color='%238a6326'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='translate(32 0) scale(-1 1)' fill='none' stroke='url(%23g)'%3E%3Cpath d='M1.5 31V9.5L9.5 1.5H31' stroke-width='2'/%3E%3Cpath d='M5.5 26V12L12 5.5H26' stroke-width='.9' opacity='.75'/%3E%3Cpath d='M10 10l4.5-4.5L19 10l-4.5 4.5zM10 10l-4.5 4.5L10 19l4.5-4.5z' fill='url(%23g)' stroke='none' opacity='.0'/%3E%3Cpath d='M9.5 9.5l3.5-3.5 3.5 3.5-3.5 3.5z' fill='url(%23g)' stroke='none'/%3E%3Ccircle cx='22' cy='4' r='1.3' fill='url(%23g)' stroke='none'/%3E%3Ccircle cx='4' cy='22' r='1.3' fill='url(%23g)' stroke='none'/%3E%3C/g%3E%3C/svg%3E") top right/30px 30px no-repeat,url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dc96'/%3E%3Cstop offset='.45' stop-color='%23c9973f'/%3E%3Cstop offset='.7' stop-color='%23f2cd78'/%3E%3Cstop offset='1' stop-color='%238a6326'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='translate(0 32) scale(1 -1)' fill='none' stroke='url(%23g)'%3E%3Cpath d='M1.5 31V9.5L9.5 1.5H31' stroke-width='2'/%3E%3Cpath d='M5.5 26V12L12 5.5H26' stroke-width='.9' opacity='.75'/%3E%3Cpath d='M10 10l4.5-4.5L19 10l-4.5 4.5zM10 10l-4.5 4.5L10 19l4.5-4.5z' fill='url(%23g)' stroke='none' opacity='.0'/%3E%3Cpath d='M9.5 9.5l3.5-3.5 3.5 3.5-3.5 3.5z' fill='url(%23g)' stroke='none'/%3E%3Ccircle cx='22' cy='4' r='1.3' fill='url(%23g)' stroke='none'/%3E%3Ccircle cx='4' cy='22' r='1.3' fill='url(%23g)' stroke='none'/%3E%3C/g%3E%3C/svg%3E") bottom left/30px 30px no-repeat,url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dc96'/%3E%3Cstop offset='.45' stop-color='%23c9973f'/%3E%3Cstop offset='.7' stop-color='%23f2cd78'/%3E%3Cstop offset='1' stop-color='%238a6326'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='translate(32 32) scale(-1 -1)' fill='none' stroke='url(%23g)'%3E%3Cpath d='M1.5 31V9.5L9.5 1.5H31' stroke-width='2'/%3E%3Cpath d='M5.5 26V12L12 5.5H26' stroke-width='.9' opacity='.75'/%3E%3Cpath d='M10 10l4.5-4.5L19 10l-4.5 4.5zM10 10l-4.5 4.5L10 19l4.5-4.5z' fill='url(%23g)' stroke='none' opacity='.0'/%3E%3Cpath d='M9.5 9.5l3.5-3.5 3.5 3.5-3.5 3.5z' fill='url(%23g)' stroke='none'/%3E%3Ccircle cx='22' cy='4' r='1.3' fill='url(%23g)' stroke='none'/%3E%3Ccircle cx='4' cy='22' r='1.3' fill='url(%23g)' stroke='none'/%3E%3C/g%3E%3C/svg%3E") bottom right/30px 30px no-repeat}
+.frame>.in{position:relative;z-index:2}
+.frame.gold{border-color:rgba(242,205,120,.7);background:radial-gradient(120% 80% at 50% 0%,rgba(217,173,85,.10),rgba(0,0,0,0) 60%),linear-gradient(180deg,var(--panel-hi),var(--panel))}
+.frame.gold::before{content:"";position:absolute;left:50%;top:-6px;width:12px;height:12px;transform:translateX(-50%) rotate(45deg);background:linear-gradient(135deg,var(--gold-hi),#8a6326);border:2px solid var(--bg);z-index:3}
+.frame.done{border-color:rgba(229,69,46,.55);background:linear-gradient(180deg,#2d1a16,#1f1513)}
 
-.label{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.rule{display:flex;align-items:center;gap:10px;color:var(--red);font-family:var(--display);font-size:26px;font-weight:700;line-height:1}
-.rule::before,.rule::after{content:"";flex:1;height:0;border-top:1.5px solid var(--line-hi)}
-.rule::before{border-image:linear-gradient(90deg,rgba(156,129,88,0),var(--line-hi)) 1}
-.rule::after{border-image:linear-gradient(270deg,rgba(156,129,88,0),var(--line-hi)) 1}
+.label{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.rule{display:flex;align-items:center;gap:10px;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.rule::before,.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(217,173,85,0),var(--line-hi))}
+.rule::after{background:linear-gradient(270deg,rgba(217,173,85,0),var(--line-hi))}
 .muted{color:var(--muted)}
 
 /* Hero header */
 .hero .in{padding:16px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center}
-.portrait{width:76px;height:76px;border-radius:50%;padding:2px;background:var(--fg);flex:none}
-.portrait>div{width:100%;height:100%;border-radius:50%;background:var(--inset) center/cover no-repeat;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:40px;color:var(--red);border:3px solid var(--panel)}
+.portrait{width:76px;height:76px;border-radius:50%;padding:3px;background:conic-gradient(from 210deg,var(--gold),#7a5a24,var(--gold-hi),#7a5a24,var(--gold));flex:none}
+.portrait>div{width:100%;height:100%;border-radius:50%;background:#2a1714 center/cover no-repeat;display:grid;place-items:center;font-family:var(--display);font-size:30px;color:var(--gold);border:2px solid var(--inset)}
 .hero-name{min-width:0}
-.hero-name h1{font-size:34px;overflow-wrap:anywhere}
-.hero-name .title{margin-top:2px;color:var(--red);font-size:15px;font-weight:700;letter-spacing:.02em}
-.lvl-shield{width:64px;height:72px;display:grid;place-items:center;text-align:center;background:var(--fg);
+.hero-name h1{font-size:22px;line-height:1.1;overflow-wrap:anywhere}
+.hero-name .title{margin-top:4px;color:var(--gold);font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.lvl-shield{width:64px;height:72px;display:grid;place-items:center;text-align:center;
+  background:linear-gradient(180deg,var(--red),var(--red-deep));
   clip-path:polygon(50% 0,100% 14%,100% 62%,50% 100%,0 62%,0 14%);position:relative}
-.lvl-shield::before{content:"";position:absolute;inset:2px;background:var(--paper),var(--panel-hi);clip-path:inherit}
+.lvl-shield::before{content:"";position:absolute;inset:3px;background:var(--inset);clip-path:inherit}
 .lvl-shield span{position:relative;display:block}
-.lvl-shield .l{font-size:11px;letter-spacing:.1em;color:var(--muted);font-weight:700;margin-top:-6px}
-.lvl-shield .n{font-family:var(--display);font-size:36px;line-height:.9;color:var(--red);font-weight:700}
+.lvl-shield .l{font-size:10px;letter-spacing:.16em;color:var(--muted);font-weight:700;margin-top:-6px}
+.lvl-shield .n{font-family:var(--display);font-size:28px;line-height:1;color:var(--fg)}
 .hero .xp{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
-.xp-row{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);gap:8px}
+.xp-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);gap:8px}
 .xp-row b{color:var(--fg);font-weight:700}
 
-.bar{height:12px;background:var(--inset);border:1.5px solid var(--line-hi);border-radius:6px;position:relative;overflow:hidden;box-shadow:inset 0 1px 2px rgba(80,55,25,.2)}
-.bar>i{position:absolute;inset:0 auto 0 0;border-radius:4px;background:linear-gradient(180deg,var(--red-hi),var(--red) 60%,var(--red-deep));transition:width .8s cubic-bezier(.2,.8,.2,1)}
-.bar.thin{height:9px}
-.bar.goldfill>i{background:linear-gradient(180deg,var(--gold-hi),var(--gold) 60%,#7c561d)}
+.bar{height:12px;background:var(--inset);border:1px solid var(--line);border-radius:2px;position:relative;overflow:hidden}
+.bar>i{position:absolute;inset:0 auto 0 0;background:linear-gradient(180deg,var(--red-hi),var(--red) 55%,var(--red-deep));box-shadow:inset 0 1px 0 rgba(255,255,255,.25);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.bar>i::after{content:"";position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--gold-hi);opacity:.8}
+.bar.thin{height:8px}
+.bar.goldfill>i{background:linear-gradient(180deg,var(--gold-hi),var(--gold) 60%,#8c6a2b)}
 
 /* Day card */
 .day .in{padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px}
 .day-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.day-nav h2{font-size:34px;text-align:center;flex:1}
-.day-nav .sub{display:block;font-family:var(--body);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:2px}
-.iconbtn{width:40px;height:40px;display:grid;place-items:center;border:1.5px solid var(--line-hi);background:var(--inset);border-radius:50%;color:var(--fg)}
+.day-nav h2{font-size:18px;text-align:center;flex:1}
+.day-nav .sub{display:block;font-family:var(--body);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:2px}
+.iconbtn{width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);background:var(--inset);border-radius:2px;color:var(--gold)}
 .iconbtn:disabled{opacity:.3}
 .iconbtn svg{width:18px;height:18px}
 .medalbar{position:relative;padding-top:4px}
 .medalbar .bar{height:14px}
 .ticks{position:relative;height:22px;margin-top:4px}
-.tick{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:700;color:var(--faint)}
-.tick::before{content:"";width:1.5px;height:6px;background:var(--line-hi);margin-bottom:1px}
+.tick{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:700;color:var(--faint);letter-spacing:.06em}
+.tick::before{content:"";width:1px;height:6px;background:var(--line-hi);margin-bottom:2px}
 .tick.hit{color:var(--fg)}
-.medal-line{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px 2px 6px;border-radius:999px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:1.5px solid var(--line);background:var(--inset);color:var(--muted);white-space:nowrap}
+.medal-line{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 6px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);background:var(--inset);color:var(--muted)}
 .chip .dot{width:12px;height:12px;border-radius:50%;background:var(--faint)}
-.chip.bronze{color:var(--bronze);border-color:var(--bronze)}.chip.bronze .dot{background:var(--bronze)}
-.chip.silver{color:#6c747a;border-color:var(--silver)}.chip.silver .dot{background:var(--silver)}
-.chip.gold{color:#8a6714;border-color:var(--goldm)}.chip.gold .dot{background:var(--goldm)}
+.chip.bronze{color:var(--bronze);border-color:#5d3a22}.chip.bronze .dot{background:var(--bronze)}
+.chip.silver{color:var(--silver);border-color:#4a4f54}.chip.silver .dot{background:var(--silver)}
+.chip.gold{color:var(--goldm);border-color:#6b5420}.chip.gold .dot{background:var(--goldm);box-shadow:0 0 8px rgba(240,194,76,.6)}
 
-.banner{border:1.5px dashed var(--line-hi);padding:10px 12px;font-size:15px;color:var(--muted);display:flex;gap:10px;align-items:center;justify-content:space-between;background:rgba(255,250,235,.4)}
-.banner b{color:var(--red)}
-.linkbtn{color:var(--red);font-weight:700;font-size:15px;text-decoration:underline;text-underline-offset:3px}
+.banner{border:1px dashed var(--line-hi);padding:10px 12px;font-size:14px;color:var(--muted);display:flex;gap:10px;align-items:center;justify-content:space-between;background:rgba(0,0,0,.25)}
+.banner b{color:var(--gold)}
+.linkbtn{color:var(--gold);font-weight:700;font-size:14px;text-decoration:underline;text-underline-offset:3px}
 
 /* Quest rows */
 .quests{display:flex;flex-direction:column;gap:10px}
 .quest .in{padding:12px 12px 12px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;min-height:76px}
-.sigil{width:42px;height:42px;display:grid;place-items:center;color:var(--fg);position:relative}
-.sigil::before{content:"";position:absolute;inset:6px;transform:rotate(45deg);border:1.5px solid var(--line-hi);background:var(--inset)}
+.sigil{width:42px;height:42px;display:grid;place-items:center;color:var(--gold);position:relative}
+.sigil::before{content:"";position:absolute;inset:5px;transform:rotate(45deg);border:1px solid var(--line-hi);background:var(--inset)}
 .sigil svg{position:relative;width:20px;height:20px}
-.quest.is-done .sigil{color:var(--on-accent)}
-.quest.is-done .sigil::before{background:var(--red);border-color:var(--red-deep)}
+.quest.is-done .sigil{color:var(--fg)}
+.quest.is-done .sigil::before{background:var(--red-deep);border-color:var(--red)}
 .qmain{min-width:0}
-.qname{font-family:var(--display);font-size:27px;font-weight:700;line-height:1}
-.qmeta{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:14px;color:var(--muted);margin-top:4px;align-items:center}
+.qname{font-size:17px;font-weight:700;line-height:1.2}
+.qmeta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px;color:var(--muted);margin-top:3px;align-items:center}
 .streak{display:inline-flex;align-items:center;gap:3px;color:var(--gold)}
-.streak svg{width:14px;height:14px}
-.streak.hot{color:var(--red)}
-.bonus{font-weight:700;color:var(--red)}
-.xpchip{font-weight:700;font-size:16px;color:var(--fg)}
-.xpchip small{font-size:12px;color:var(--muted)}
+.streak svg{width:13px;height:13px}
+.streak.hot{color:var(--red-hi)}
+.bonus{font-weight:700;color:var(--gold-hi)}
+.xpchip{font-family:var(--display);font-weight:700;font-size:15px;color:var(--gold)}
+.xpchip small{font-family:var(--body);font-size:11px;letter-spacing:.1em;color:var(--muted)}
 
 .check{width:48px;height:48px;display:grid;place-items:center;position:relative}
-.check::before{content:"";position:absolute;inset:10px;transform:rotate(45deg);border:2px solid var(--fg);background:var(--panel-hi);transition:background .2s,border-color .2s}
-.check svg{position:relative;width:20px;height:20px;opacity:0;transform:scale(.4);transition:all .2s;color:var(--on-accent)}
-.check[aria-pressed="true"]::before{background:var(--red);border-color:var(--red-deep)}
+.check::before{content:"";position:absolute;inset:9px;transform:rotate(45deg);border:2px solid var(--gold);background:var(--inset);transition:background .2s,border-color .2s}
+.check svg{position:relative;width:20px;height:20px;opacity:0;transform:scale(.4);transition:all .2s;color:#fff}
+.check[aria-pressed="true"]::before{background:var(--red);border-color:var(--red-hi);box-shadow:0 0 14px rgba(229,69,46,.5)}
 .check[aria-pressed="true"] svg{opacity:1;transform:scale(1)}
 .ctrlcol{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-.stepper{display:flex;align-items:center;border:1.5px solid var(--line-hi);background:var(--panel-hi);border-radius:20px}
-.stepper button{width:36px;height:36px;display:grid;place-items:center;color:var(--red);font-size:24px;line-height:1;font-weight:700}
+.stepper{display:flex;align-items:center;border:1px solid var(--line-hi);background:var(--inset);border-radius:2px}
+.stepper button{width:36px;height:36px;display:grid;place-items:center;color:var(--gold);font-size:22px;line-height:1}
 .stepper button:disabled{opacity:.3}
-.stepper output{min-width:58px;text-align:center;font-weight:700;font-size:16px}
+.stepper output{min-width:58px;text-align:center;font-weight:700;font-size:15px}
+
+/* Ability groups & bubbles */
+.abhead{display:flex;align-items:center;gap:10px;margin-top:6px;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.06em;color:var(--fg)}
+.abhead:first-child{margin-top:0}
+.abhead::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line-hi),rgba(0,0,0,0))}
+.abbr{display:inline-grid;place-items:center;min-width:40px;height:24px;padding:0 6px;font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--gold);border:1px solid rgba(217,173,85,.55);background:var(--inset)}
+.quest .in.tiered{grid-template-columns:auto 1fr}
+.bubbles{grid-column:1/-1;display:grid;gap:8px}
+.bubble{min-height:50px;border-radius:999px;border:1px solid var(--line-hi);background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:4px 6px;line-height:1.15;transition:background .2s,border-color .2s,box-shadow .2s}
+.bubble span{font-weight:700;font-size:14px}
+.bubble small{font-size:11px;color:var(--gold);letter-spacing:.06em}
+.bubble.under{border-color:rgba(229,69,46,.45);background:rgba(110,26,16,.35)}
+.bubble.on{background:linear-gradient(180deg,var(--red),var(--red-deep));border-color:var(--red-hi);box-shadow:0 0 14px rgba(229,69,46,.45)}
+.bubble.on small{color:var(--gold-hi)}
+.aboxes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.abox{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 10px 12px;text-decoration:none;color:var(--fg);text-align:center;
+  background:linear-gradient(180deg,var(--panel-hi),var(--panel));border:1px solid rgba(217,173,85,.42);box-shadow:inset 0 0 0 3px var(--panel),inset 0 0 0 4px rgba(217,173,85,.14)}
+.abox::before,.abox::after{content:"";position:absolute;width:7px;height:7px;transform:rotate(45deg);background:linear-gradient(135deg,var(--gold-hi),#8a6326);left:50%;margin-left:-3.5px}
+.abox::before{top:-4px}.abox::after{bottom:-4px}
+.abox .an{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.abox b{font-family:var(--display);font-size:30px;line-height:1.1}
+.abox .ax{font-size:11px;color:var(--gold);margin-bottom:4px}
+.abox .bar{width:100%;height:5px}
+.tierhead,.tierrow{display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;align-items:center}
+.tierrow input{width:100%;min-height:44px;padding:8px 10px;background:var(--inset);border:1px solid var(--line-hi);border-radius:2px;font-size:16px}
 
 /* Tabs */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--paper),#e3d2ad;border-top:1.5px solid var(--line-hi);box-shadow:0 -4px 14px rgba(80,55,25,.12);
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:linear-gradient(180deg,#1b1513,#0d0b0a);border-top:1px solid var(--line-hi);
   padding-bottom:env(safe-area-inset-bottom, 0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabs::before{content:"";position:absolute;top:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5}
 .tabs nav{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);height:var(--tab-h)}
-.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:13px;font-weight:700;color:var(--faint)}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
 .tab svg{width:22px;height:22px}
-.tab[aria-current="page"]{color:var(--red)}
+.tab[aria-current="page"]{color:var(--gold)}
+.tab[aria-current="page"] svg{filter:drop-shadow(0 0 6px rgba(217,173,85,.5))}
 
 /* Skills */
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -148,122 +173,121 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .skillhead{display:flex;align-items:center;gap:10px}
 .skillhead .sigil{width:36px;height:36px}
 .skillhead .sigil svg{width:17px;height:17px}
-.skillname{font-family:var(--display);font-weight:700;font-size:25px;line-height:1;overflow-wrap:anywhere}
-.skilllvl{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted)}
-.skilllvl b{font-family:var(--display);font-size:32px;color:var(--red);line-height:1}
-.back{display:inline-flex;align-items:center;gap:6px;color:var(--red);font-weight:700;font-size:16px;align-self:flex-start}
+.skillname{font-family:var(--display);font-weight:700;font-size:15px;line-height:1.15;overflow-wrap:anywhere}
+.skilllvl{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted)}
+.skilllvl b{font-family:var(--display);font-size:22px;color:var(--fg)}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--gold);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;align-self:flex-start}
 .back svg{width:16px;height:16px}
 .detailhead .in{padding:18px 16px;display:flex;flex-direction:column;gap:14px}
 .detailhead .top{display:flex;align-items:center;gap:14px}
 .detailhead .sigil{width:58px;height:58px}
 .detailhead .sigil svg{width:26px;height:26px}
-.detailhead h1{font-size:40px}
-.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.5px;background:var(--line-hi);border:1.5px solid var(--line-hi)}
-.stat{background:var(--paper),var(--panel);padding:10px 14px;display:flex;flex-direction:column;gap:0}
-.stat b{font-family:var(--display);font-size:32px;font-weight:700;line-height:1.05}
-.stat span{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.detailhead h1{font-size:24px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.stat{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--display);font-size:20px;font-weight:700}
+.stat span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .heat{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-.heat i{aspect-ratio:1;border-radius:3px;background:var(--inset);border:1px solid var(--line);max-width:100%}
-.heat i.today{outline:1.5px solid var(--fg);outline-offset:1px}
-.heatlabels{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;font-size:12px;color:var(--muted);text-align:center;font-weight:700}
-.list{display:flex;flex-direction:column;border:1.5px solid var(--line-hi)}
-.list>div{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--line);background:var(--paper),var(--panel);font-size:15px}
+.heat i{aspect-ratio:1;border-radius:2px;background:var(--inset);border:1px solid var(--line);max-width:100%}
+.heat i.today{outline:1px solid var(--gold);outline-offset:1px}
+.heatlabels{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;font-size:10px;color:var(--faint);text-align:center;font-weight:700;letter-spacing:.1em}
+.list{display:flex;flex-direction:column;border:1px solid var(--line)}
+.list>div{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--line);background:var(--panel);font-size:14px}
 .list>div:first-child{border-top:0}
 .titlechips{display:flex;flex-wrap:wrap;gap:8px}
-.tchip{padding:5px 12px;border:1.5px solid var(--line);font-size:14px;font-weight:700;color:var(--faint);background:var(--inset);border-radius:16px}
-.tchip.got{color:var(--fg);border-color:var(--line-hi);background:var(--panel-hi)}
-.tchip.sel{background:var(--red);border-color:var(--red-deep);color:var(--on-accent)}
+.tchip{padding:6px 12px;border:1px solid var(--line);font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--faint);background:var(--inset)}
+.tchip.got{color:var(--gold);border-color:#6b5420}
+.tchip.sel{background:var(--red-deep);border-color:var(--red);color:var(--fg)}
 
 /* Trophies */
 .medalcount{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.mc .in{height:100%;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:4px}
-.mc b{font-family:var(--display);font-size:38px;line-height:1}
-.coin{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:20px;color:var(--on-accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2),inset 0 2px 0 rgba(255,255,255,.35),0 1px 2px rgba(80,55,25,.35)}
-.coin.bronze{background:radial-gradient(circle at 35% 30%,#d79a68,var(--bronze) 55%,#6e3f1e)}
-.coin.silver{background:radial-gradient(circle at 35% 30%,#e8ecef,var(--silver) 55%,#5f666b)}
-.coin.gold{background:radial-gradient(circle at 35% 30%,#f3d98a,var(--goldm) 55%,#87631a)}
+.mc .in{padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.mc b{font-family:var(--display);font-size:26px}
+.coin{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;color:#1b130b;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),inset 0 2px 0 rgba(255,255,255,.35)}
+.coin.bronze{background:radial-gradient(circle at 35% 30%,#e3a273,var(--bronze) 55%,#7a4524)}
+.coin.silver{background:radial-gradient(circle at 35% 30%,#f2f5f7,var(--silver) 55%,#7c848b)}
+.coin.gold{background:radial-gradient(circle at 35% 30%,#fff0b8,var(--goldm) 55%,#9c7319)}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 30px;gap:5px;align-items:center}
-.cal .h{font-size:12px;font-weight:700;color:var(--muted);text-align:center}
-.cal .d{aspect-ratio:1;max-width:100%;display:grid;place-items:center;font-size:13px;color:var(--faint);border:1.5px solid var(--line);background:var(--inset);border-radius:50%}
-.cal .d.bronze{background:var(--bronze);color:var(--on-accent);border-color:#6e3f1e}
-.cal .d.silver{background:var(--silver);color:var(--on-accent);border-color:#5f666b}
-.cal .d.gold{background:var(--goldm);color:var(--on-accent);border-color:#87631a}
-.cal .d.some{border-color:var(--line-hi);color:var(--fg)}
+.cal .h{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--faint);text-align:center}
+.cal .d{aspect-ratio:1;max-width:100%;display:grid;place-items:center;font-size:12px;color:var(--faint);border:1px solid var(--line);background:var(--inset);border-radius:50%}
+.cal .d.bronze{background:var(--bronze);color:#1b130b;border-color:var(--bronze)}
+.cal .d.silver{background:var(--silver);color:#1b130b;border-color:var(--silver)}
+.cal .d.gold{background:var(--goldm);color:#1b130b;border-color:var(--goldm);box-shadow:0 0 8px rgba(240,194,76,.45)}
+.cal .d.some{border-color:var(--line-hi);color:var(--muted)}
 .cal .d.future{opacity:.35}
-.cal .d.today{outline:1.5px solid var(--fg);outline-offset:2px}
+.cal .d.today{outline:1px solid var(--gold);outline-offset:2px}
 .cal .w{display:grid;place-items:center}
-.cal .w .coin{width:22px;height:22px;font-size:13px}
-.cal .w .none{width:22px;height:22px;border-radius:50%;border:1.5px dashed var(--line)}
+.cal .w .coin{width:22px;height:22px;font-size:9px}
+.cal .w .none{width:22px;height:22px;border-radius:50%;border:1px dashed var(--line)}
 .week .in{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .achs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.ach{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:12px 6px;border:1.5px solid var(--line);background:var(--paper),var(--panel);width:100%}
+.ach{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:12px 6px;border:1px solid var(--line);background:var(--panel);width:100%}
 .ach .badge{width:52px;height:58px;display:grid;place-items:center;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--line);position:relative}
-.ach .badge::before{content:"";position:absolute;inset:2.5px;clip-path:inherit;background:var(--inset)}
+.ach .badge::before{content:"";position:absolute;inset:3px;clip-path:inherit;background:var(--inset)}
 .ach .badge svg{position:relative;width:22px;height:22px;color:var(--faint)}
-.ach .an{font-family:var(--display);font-size:21px;font-weight:700;line-height:1;color:var(--faint)}
-.ach .ad{font-size:12px;color:var(--faint);line-height:1.25}
+.ach .an{font-size:13px;font-weight:700;line-height:1.15;color:var(--faint)}
+.ach .ad{font-size:11px;color:var(--faint);line-height:1.25}
 .ach.got .an{color:var(--fg)} .ach.got .ad{color:var(--muted)}
-.ach.got .badge::before{background:var(--panel-hi)}
 .ach.got.t-bronze .badge{background:var(--bronze)} .ach.got.t-bronze svg{color:var(--bronze)}
-.ach.got.t-silver .badge{background:#6c747a} .ach.got.t-silver svg{color:#6c747a}
-.ach.got.t-gold .badge{background:var(--goldm)} .ach.got.t-gold svg{color:#8a6714}
-.ach.got.t-red .badge{background:var(--red)} .ach.got.t-red svg{color:var(--red)}
-.ach:not(.got){opacity:.75}
+.ach.got.t-silver .badge{background:var(--silver)} .ach.got.t-silver svg{color:var(--silver)}
+.ach.got.t-gold .badge{background:var(--goldm)} .ach.got.t-gold svg{color:var(--goldm)}
+.ach.got.t-red .badge{background:var(--red)} .ach.got.t-red svg{color:var(--red-hi)}
+.ach:not(.got) .badge{opacity:.6}
 
 /* Hero screen */
 .profile .in{padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
 .profile .portrait{width:120px;height:120px}
-.profile .portrait>div{font-size:64px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1.5px solid var(--line-hi);background:var(--panel-hi);font-weight:700;font-size:16px;color:var(--fg);border-radius:4px}
-.btn.primary{background:var(--red);border-color:var(--red-deep);color:var(--on-accent)}
-.btn.gold{color:var(--gold);border-color:var(--gold)}
-.btn.danger{color:var(--err);border-color:var(--err)}
+.profile .portrait>div{font-size:46px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid var(--line-hi);background:var(--inset);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:13px;color:var(--fg)}
+.btn.primary{background:linear-gradient(180deg,var(--red),var(--red-deep));border-color:var(--red-hi)}
+.btn.gold{color:var(--gold);border-color:#6b5420}
+.btn.danger{color:#ff8d7b;border-color:#6e2a20}
 .btn.block{width:100%}
 .btnrow{display:flex;flex-wrap:wrap;gap:8px}
 .btnrow .btn{flex:1 1 140px}
 .field{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%}
-.field label{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.field input,.field select,.field textarea{width:100%;min-height:44px;padding:8px 12px;background:var(--panel-hi);border:1.5px solid var(--line-hi);border-radius:4px;font-size:17px}
+.field label{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select,.field textarea{width:100%;min-height:44px;padding:10px 12px;background:var(--inset);border:1px solid var(--line-hi);border-radius:2px;font-size:16px}
 .field textarea{min-height:120px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
-.hint{font-size:14px;color:var(--muted)}
-.mrow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid var(--line);background:var(--paper),var(--panel)}
+.hint{font-size:13px;color:var(--muted)}
+.mrow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid var(--line);background:var(--panel)}
 .mrow:first-child{border-top:0}
 .mrow .sigil{width:34px;height:34px}.mrow .sigil svg{width:16px;height:16px}
 .mrow .mm{flex:1;min-width:0}
-.mrow .mm b{display:block;font-family:var(--display);font-size:24px;line-height:1}
-.mrow .mm span{font-size:14px;color:var(--muted)}
-.mrow .btn{min-height:36px;padding:0 12px;font-size:14px}
-.mlist{border:1.5px solid var(--line-hi);display:flex;flex-direction:column}
+.mrow .mm b{display:block;font-size:15px}
+.mrow .mm span{font-size:13px;color:var(--muted)}
+.mrow .btn{min-height:36px;padding:0 12px;font-size:12px}
+.mlist{border:1px solid var(--line);display:flex;flex-direction:column}
 .retired{opacity:.5}
 
 /* Sheets & celebrations */
-.backdrop{position:fixed;inset:0;z-index:40;background:rgba(51,36,26,.45);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s ease}
-.sheet{width:100%;max-width:560px;max-height:88vh;overflow:auto;background:var(--paper),var(--panel);border-top:2px solid var(--fg);box-shadow:0 -10px 30px rgba(51,36,26,.3);
+.backdrop{position:fixed;inset:0;z-index:40;background:rgba(5,3,2,.72);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s ease}
+.sheet{width:100%;max-width:560px;max-height:88vh;overflow:auto;background:linear-gradient(180deg,#221b18,#151110);border-top:1px solid var(--gold);
   padding:20px max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
   display:flex;flex-direction:column;gap:14px;animation:rise .25s cubic-bezier(.2,.8,.2,1)}
-.sheet h2{font-size:36px}
-.seg{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--line-hi);border-radius:4px;overflow:hidden}
-.seg button{min-height:44px;font-weight:700;font-size:15px;color:var(--muted);background:var(--panel-hi)}
-.seg button[aria-pressed="true"]{background:var(--red);color:var(--on-accent)}
+.sheet h2{font-size:20px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line-hi)}
+.seg button{min-height:44px;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--inset)}
+.seg button[aria-pressed="true"]{background:var(--red-deep);color:var(--fg)}
 .icons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
-.icons button{aspect-ratio:1;display:grid;place-items:center;border:1.5px solid var(--line);background:var(--panel-hi);color:var(--muted);border-radius:4px}
-.icons button[aria-pressed="true"]{border-color:var(--red);color:var(--red);background:var(--inset)}
+.icons button{aspect-ratio:1;display:grid;place-items:center;border:1px solid var(--line);background:var(--inset);color:var(--muted)}
+.icons button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
 .icons svg{width:20px;height:20px}
 
-.celebrate{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:var(--paper),radial-gradient(circle at 50% 45%,#f8efd9,#e2cfa6 75%);animation:fade .25s ease;padding:24px}
-.celebrate .box{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
-.celebrate .kicker{color:var(--muted);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:15px}
-.celebrate .big{font-family:var(--display);font-size:110px;font-weight:700;line-height:.9;color:var(--red)}
-.celebrate .what{font-family:var(--display);font-size:36px;font-weight:700}
-.celebrate .rays{position:absolute;width:420px;height:420px;max-width:100%;border-radius:50%;background:repeating-conic-gradient(rgba(143,58,34,.10) 0 6deg,rgba(0,0,0,0) 6deg 18deg);animation:spin 20s linear infinite;z-index:-1;pointer-events:none}
-.celebrate .tap{margin-top:16px;font-size:14px;color:var(--muted)}
+.celebrate{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,rgba(120,26,14,.85),rgba(5,3,2,.92) 70%);animation:fade .25s ease;padding:24px}
+.celebrate .box{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+.celebrate .kicker{color:var(--gold);font-weight:700;letter-spacing:.3em;text-transform:uppercase;font-size:13px}
+.celebrate .big{font-family:var(--display);font-size:64px;font-weight:700;line-height:1;color:var(--fg);text-shadow:0 0 30px rgba(242,205,120,.5)}
+.celebrate .what{font-family:var(--display);font-size:22px}
+.celebrate .rays{position:absolute;width:420px;height:420px;max-width:100%;border-radius:50%;background:repeating-conic-gradient(rgba(242,205,120,.14) 0 6deg,rgba(0,0,0,0) 6deg 18deg);animation:spin 14s linear infinite;z-index:-1;pointer-events:none}
+.celebrate .tap{margin-top:16px;font-size:12px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
 .toasts{position:fixed;left:0;right:0;top:calc(10px + env(safe-area-inset-top, 0px));z-index:70;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px}
-.toast{max-width:420px;width:100%;display:flex;gap:12px;align-items:center;padding:10px 14px;background:var(--paper),var(--panel-hi);border:1.5px solid var(--fg);box-shadow:0 8px 24px rgba(51,36,26,.3);animation:drop .35s cubic-bezier(.2,1.2,.4,1)}
-.toast .badge{width:34px;height:38px;flex:none;display:grid;place-items:center;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--red);color:var(--on-accent)}
+.toast{max-width:420px;width:100%;display:flex;gap:12px;align-items:center;padding:10px 14px;background:linear-gradient(180deg,#2a201b,#171211);border:1px solid var(--gold);box-shadow:0 8px 30px rgba(0,0,0,.6);animation:drop .35s cubic-bezier(.2,1.2,.4,1)}
+.toast .badge{width:34px;height:38px;flex:none;display:grid;place-items:center;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--gold);color:#1b130b}
 .toast .badge svg{width:18px;height:18px}
-.toast b{display:block;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
-.toast span{font-family:var(--display);font-size:24px;font-weight:700;line-height:1}
-.floatxp{white-space:nowrap;position:fixed;z-index:65;pointer-events:none;font-family:var(--display);font-weight:700;font-size:30px;color:var(--red);text-shadow:0 1px 0 var(--panel-hi);animation:floatup 1.1s ease-out forwards}
+.toast b{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.toast span{font-size:15px;font-weight:700}
+.floatxp{white-space:nowrap;position:fixed;z-index:65;pointer-events:none;font-family:var(--display);font-weight:700;font-size:20px;color:var(--gold-hi);text-shadow:0 2px 8px rgba(0,0,0,.8);animation:floatup 1.1s ease-out forwards}
 @keyframes floatup{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-60px)}}
 @keyframes fade{from{opacity:0}}
 @keyframes rise{from{transform:translateY(40px);opacity:0}}
@@ -271,7 +295,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 @keyframes drop{from{transform:translateY(-20px);opacity:0}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
-@media (max-width:360px){.achs{grid-template-columns:repeat(2,minmax(0,1fr))}.hero .in{gap:10px}.portrait{width:64px;height:64px}}
+@media (max-width:360px){.aboxes{grid-template-columns:repeat(2,minmax(0,1fr))}.achs{grid-template-columns:repeat(2,minmax(0,1fr))}.hero .in{gap:10px}.portrait{width:64px;height:64px}}
 </style>
 
 <div id="app"></div>
@@ -285,6 +309,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 const RULES = {
   charBase: 300,        // XP from level 1 to 2
   skillBase: 100,       // XP from skill level 1 to 2
+  abilityBase: 200,     // XP from ability level 1 to 2 (abilities pool their skills)
   growth: 1.5,          // each level needs 1.5x the previous...
   roundTo: 50,          // ...rounded up to the nearest 50
   streakShort: {days: 2, bonus: 0.10},
@@ -340,22 +365,26 @@ const uid = p => p + '_' + Math.random().toString(36).slice(2,8);
 const $ = s => document.querySelector(s);
 
 /* ============ Defaults ============ */
+const ABILITIES = [['STR','Strength'],['DEX','Dexterity'],['CON','Constitution'],['INT','Intelligence'],['WIS','Wisdom'],['CHA','Charisma']];
+const ABILITY_NAME = Object.fromEntries(ABILITIES);
+const GUITAR_TIERS = () => [{amt:30,xp:10},{amt:60,xp:20},{amt:90,xp:30}];
+const READ_TIERS = () => [{amt:15,xp:10},{amt:30,xp:20},{amt:50,xp:30}];
 function defaultState(){
   const t = todayKey();
   return {
-    v: 1, created: t,
+    v: 2, created: t,
     profile: { name: '', portrait: '', title: '' },
     skills: [
-      { id:'guitar',   name:'Guitar',        icon:'guitar',   titles:['Bard','Virtuoso'] },
-      { id:'running',  name:'Running',       icon:'bolt',     titles:['Fleetfoot','Windrunner'] },
-      { id:'climbing', name:'Rock Climbing', icon:'mountain', titles:['Cliffwalker','Mountain-Born'] },
-      { id:'reading',  name:'Reading',       icon:'book',     titles:['Scholar','Sage'] },
+      { id:'guitar',   name:'Guitar',        icon:'guitar',   ability:'CHA', titles:['Bard','Virtuoso'] },
+      { id:'running',  name:'Running',       icon:'bolt',     ability:'STR', titles:['Fleetfoot','Windrunner'] },
+      { id:'climbing', name:'Rock Climbing', icon:'mountain', ability:'STR', titles:['Cliffwalker','Mountain-Born'] },
+      { id:'reading',  name:'Reading',       icon:'book',     ability:'INT', titles:['Scholar','Sage'] },
     ],
     tasks: [
-      { id:'t_guitar', name:'Practice guitar', skill:'guitar',   type:'timed', xp:10, unit:30, target:60, created:'2000-01-01' },
+      { id:'t_guitar', name:'Practice guitar', skill:'guitar',   type:'tiers', unit:'min', tiers:GUITAR_TIERS(), created:'2000-01-01' },
       { id:'t_run',    name:'Go for a run',    skill:'running',  type:'once',  xp:30, created:'2000-01-01' },
       { id:'t_climb',  name:'Rock climbing',   skill:'climbing', type:'once',  xp:30, created:'2000-01-01' },
-      { id:'t_read',   name:'Read',            skill:'reading',  type:'timed', xp:10, unit:30, target:30, created:'2000-01-01' },
+      { id:'t_read',   name:'Read',            skill:'reading',  type:'tiers', unit:'pages', tiers:READ_TIERS(), created:'2000-01-01' },
     ],
     log: {}
   };
@@ -370,7 +399,7 @@ function demoState(){
     if(i <= 9 || rnd() < .6) e.t_guitar = 30 * (1 + Math.floor(rnd()*3));
     if(rnd() < .5 || (i<=4)) e.t_run = 1;
     if(dow===2 || dow===6 || (dow===4 && rnd()<.5)) e.t_climb = 1;
-    if(rnd() < .75) e.t_read = 30 * (1 + Math.floor(rnd()*2));
+    if(rnd() < .75) e.t_read = [15,30,50][Math.floor(rnd()*3)];
     s.log[k] = e;
   }
   s.log[t] = { t_guitar: 30 };
@@ -381,6 +410,18 @@ function migrate(s){
   s.profile = Object.assign({}, d.profile, s.profile||{});
   s.skills = s.skills || d.skills; s.tasks = s.tasks || d.tasks; s.log = s.log || {};
   s.created = s.created || todayKey();
+  if(!s.v || s.v < 2){
+    const AB = {guitar:'CHA', running:'STR', climbing:'STR', reading:'INT'};
+    s.skills.forEach(k=>{ if(!k.ability) k.ability = AB[k.id] || 'WIS'; });
+    const g = s.tasks.find(t=>t.id==='t_guitar'), r = s.tasks.find(t=>t.id==='t_read');
+    if(g && g.type==='timed') Object.assign(g, {type:'tiers', unit:'min', tiers:GUITAR_TIERS()});
+    if(r && r.type==='timed'){
+      Object.assign(r, {type:'tiers', unit:'pages', tiers:READ_TIERS()});
+      for(const k in s.log){ const m = s.log[k].t_read; if(m) s.log[k].t_read = m>=90 ? 50 : m>=60 ? 30 : 15; }
+    }
+    s.v = 2;
+  }
+  s.skills.forEach(k=>{ if(!ABILITY_NAME[k.ability]) k.ability = 'WIS'; });
   return s;
 }
 function load(){ try{ const raw = localStorage.getItem(STORE_KEY); if(raw) return migrate(JSON.parse(raw)); }catch(e){} return null; }
@@ -395,8 +436,16 @@ if(!state){ state = DEMO ? demoState() : defaultState(); firstRun = !DEMO; save(
 function stepUp(r){ return Math.ceil(r*RULES.growth/RULES.roundTo)*RULES.roundTo; }
 function levelInfo(xp, base){ let lvl=1, rem=xp, req=base; while(rem>=req){ rem-=req; lvl++; req=stepUp(req); } return {level:lvl, into:rem, need:req, total:xp}; }
 function multFor(streak){ if(streak>=RULES.streakLong.days) return 1+RULES.streakLong.bonus; if(streak>=RULES.streakShort.days) return 1+RULES.streakShort.bonus; return 1; }
-function baseXP(t, val){ if(!val) return 0; return t.type==='once' ? t.xp : Math.floor(val/t.unit)*t.xp; }
-function possibleXP(t){ return t.type==='once' ? t.xp : Math.floor((t.target||t.unit)/t.unit)*t.xp; }
+function tierFor(t, val){ let hit = null; for(const tr of t.tiers) if(val >= tr.amt && (!hit || tr.amt > hit.amt)) hit = tr; return hit; }
+function baseXP(t, val){ if(!val) return 0; if(t.type==='once') return t.xp; if(t.type==='tiers'){ const tr = tierFor(t,val); return tr ? tr.xp : 0; } return Math.floor(val/t.unit)*t.xp; }
+function possibleXP(t){ if(t.type==='once') return t.xp; if(t.type==='tiers') return Math.max(0, ...t.tiers.map(x=>x.xp)); return Math.floor((t.target||t.unit)/t.unit)*t.xp; }
+function unitOf(t){ return t.type==='timed' ? 'min' : t.type==='tiers' ? t.unit : null; }
+function tierLabel(t, amt){
+  if(t.unit==='min'){ if(amt<60) return `${amt} min`; if(amt%30) return fmtMin(amt); const h = amt/60; return h===1 ? '1 hour' : Number.isInteger(h) ? `${h} hours` : `${Math.floor(h)}\u00bd hours`; }
+  return `${amt} ${t.unit}`;
+}
+function qtyText(u, n){ return u==='min' ? fmtMin(n) : `${fmt(n)} ${u}`; }
+const abilityOf = sid => (state.skills.find(s=>s.id===sid)||{}).ability || 'WIS';
 function isActive(t, k){ return (t.created||'0000') <= k && (!t.retired || k < t.retired); }
 function medalFor(r){ const m=RULES.medals; return r>=m.gold?'gold':r>=m.silver?'silver':r>=m.bronze?'bronze':''; }
 const skillById = id => state.skills.find(s=>s.id===id) || {id, name:'Unknown', icon:'star', titles:[]};
@@ -425,13 +474,16 @@ function achDefs(){
     {id:'xp10k',     name:'Hoard of Ages',     desc:'Earn 10,000 total XP',               icon:'potion', tier:'gold',   test:c=>c.total>=10000},
   ];
   for(const s of state.skills){
-    const timed = state.tasks.some(t=>t.skill===s.id && t.type==='timed');
-    const marks = timed ? [[10,'bronze'],[50,'silver'],[100,'gold']] : [[10,'bronze'],[50,'silver'],[100,'gold']];
-    for(const [n,tier] of marks){
-      L.push(timed
-        ? {id:`h_${s.id}_${n}`, name:`${s.name}: ${n} Hours`, desc:`Log ${n} hours of ${s.name.toLowerCase()}`, icon:s.icon, tier, test:c=>(c.skillMin[s.id]||0)>=n*60}
-        : {id:`n_${s.id}_${n}`, name:`${s.name} ×${n}`, desc:`Complete ${n} ${s.name.toLowerCase()} sessions`, icon:s.icon, tier, test:c=>(c.skillCount[s.id]||0)>=n});
-    }
+    const units = state.tasks.filter(t=>t.skill===s.id).map(unitOf).filter(Boolean);
+    const u = units.includes('min') ? 'min' : units[0];
+    const tiers = ['bronze','silver','gold'];
+    const marks = u==='min' ? [10,50,100] : u==='pages' ? [500,2500,10000] : u ? [100,500,1000] : [10,50,100];
+    marks.forEach((n,i)=>{
+      const tier = tiers[i];
+      if(u==='min') L.push({id:`h_${s.id}_${n}`, name:`${s.name}: ${n} Hours`, desc:`Log ${n} hours of ${s.name.toLowerCase()}`, icon:s.icon, tier, test:c=>((c.skillQty[s.id]||{}).min||0)>=n*60});
+      else if(u) L.push({id:`q_${s.id}_${n}`, name:`${s.name}: ${fmt(n)} ${u[0].toUpperCase()+u.slice(1)}`, desc:`Log ${fmt(n)} ${u} of ${s.name.toLowerCase()}`, icon:s.icon, tier, test:c=>((c.skillQty[s.id]||{})[u]||0)>=n});
+      else L.push({id:`n_${s.id}_${n}`, name:`${s.name} \u00d7${n}`, desc:`Complete ${n} ${s.name.toLowerCase()} sessions`, icon:s.icon, tier, test:c=>(c.skillCount[s.id]||0)>=n});
+    });
   }
   return L;
 }
@@ -443,10 +495,10 @@ function compute(){
   const tasks = state.tasks, defs = achDefs();
   const streak = {}, best = {}, prevStreak = {};
   tasks.forEach(t=>{ streak[t.id]=0; best[t.id]=0; });
-  const skillXP = {}, skillMin = {}, skillCount = {}, skillBest = {}, skillStreak = {};
-  state.skills.forEach(s=>{ skillXP[s.id]=0; skillMin[s.id]=0; skillCount[s.id]=0; skillBest[s.id]=0; skillStreak[s.id]=0; });
+  const skillXP = {}, skillQty = {}, skillCount = {}, skillBest = {}, skillStreak = {};
+  state.skills.forEach(s=>{ skillXP[s.id]=0; skillQty[s.id]={}; skillCount[s.id]=0; skillBest[s.id]=0; skillStreak[s.id]=0; });
   const days = {}, ach = {};
-  const c = { quests:0, bestStreak:0, medals:{bronze:0,silver:0,gold:0}, weekMedals:{bronze:0,silver:0,gold:0}, perfect:0, allSkillsDay:false, level:1, total:0, skillMin, skillCount };
+  const c = { quests:0, bestStreak:0, medals:{bronze:0,silver:0,gold:0}, weekMedals:{bronze:0,silver:0,gold:0}, perfect:0, allSkillsDay:false, level:1, total:0, skillQty, skillCount };
   let wkE=0, wkP=0; const weeks = {};
   for(let k = start; k <= today; k = addDays(k,1)){
     if(parseKey(k).getDay()===1){ wkE=0; wkP=0; }
@@ -463,8 +515,9 @@ function compute(){
       if(val>0){
         if(active) earned += Math.min(b, possibleXP(t));
         xp += x; c.total += x; c.quests++;
-        if(skillXP[t.skill]==null){ skillXP[t.skill]=0; skillMin[t.skill]=0; skillCount[t.skill]=0; }
-        skillXP[t.skill] += x; skillCount[t.skill]++; if(t.type==='timed') skillMin[t.skill] += val;
+        if(skillXP[t.skill]==null){ skillXP[t.skill]=0; skillQty[t.skill]={}; skillCount[t.skill]=0; }
+        skillXP[t.skill] += x; skillCount[t.skill]++;
+        const u = unitOf(t); if(u) skillQty[t.skill][u] = (skillQty[t.skill][u]||0) + val;
         hit.add(t.skill);
       }
     }
@@ -491,8 +544,10 @@ function compute(){
     nextMult[t.id] = todayDone(t.id) ? days[today].items[t.id].mult : multFor((prevStreak[t.id]||0)+1);
   }
   const skills = {};
-  for(const s of state.skills) skills[s.id] = Object.assign(levelInfo(skillXP[s.id]||0, RULES.skillBase), {minutes:skillMin[s.id]||0, count:skillCount[s.id]||0, best:skillBest[s.id]||0, streak:skillStreak[s.id]||0});
-  return { today, start, days, weeks, char: levelInfo(c.total, RULES.charBase), skills, cur, best, nextMult, ach, defs, c };
+  for(const s of state.skills) skills[s.id] = Object.assign(levelInfo(skillXP[s.id]||0, RULES.skillBase), {qty:skillQty[s.id]||{}, minutes:(skillQty[s.id]||{}).min||0, count:skillCount[s.id]||0, best:skillBest[s.id]||0, streak:skillStreak[s.id]||0});
+  const abilities = {};
+  for(const [ab] of ABILITIES){ const xp = state.skills.filter(s=>s.ability===ab).reduce((a,s)=>a+(skillXP[s.id]||0),0); abilities[ab] = levelInfo(xp, RULES.abilityBase); }
+  return { today, start, days, weeks, char: levelInfo(c.total, RULES.charBase), skills, abilities, cur, best, nextMult, ach, defs, c };
 }
 
 function titleDefs(R){
@@ -571,7 +626,11 @@ function viewToday(){
   else next = d.ratio>=1 ? 'Flawless day' : 'Gold secured';
   const medalChip = d.medal ? `<span class="chip ${d.medal}"><span class="dot"></span>${d.medal} day</span>` : `<span class="chip"><span class="dot"></span>No medal yet</span>`;
   const tasks = state.tasks.filter(t=>isActive(t,k));
-  const rows = tasks.map(t=>questRow(t, k, d)).join('');
+  const rows = ABILITIES.map(([ab,name])=>{
+    const list = tasks.filter(t=>abilityOf(t.skill)===ab);
+    if(!list.length) return '';
+    return `<div class="abhead"><span class="abbr">${ab}</span>${name}</div>` + list.map(t=>questRow(t, k, d)).join('');
+  }).join('');
   return `
   ${DEMO ? `<div class="banner"><span>You’re viewing <b>sample progress</b>.</span><button class="linkbtn" data-act="reset-ask">Start fresh</button></div>` : ''}
   ${heroHeader()}
@@ -602,7 +661,13 @@ function questRow(t, k, d){
   const bonusHTML = bonusPct && (done || isToday) ? `<span class="bonus">+${bonusPct}%</span>` : '';
   const shownXP = done ? it.xp : Math.round((t.type==='once'?t.xp:t.xp)*mult);
   let ctrl;
-  if(t.type==='once'){
+  if(t.type==='tiers'){
+    const sel = tierFor(t, it.val);
+    ctrl = `<div class="bubbles" style="grid-template-columns:repeat(${t.tiers.length},minmax(0,1fr))">${t.tiers.map(tr=>{
+      const on = sel && sel.amt===tr.amt, under = sel && tr.amt < sel.amt;
+      return `<button class="bubble ${on?'on':''} ${under?'under':''}" data-act="tier" data-id="${t.id}" data-amt="${tr.amt}" aria-pressed="${!!on}"><span>${esc(tierLabel(t,tr.amt))}</span><small class="num">${fmt(Math.round(tr.xp*mult))} XP</small></button>`;
+    }).join('')}</div>`;
+  } else if(t.type==='once'){
     ctrl = `<div class="ctrlcol"><button class="check" data-act="toggle" data-id="${t.id}" aria-pressed="${done}" aria-label="${esc(t.name)}: ${done?'done':'not done'}">${svg('check')}</button></div>`;
   } else {
     ctrl = `<div class="ctrlcol"><div class="stepper">
@@ -610,11 +675,13 @@ function questRow(t, k, d){
       <output class="num">${fmtMin(it.val)}</output>
       <button data-act="step" data-id="${t.id}" data-n="1" aria-label="More time">+</button></div></div>`;
   }
-  const meta = t.type==='once'
+  const meta = t.type==='tiers'
+    ? `<span class="xpchip num">${done ? fmt(it.xp) : 'up to '+fmt(Math.round(possibleXP(t)*mult))}<small> XP</small></span>`
+    : t.type==='once'
     ? `<span class="xpchip num">${fmt(shownXP)}<small> XP</small></span>`
     : `<span class="xpchip num">${done ? fmt(it.xp) : fmt(Math.round(t.xp*mult))}<small> XP${done?'':' / '+t.unit+'m'}</small></span>`;
   const goal = t.type==='timed' ? `<span>Goal ${fmtMin(t.target)}</span>` : '';
-  return `<article class="frame quest ${done?'done is-done':''}"><div class="in">
+  return `<article class="frame quest ${done?'done is-done':''}"><div class="in ${t.type==='tiers'?'tiered':''}">
     <div class="sigil">${svg(s.icon)}</div>
     <div class="qmain"><div class="qname">${esc(t.name)}</div>
       <div class="qmeta">${meta}<span>${esc(s.name)}</span>${goal}${streakHTML}${bonusHTML}</div></div>
@@ -623,7 +690,7 @@ function questRow(t, k, d){
 
 function viewSkills(){
   if(skillView) return viewSkill(skillView);
-  const cards = state.skills.map(s=>{
+  const card = s=>{
     const L = R.skills[s.id];
     return `<button class="frame skillcard" data-act="skill" data-id="${s.id}"><div class="in">
       <div class="skillhead"><div class="sigil">${svg(s.icon)}</div><div class="skillname">${esc(s.name)}</div></div>
@@ -631,14 +698,20 @@ function viewSkills(){
       ${bar('sk-'+s.id, L.into/L.need*100, 'thin')}
       <div class="xp-row num" style="font-size:12px"><span>${fmt(L.into)} / ${fmt(L.need)}</span><span>${fmt(L.total)} total</span></div>
     </div></button>`;
+  };
+  const boxes = ABILITIES.map(([ab,name])=>{ const A = R.abilities[ab]; return `<a class="abox" href="#ab-${ab}" data-act="ability" data-id="${ab}"><span class="an">${name}</span><b class="num">${A.level}</b><span class="ax num">${fmt(A.total)} XP</span>${bar('ab-'+ab, A.into/A.need*100, 'thin')}</a>`; }).join('');
+  const groups = ABILITIES.map(([ab,name])=>{
+    const list = state.skills.filter(s=>s.ability===ab);
+    if(!list.length) return '';
+    return `<div class="rule" id="ab-${ab}">${name}</div><div class="grid2">${list.map(card).join('')}</div>`;
   }).join('');
-  return `${heroHeader()}<div class="rule">Skills</div><div class="grid2">${cards}</div>
-  <p class="hint" style="text-align:center">Skill XP also counts toward your character level.</p>`;
+  return `${heroHeader()}<div class="rule">Abilities</div><div class="aboxes">${boxes}</div>${groups}
+  <p class="hint" style="text-align:center">Skill XP counts toward its ability and your character level.</p>`;
 }
 function viewSkill(id){
   const s = skillById(id), L = R.skills[id] || levelInfo(0,RULES.skillBase);
   const tasks = state.tasks.filter(t=>t.skill===id);
-  const timed = tasks.some(t=>t.type==='timed');
+  const unitsHere = [...new Set(tasks.map(unitOf).filter(Boolean))];
   // last 28 days heat, aligned to weeks
   const end = R.today, startK = addDays(weekStart(end), -21);
   const cells = []; let maxXP = 1;
@@ -649,24 +722,24 @@ function viewSkill(id){
   }
   const heat = cells.map(([k,x])=>{
     const fut = k > end, a = x ? .25 + .75*(x/maxXP) : 0;
-    return `<i class="${k===end?'today':''}" title="${k}: ${x} XP" style="${x?`background:rgba(143,58,34,${a.toFixed(2)});border-color:rgba(107,40,23,${a.toFixed(2)})`:''}${fut?';opacity:.3':''}"></i>`;
+    return `<i class="${k===end?'today':''}" title="${k}: ${x} XP" style="${x?`background:rgba(201,48,28,${a.toFixed(2)});border-color:rgba(229,69,46,${a.toFixed(2)})`:''}${fut?';opacity:.3':''}"></i>`;
   }).join('');
   const recent = [];
   for(let k=R.today; k>=R.start && recent.length<8; k=addDays(k,-1)){
     const d = R.days[k]; if(!d) continue;
-    for(const t of tasks){ const it=d.items[t.id]; if(it && it.val) recent.push(`<div><span>${esc(niceDate(k))}<br><span class="muted" style="font-size:13px">${esc(t.name)}${t.type==='timed'?' · '+fmtMin(it.val):''}</span></span><b class="num" style="color:var(--gold)">+${it.xp}</b></div>`); }
+    for(const t of tasks){ const it=d.items[t.id]; if(it && it.val) recent.push(`<div><span>${esc(niceDate(k))}<br><span class="muted" style="font-size:13px">${esc(t.name)}${unitOf(t)?' · '+qtyText(unitOf(t), it.val):''}</span></span><b class="num" style="color:var(--gold)">+${it.xp}</b></div>`); }
   }
   const titles = titleDefs(R).filter(t=>t.skill===id);
   return `<button class="back" data-act="skills-back">${svg('left')}All skills</button>
   <section class="frame gold detailhead"><div class="in">
-    <div class="top"><div class="sigil">${svg(s.icon)}</div><div style="flex:1;min-width:0"><div class="label">Skill</div><h1>${esc(s.name)}</h1></div>
+    <div class="top"><div class="sigil">${svg(s.icon)}</div><div style="flex:1;min-width:0"><div class="label">${esc(ABILITY_NAME[s.ability]||'')} skill</div><h1>${esc(s.name)}</h1></div>
       <div class="lvl-shield"><span><span class="l">LEVEL</span><span class="n num">${L.level}</span></span></div></div>
     ${bar('skd-'+id, L.into/L.need*100)}
     <div class="xp-row num"><span><b>${fmt(L.into)}</b> / ${fmt(L.need)} XP</span><span>${fmt(L.need-L.into)} to Level ${L.level+1}</span></div>
   </div></section>
   <div class="stats">
     <div class="stat"><b class="num">${fmt(L.total)}</b><span>Total XP</span></div>
-    <div class="stat"><b class="num">${timed ? fmtMin(L.minutes) : fmt(L.count)}</b><span>${timed?'Time logged':'Sessions'}</span></div>
+    <div class="stat"><b class="num">${unitsHere.length ? qtyText(unitsHere[0], L.qty[unitsHere[0]]||0) : fmt(L.count)}</b><span>${!unitsHere.length ? 'Sessions' : unitsHere[0]==='min' ? 'Time logged' : 'Total '+esc(unitsHere[0])}</span></div>
     <div class="stat"><b class="num">${L.streak}</b><span>Current streak</span></div>
     <div class="stat"><b class="num">${L.best}</b><span>Best streak</span></div>
   </div>
@@ -721,8 +794,8 @@ function viewTrophies(){
 function viewHero(){
   const p = state.profile, T = titleDefs(R), cur = currentTitle(R);
   const totalTime = Object.values(R.skills).reduce((a,s)=>a+s.minutes,0);
-  const skillRows = state.skills.map(s=>`<div class="mrow"><div class="sigil">${svg(s.icon)}</div><div class="mm"><b>${esc(s.name)}</b><span>${state.tasks.filter(t=>t.skill===s.id && !t.retired).length} active quest(s)</span></div><button class="btn" data-act="edit-skill" data-id="${s.id}">Edit</button></div>`).join('');
-  const questRows = state.tasks.map(t=>`<div class="mrow ${t.retired?'retired':''}"><div class="sigil">${svg(skillById(t.skill).icon)}</div><div class="mm"><b>${esc(t.name)}</b><span>${t.type==='once' ? `${t.xp} XP, once a day` : `${t.xp} XP per ${t.unit} min · goal ${fmtMin(t.target)}`}${t.retired?' · retired':''}</span></div><button class="btn" data-act="edit-task" data-id="${t.id}">Edit</button></div>`).join('');
+  const skillRows = state.skills.map(s=>`<div class="mrow"><div class="sigil">${svg(s.icon)}</div><div class="mm"><b>${esc(s.name)}</b><span>${esc(ABILITY_NAME[s.ability]||'')} · ${state.tasks.filter(t=>t.skill===s.id && !t.retired).length} active quest(s)</span></div><button class="btn" data-act="edit-skill" data-id="${s.id}">Edit</button></div>`).join('');
+  const questRows = state.tasks.map(t=>`<div class="mrow ${t.retired?'retired':''}"><div class="sigil">${svg(skillById(t.skill).icon)}</div><div class="mm"><b>${esc(t.name)}</b><span>${t.type==='once' ? `${t.xp} XP, once a day` : t.type==='tiers' ? t.tiers.map(x=>`${tierLabel(t,x.amt)}: ${x.xp} XP`).join(' · ') : `${t.xp} XP per ${t.unit} min · goal ${fmtMin(t.target)}`}${t.retired?' · retired':''}</span></div><button class="btn" data-act="edit-task" data-id="${t.id}">Edit</button></div>`).join('');
   return `<section class="frame gold profile"><div class="in">
     ${portraitHTML()}
     <label class="btn gold" for="f-photo">Change portrait</label>
@@ -840,48 +913,70 @@ function closeSheet(){ const s=$('#sheet'); if(s) s.remove(); }
 function iconPicker(sel){ return `<div class="icons" id="f-icons">${SKILL_ICONS.map(i=>`<button type="button" data-icon="${i}" aria-label="${i}" aria-pressed="${i===sel}">${svg(i)}</button>`).join('')}</div>`; }
 function wireIcons(root, cb){ root.querySelectorAll('[data-icon]').forEach(b=>b.addEventListener('click',()=>{ root.querySelectorAll('[data-icon]').forEach(x=>x.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true'); cb(b.dataset.icon); })); }
 
+function abilitySelect(id, sel){ return `<select id="${id}">${ABILITIES.map(([ab,n])=>`<option value="${ab}" ${ab===sel?'selected':''}>${n} (${ab})</option>`).join('')}</select>`; }
 function taskSheet(id){
-  const t = id ? state.tasks.find(x=>x.id===id) : {name:'', skill: state.skills[0] ? state.skills[0].id : '__new', type:'once', xp:30, unit:30, target:30};
-  let type = t.type, icon = 'star';
-  const opts = state.skills.map(s=>`<option value="${s.id}" ${s.id===t.skill?'selected':''}>${esc(s.name)}</option>`).join('') + `<option value="__new" ${!state.skills.length?'selected':''}>+ New skill…</option>`;
+  const t = id ? state.tasks.find(x=>x.id===id) : {name:'', skill: state.skills[0] ? state.skills[0].id : '__new', type:'once', xp:30};
+  let type = t.type==='once' ? 'once' : 'tiers', icon = 'star';
+  const tiers = t.type==='tiers' ? t.tiers.map(x=>({...x})) : GUITAR_TIERS();
+  const unit = t.type==='tiers' ? t.unit : 'min';
+  const opts = state.skills.map(s=>`<option value="${s.id}" ${s.id===t.skill?'selected':''}>${esc(s.name)} · ${ABILITY_NAME[s.ability]}</option>`).join('') + `<option value="__new" ${!state.skills.length?'selected':''}>+ New skill…</option>`;
+  const tierRow = i => `<div class="tierrow"><span class="label">Bubble ${i+1}</span>
+      <input id="f-amt${i}" type="number" inputmode="numeric" min="1" value="${tiers[i]?tiers[i].amt:''}" aria-label="Bubble ${i+1} amount" placeholder="Amount">
+      <input id="f-xp${i}" type="number" inputmode="numeric" min="1" value="${tiers[i]?tiers[i].xp:''}" aria-label="Bubble ${i+1} XP" placeholder="XP"></div>`;
   openSheet(`<h2>${id?'Edit quest':'New quest'}</h2>
-    <div class="field"><label for="f-tname">Quest</label><input id="f-tname" value="${esc(t.name)}" placeholder="e.g. Stretch for 10 minutes" autocomplete="off"></div>
+    <div class="field"><label for="f-tname">Quest</label><input id="f-tname" value="${esc(t.name)}" placeholder="e.g. Stretch" autocomplete="off"></div>
     <div class="field"><label for="f-tskill">Skill it trains</label><select id="f-tskill">${opts}</select></div>
-    <div id="f-newskill-wrap" hidden><div class="field"><label for="f-newskill">New skill name</label><input id="f-newskill" placeholder="e.g. Fitness" autocomplete="off"></div><div class="field" style="margin-top:10px"><label>Icon</label>${iconPicker(icon)}</div></div>
-    <div class="field"><label>How it counts</label><div class="seg"><button type="button" id="f-once" aria-pressed="${type==='once'}">Once a day</button><button type="button" id="f-timed" aria-pressed="${type==='timed'}">By time</button></div></div>
-    <div class="field" id="f-xp-wrap"><label for="f-txp" id="f-xp-label"></label><input id="f-txp" type="number" inputmode="numeric" min="5" step="5" value="${t.xp}"></div>
-    <div class="field" id="f-target-wrap"><label for="f-target">Daily goal (minutes)</label><input id="f-target" type="number" inputmode="numeric" min="30" step="30" value="${t.target||30}"><span class="hint">The goal sets how much this quest counts toward your bronze, silver and gold days. Time beyond the goal still earns XP.</span></div>
+    <div id="f-newskill-wrap" hidden style="display:flex;flex-direction:column;gap:10px">
+      <div class="field"><label for="f-newskill">New skill name</label><input id="f-newskill" placeholder="e.g. Yoga" autocomplete="off"></div>
+      <div class="field"><label for="f-newab">Ability</label>${abilitySelect('f-newab','DEX')}</div>
+      <div class="field"><label>Icon</label>${iconPicker(icon)}</div></div>
+    <div class="field"><label>How it counts</label><div class="seg"><button type="button" id="f-once" aria-pressed="${type==='once'}">Checkbox</button><button type="button" id="f-tiers" aria-pressed="${type==='tiers'}">Bubbles</button></div></div>
+    <div class="field" id="f-once-wrap"><label for="f-txp">XP when done</label><input id="f-txp" type="number" inputmode="numeric" min="1" step="5" value="${t.xp||30}"></div>
+    <div id="f-tiers-wrap" style="display:flex;flex-direction:column;gap:10px">
+      <div class="field"><label for="f-unit">Measured in</label><select id="f-unit">
+        ${[['min','Minutes'],['pages','Pages'],['reps','Reps'],['miles','Miles'],['km','Kilometers'],['sets','Sets']].map(([v,l])=>`<option value="${v}" ${v===unit?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="tierhead"><span></span><span class="label">Amount</span><span class="label">XP</span></div>
+      ${[0,1,2].map(tierRow).join('')}
+      <span class="hint">Tap a bubble to log it, tap it again to clear it. The biggest bubble is the most XP the quest gives in a day. Leave bubble 3 empty if you only want two.</span>
+    </div>
     <p class="hint" id="f-err" style="color:var(--err)" hidden></p>
     <button class="btn primary block" id="f-save">${id?'Save quest':'Add quest'}</button>
     ${id ? `<button class="btn ${t.retired?'gold':'danger'} block" id="f-retire">${t.retired?'Bring back this quest':'Retire this quest'}</button><p class="hint" style="margin:0">Retiring hides a quest from your daily list. The XP you already earned from it stays.</p>`:''}
     <button class="btn block" id="f-cancel">Cancel</button>`, root=>{
+    const q = x=>root.querySelector(x);
     const sync = ()=>{
-      root.querySelector('#f-once').setAttribute('aria-pressed', type==='once');
-      root.querySelector('#f-timed').setAttribute('aria-pressed', type==='timed');
-      root.querySelector('#f-target-wrap').hidden = type!=='timed';
-      root.querySelector('#f-xp-label').textContent = type==='once' ? 'XP when done' : 'XP per 30 minutes';
-      root.querySelector('#f-newskill-wrap').hidden = root.querySelector('#f-tskill').value !== '__new';
+      q('#f-once').setAttribute('aria-pressed', type==='once');
+      q('#f-tiers').setAttribute('aria-pressed', type==='tiers');
+      q('#f-once-wrap').hidden = type!=='once';
+      q('#f-tiers-wrap').hidden = type!=='tiers';
+      q('#f-newskill-wrap').hidden = q('#f-tskill').value !== '__new';
     };
-    root.querySelector('#f-once').onclick = ()=>{ type='once'; if(!id) root.querySelector('#f-txp').value = 30; sync(); };
-    root.querySelector('#f-timed').onclick = ()=>{ type='timed'; if(!id) root.querySelector('#f-txp').value = 10; sync(); };
-    root.querySelector('#f-tskill').onchange = sync;
+    q('#f-once').onclick = ()=>{ type='once'; sync(); };
+    q('#f-tiers').onclick = ()=>{ type='tiers'; sync(); };
+    q('#f-tskill').onchange = sync;
     wireIcons(root, i=>icon=i);
-    root.querySelector('#f-cancel').onclick = closeSheet;
-    const ret = root.querySelector('#f-retire');
+    q('#f-cancel').onclick = closeSheet;
+    const ret = q('#f-retire');
     if(ret) ret.onclick = ()=>{ mutate(()=>{ t.retired = t.retired ? '' : todayKey(); if(!t.retired) delete t.retired; }); closeSheet(); };
-    root.querySelector('#f-save').onclick = ()=>{
-      const err = root.querySelector('#f-err');
-      const name = root.querySelector('#f-tname').value.trim();
-      const xp = Math.max(1, parseInt(root.querySelector('#f-txp').value,10)||0);
-      const target = Math.max(30, Math.round((parseInt(root.querySelector('#f-target').value,10)||30)/30)*30);
-      let skill = root.querySelector('#f-tskill').value;
-      const newName = root.querySelector('#f-newskill').value.trim();
-      if(!name){ err.textContent='Give the quest a name.'; err.hidden=false; return; }
-      if(skill==='__new' && !newName){ err.textContent='Name the new skill.'; err.hidden=false; return; }
+    q('#f-save').onclick = ()=>{
+      const err = q('#f-err'), fail = m=>{ err.textContent=m; err.hidden=false; };
+      const name = q('#f-tname').value.trim();
+      let skill = q('#f-tskill').value;
+      const newName = q('#f-newskill').value.trim();
+      if(!name) return fail('Give the quest a name.');
+      if(skill==='__new' && !newName) return fail('Name the new skill.');
+      let fields;
+      if(type==='once'){ fields = {type:'once', xp: Math.max(1, parseInt(q('#f-txp').value,10)||0)}; }
+      else {
+        const list = [0,1,2].map(i=>({amt:parseInt(q('#f-amt'+i).value,10), xp:parseInt(q('#f-xp'+i).value,10)})).filter(x=>x.amt>0 && x.xp>0).sort((a,b)=>a.amt-b.amt);
+        if(!list.length) return fail('Fill in at least one bubble with an amount and XP.');
+        if(new Set(list.map(x=>x.amt)).size !== list.length) return fail('Each bubble needs a different amount.');
+        fields = {type:'tiers', unit:q('#f-unit').value, tiers:list};
+      }
       mutate(()=>{
-        if(skill==='__new'){ const s = {id:uid('s'), name:newName, icon, titles:[]}; state.skills.push(s); skill = s.id; }
-        if(id){ Object.assign(t, {name, skill, type, xp, unit:30, target}); }
-        else state.tasks.push({id:uid('t'), name, skill, type, xp, unit:30, target, created: todayKey()});
+        if(skill==='__new'){ const s = {id:uid('s'), name:newName, icon, ability:q('#f-newab').value, titles:[]}; state.skills.push(s); skill = s.id; }
+        if(id){ ['xp','unit','tiers','target'].forEach(k=>delete t[k]); Object.assign(t, {name, skill}, fields); }
+        else state.tasks.push(Object.assign({id:uid('t'), name, skill, created: todayKey()}, fields));
       });
       closeSheet();
     };
@@ -889,11 +984,12 @@ function taskSheet(id){
   });
 }
 function skillSheet(id){
-  const s = id ? state.skills.find(x=>x.id===id) : {name:'', icon:'star', titles:[]};
+  const s = id ? state.skills.find(x=>x.id===id) : {name:'', icon:'star', ability:'STR', titles:[]};
   let icon = s.icon;
   const [a,b] = s.titles||[];
   openSheet(`<h2>${id?'Edit skill':'New skill'}</h2>
     <div class="field"><label for="f-sname">Skill name</label><input id="f-sname" value="${esc(s.name)}" placeholder="e.g. Cooking" autocomplete="off"></div>
+    <div class="field"><label for="f-sab">Ability</label>${abilitySelect('f-sab', s.ability)}</div>
     <div class="field"><label>Icon</label>${iconPicker(icon)}</div>
     <div class="field"><label for="f-t5">Title at skill level 5</label><input id="f-t5" value="${esc(a||'')}" placeholder="e.g. Hearth Cook" autocomplete="off"></div>
     <div class="field"><label for="f-t10">Title at skill level 10</label><input id="f-t10" value="${esc(b||'')}" placeholder="e.g. Master Chef" autocomplete="off"></div>
@@ -906,7 +1002,8 @@ function skillSheet(id){
       const name = root.querySelector('#f-sname').value.trim();
       if(!name){ const e=root.querySelector('#f-err'); e.textContent='Give the skill a name.'; e.hidden=false; return; }
       const titles = [root.querySelector('#f-t5').value.trim(), root.querySelector('#f-t10').value.trim()].filter(Boolean);
-      mutate(()=>{ if(id) Object.assign(s,{name,icon,titles}); else state.skills.push({id:uid('s'), name, icon, titles}); });
+      const ability = root.querySelector('#f-sab').value;
+      mutate(()=>{ if(id) Object.assign(s,{name,icon,ability,titles}); else state.skills.push({id:uid('s'), name, icon, ability, titles}); });
       closeSheet();
     };
   });
@@ -980,6 +1077,8 @@ document.addEventListener('click', e=>{
   const a = b.dataset.act, id = b.dataset.id;
   if(a==='tab'){ view = id; skillView = null; if(id==='today') viewDate = R.today; try{ sessionStorage.setItem('hl-view', id); }catch(_){} render(); window.scrollTo(0,0); }
   else if(a==='toggle'){ const cur = ((state.log[viewDate]||{})[id])||0; mutate(()=>setVal(id, cur?0:1), e); }
+  else if(a==='tier'){ const t = state.tasks.find(x=>x.id===id), amt = +b.dataset.amt, cur = ((state.log[viewDate]||{})[id])||0, sel = tierFor(t, cur); mutate(()=>setVal(id, sel && sel.amt===amt ? 0 : amt), e); }
+  else if(a==='ability'){ e.preventDefault(); const el = document.getElementById('ab-'+id); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); else toast(ABILITY_NAME[id], 'No skills here yet. Add one from the Hero tab.', 'skills'); }
   else if(a==='step'){ const t = state.tasks.find(x=>x.id===id); const cur = ((state.log[viewDate]||{})[id])||0; mutate(()=>setVal(id, Math.max(0, cur + (+b.dataset.n)*t.unit)), e); }
   else if(a==='day'){ const n = addDays(viewDate, +b.dataset.n); if(n<=R.today){ viewDate = n; render(); } }
   else if(a==='today'){ viewDate = R.today; render(); }
