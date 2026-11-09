@@ -391,7 +391,7 @@ const RULES = {
   rarePetChance: 1/1000  // per quest completed, for that skill's rare companion
 };
 const DEMO = !!window.XP_DEMO;
-const APP_VERSION = '2026.11.09-1855';
+const APP_VERSION = '2026.11.09-1905';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -490,6 +490,29 @@ const GROUP_NAME = { exercise:'Exercise' };
 // Sprites: 32x32 canvas. Rows of 16 chars are mirrored; rows of 32 are used as-is.
 // Region letters (auto-shaded): a c d x y z.  Flat: e eye, w white, n dark/mouth.
 const SPR = {
+nightmare: { pal:{a:[265,18,20], x:[16,95,52], y:[46,100,62]}, e:'#ff5a1f', rows:[
+"......................xx........",
+".....................xyx.x......",
+"....................xyyxxyx.....",
+"...................xyyxaaax.....",
+"..................xyyxaaaaaa....",
+"..................xyxaaaeaaaa...",
+".................xyxaaaaaaaaaa..",
+".................xyaaaa...aaaan.",
+".................xaaaa.....aaa..",
+"................aaaaa...........",
+"....xx.......aaaaaaa............",
+"...xyyx..aaaaaaaaaaa............",
+"..xyyxaaaaaaaaaaaaaa............",
+".xyyx.aaaaaaaaaaaaaa............",
+".xyx..aaaaaaaaaaaaaa............",
+"xyx...aaaaaaaaaaaaa.............",
+"xx.....aaa.aa...aa.aa...........",
+".......aa..aa...aa..aa..........",
+"......aa...aa...aa...aa.........",
+"......aa...aa...aa...aa.........",
+".....xx...xx....xx...xx.........",
+".....yx...yx....yx...yx........."]},
 cat: { pal:{a:[24,85,55], c:[35,40,88], d:[18,75,36], x:[350,60,72]}, e:'#7bd35a', rows:[
 "........a..............a........",
 "........aa............aa........",
@@ -643,31 +666,6 @@ hound: { pal:{a:[28,62,50], c:[38,60,82], d:[20,40,26], x:[4,65,42]}, e:'#120c0a
 ".....aaa.........aa...aa........",
 "....aaa..........aa....aa.......",
 "...ddd...........dd.....dd......"]},
-werewolf: { pal:{a:[30,12,38], c:[35,15,62], d:[30,12,22], y:[90,25,32]}, e:'#ff4a2a', rows:[
-"................",
-".......d........",
-".......dd.......",
-".......dad..aaaa",
-"........aaaaaaaa",
-".......aaaaaaaaa",
-".......aaeeaaaaa",
-".......aaaaaaccc",
-"........aaaaccnn",
-"........aawwcccc",
-"....aaaaaaaacccc",
-"..aaaaaaaacccccc",
-".aaaaaaaaacccccc",
-".aaa.aaaaaaccccc",
-".aaa..aaaaaaccca",
-".aaa..aaaaaaaaaa",
-".aaa...yyyyyyyyy",
-".www...yyyyyyyyy",
-".w.w...yyyyyyyyy",
-"........yyyy....",
-"........aaaa....",
-"........aaaa....",
-".......aaaaa....",
-"......wwwww....."]},
 lizard: { pal:{a:[150,32,42], c:[60,45,70], d:[150,35,24], x:[22,90,58]}, e:'#120c0a', rows:[
 ".......d.d.d.d........aaaaa.....",
 "......dadadadad......aaaaaeaa...",
@@ -954,10 +952,10 @@ sprSVG.n = 0;
 
 
 
-const SKILL_PETS = { reading:['owl','golem'], running:['hound','werewolf'], climbing:['lizard','wyvern'], guitar:['finch','phoenix'], yoga:['fox','turtle'], stretching:['hare','boa'], social:['slime','kingslime'], cinema:['bat','beholder'], plants:['mandrake','treant'], housekeeping:['mimic','gargoyle'] };
+const SKILL_PETS = { reading:['owl','golem'], running:['hound','nightmare'], climbing:['lizard','wyvern'], guitar:['finch','phoenix'], yoga:['fox','turtle'], stretching:['hare','boa'], social:['slime','kingslime'], cinema:['bat','beholder'], plants:['mandrake','treant'], housekeeping:['mimic','gargoyle'] };
 const PET_NAMES = {
   reading:     [['Wisened Owl','Peers over its spectacles at anything you have not finished reading.'],['Tome Golem','A guardian stitched from a hundred books. It remembers every page.']],
-  running:     [['Trail Hound','Knows every path for miles and wants to run all of them.'],['Werewolf','Runs all night and is still waiting at the door at dawn.']],
+  running:     [['Trail Hound','Knows every path for miles and wants to run all of them.'],['Infernal Stallion','A nightmare of smoke and flame. Its hoofprints smolder for hours after a run.']],
   climbing:    [['Crag Lizard','Sticks to any rock face. Judges your grip.'],['Ancient Wyvern','Has nested on the highest peaks for a thousand years. Respects a good climb.']],
   guitar:      [['Lyre Finch','Hums your last practice back to you, slightly off-key.'],['Phoenix','Its song catches fire on the high notes.']],
   yoga:        [['Lotus Fox','Naps in perfect balance on one paw.'],['Turtle Monk','Has held the same pose for three hundred years. Still breathing deeply.']],
