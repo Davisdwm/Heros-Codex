@@ -278,6 +278,12 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .pet:not(.got) .pn{color:var(--faint);letter-spacing:.2em}
 .pet .ph{font-size:11px;color:var(--faint);line-height:1.25}
 .pet.got .ph{color:var(--muted)}
+.petpet{border:0;padding:0;cursor:pointer;position:relative;color:inherit}
+.petpet.wiggle svg{animation:petwiggle .45s ease}
+@keyframes petwiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg) scale(1.04)}75%{transform:rotate(6deg) scale(1.04)}}
+.petbubble{position:absolute;top:2px;left:50%;transform:translateX(-50%);padding:6px 12px;border-radius:14px;background:var(--fg);color:var(--bg);font-weight:700;font-size:16px;white-space:nowrap;pointer-events:none;animation:petbub 1.1s ease forwards;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.petbubble::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:var(--fg)}
+@keyframes petbub{0%{opacity:0;transform:translate(-50%,8px) scale(.7)}15%{opacity:1;transform:translate(-50%,0) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-10px)}}
 .petbig{display:grid;place-items:center;width:180px;height:180px;max-width:100%;border-radius:50%;background:radial-gradient(circle,rgba(217,173,85,.16),rgba(0,0,0,0) 68%)}
 .petbig svg{image-rendering:pixelated}
 .petdesc{max-width:300px;margin:4px 0 0;color:var(--muted);font-size:15px}
@@ -449,7 +455,7 @@ const RULES = {
 };
 const DEMO = !!window.XP_DEMO;
 const APP_KIND = 'personal';
-const APP_VERSION = '2026.11.10-0045';
+const APP_VERSION = '2026.11.10-1458';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -3393,6 +3399,7 @@ function compute(){
       }
     }
     for(const g in gEarn) earned += Math.min(gEarn[g], gCap[g]||0);
+    if(state.petPets && state.petPets[k]){ xp += 1; c.total += 1; }   // daily pet: 1 XP to your character
     // Each day's XP becomes progress measured against that day's own quests, so earned levels never drop.
     if(xp > 0){
       uChar += xp / fullDay(k, ()=>true);
@@ -4139,11 +4146,12 @@ function skillSheet(id){
     };
   });
 }
+const PET_SOUNDS = ['Moo!','Meow!','Bark!','Caw!','Woof!','Purr\u2026','Quack!','Oink!','Baa!','Neigh!','Hoot!','Ribbit!','Squeak!','Chirp!','Hiss!','Roar!','Cluck!','Honk!','Tweet!','Grr\u2026','Bzzz!','Awoo!','Squawk!','Blub!'];
 function petSheet(id){
   const p = petDefs().find(x=>x.id===id); if(!p) return;
   const got = R.pets[p.id], isComp = state.profile.pet===p.id;
   openSheet(`<div class="label" style="color:var(--gold)">${got ? (p.rare?'Shiny companion':'Companion') : 'Not yet found'}</div><h2 id="f-pettitle">${got ? esc(petTitle(p)) : '???'}</h2>
-    <div class="petbig ${p.form}" style="align-self:center">${petArt(p, 200, !got)}</div>
+    ${got ? `<button type="button" class="petbig petpet ${p.form}" id="f-petpet" aria-label="${esc(petTitle(p))}" style="align-self:center">${petArt(p, 200)}</button>` : `<div class="petbig ${p.form}" style="align-self:center">${petArt(p, 200, true)}</div>`}
     ${got ? `<p style="margin:0">${esc(p.desc)}</p><p class="hint" style="margin:0">${esc(petOrigin(p))} · found ${esc(niceDate(got))}</p>` : `<p class="hint" style="margin:0">How to find it: ${esc(p.how)}.</p>`}
     ${got ? `<div class="field" id="f-namebox" hidden><label for="f-petname">Name your ${esc(p.name)}</label><input id="f-petname" maxlength="20" value="${esc(petNick(p))}" placeholder="e.g. Whiskers" autocomplete="off"></div>
       <div class="btnrow"><button class="btn gold" id="f-name">${petNick(p) ? 'Rename' : 'Name'}</button>${petNick(p) ? `<button class="btn" id="f-unname">Remove name</button>` : ''}</div>` : ''}
@@ -4156,6 +4164,13 @@ function petSheet(id){
     if(nb) nb.onclick = ()=>{ if(box.hidden){ box.hidden = false; nb.textContent = 'Save name'; inp.focus(); } else setName(inp.value); };
     if(inp) inp.onkeydown = e=>{ if(e.key==='Enter') setName(inp.value); };
     const un = root.querySelector('#f-unname'); if(un) un.onclick = ()=>setName('');
+    const pet = root.querySelector('#f-petpet');
+    if(pet) pet.onclick = e=>{
+      const b = document.createElement('span'); b.className = 'petbubble'; b.textContent = PET_SOUNDS[Math.floor(Math.random()*PET_SOUNDS.length)];
+      pet.appendChild(b); pet.classList.remove('wiggle'); void pet.offsetWidth; pet.classList.add('wiggle'); setTimeout(()=>b.remove(), 1100);
+      const k = todayKey(); state.petPets = state.petPets || {};
+      if(!state.petPets[k]){ mutate(()=>{ state.petPets[k] = true; }, e); }   // 1 XP for the first pet of the day, never more
+    };
   });
 }
 function condSheet(id){
