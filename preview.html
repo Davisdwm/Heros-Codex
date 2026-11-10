@@ -449,7 +449,7 @@ const RULES = {
 };
 const DEMO = !!window.XP_DEMO;
 const APP_KIND = 'personal';
-const APP_VERSION = '2026.11.10-0032';
+const APP_VERSION = '2026.11.10-0045';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -3234,9 +3234,11 @@ function migrate(s){
   s.skills.forEach(k=>{ if(!ABILITY_NAME[k.ability]) k.ability = 'WIS'; });
   return s;
 }
-function load(){ try{ const raw = localStorage.getItem(STORE_KEY); if(raw) return migrate(JSON.parse(raw)); }catch(e){} return null; }
+function ensurePetSince(s){ if(s && s.profile && !s.profile.petSince) s.profile.petSince = todayKey(); return s; }
+function load(){ try{ const raw = localStorage.getItem(STORE_KEY); if(raw) return ensurePetSince(migrate(JSON.parse(raw))); }catch(e){} return null; }
 let saveWarned = false;
-function save(){ try{ schedulePublish(); }catch(e){} try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){ if(!saveWarned){ saveWarned = true; toast('Not saved','This browser is blocking storage, so progress will reset when you close it.','shield'); } } }
+var dataDirty = false;
+function save(){ dataDirty = true; try{ schedulePublish(); }catch(e){} try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){ if(!saveWarned){ saveWarned = true; toast('Not saved','This browser is blocking storage, so progress will reset when you close it.','shield'); } } }
 
 let state = load();
 let firstRun = false;
@@ -3289,6 +3291,7 @@ function dayPossible(k){
 function medalFor(r){ const m=RULES.medals; return r>=m.gold?'gold':r>=m.silver?'silver':r>=m.bronze?'bronze':''; }
 const skillById = id => state.skills.find(s=>s.id===id) || {id, name:'Unknown', icon:'star', titles:[]};
 
+const SKILL_LADDER = [[10,'Novice','bronze'],[50,'Apprentice','bronze'],[100,'Adept','silver'],[250,'Expert','silver'],[500,'Master','gold'],[1000,'Grandmaster','red']];
 function achDefs(){
   const L = [
     {id:'first',     name:'First Steps',       desc:'Complete your first quest',          icon:'star',   tier:'bronze', test:c=>c.quests>=1},
@@ -3315,20 +3318,34 @@ function achDefs(){
     {id:'side10',    name:'Tavern Board Regular', desc:'Complete 10 side quests',         icon:'quests', tier:'silver', test:c=>c.sideDone>=10},
     {id:'side25',    name:'Wandering Hero',    desc:'Complete 25 side quests',            icon:'sword',  tier:'gold',   test:c=>c.sideDone>=25},
     {id:'side50',    name:'Hero of a Hundred Tales', desc:'Complete 50 side quests',      icon:'crown',  tier:'red',    test:c=>c.sideDone>=50},
+    {id:'days7',     name:'Steady Start',      desc:'Complete a quest 7 days in a row',   icon:'flame',  tier:'bronze', test:c=>c.bestDayRun>=7},
+    {id:'days30',    name:'Unwavering',        desc:'Complete a quest 30 days in a row',  icon:'flame',  tier:'silver', test:c=>c.bestDayRun>=30},
+    {id:'days100',   name:'Centurion',         desc:'Complete a quest 100 days in a row', icon:'flame',  tier:'gold',   test:c=>c.bestDayRun>=100},
+    {id:'days365',   name:'Year of the Hero',  desc:'Complete a quest every day for a year', icon:'crown', tier:'red',  test:c=>c.bestDayRun>=365},
+    {id:'lvlday2',   name:'Growth Spurt',      desc:'Level up 2 skills in one day',       icon:'star',   tier:'silver', test:c=>c.maxLevelUps>=2},
+    {id:'lvlday3',   name:'Renaissance Day',   desc:'Level up 3 skills in one day',       icon:'star',   tier:'gold',   test:c=>c.maxLevelUps>=3},
+    {id:'ws3',       name:'Errand Day',        desc:'Complete 3 weekly or side quests in one day', icon:'quests', tier:'bronze', test:c=>c.maxWS>=3},
+    {id:'ws5',       name:'Grand Tour',        desc:'Complete 5 weekly or side quests in one day', icon:'quests', tier:'silver', test:c=>c.maxWS>=5},
     {id:'xp10k',     name:'Hoard of Ages',     desc:'Earn 10,000 total XP',               icon:'potion', tier:'gold',   test:c=>c.total>=10000},
   ];
-  for(const s of state.skills){
-    const units = state.tasks.filter(t=>t.skill===s.id).map(unitOf).filter(Boolean);
-    const u = units.includes('min') ? 'min' : units[0];
-    const tiers = ['bronze','silver','gold'];
-    const marks = u==='min' ? [10,50,100] : u==='pages' ? [500,2500,10000] : u ? [100,500,1000] : [10,50,100];
-    marks.forEach((n,i)=>{
-      const tier = tiers[i];
-      if(u==='min') L.push({id:`h_${s.id}_${n}`, name:`${s.name}: ${n} Hours`, desc:`Log ${n} hours of ${s.name.toLowerCase()}`, icon:s.icon, tier, test:c=>((c.skillQty[s.id]||{}).min||0)>=n*60});
-      else if(u) L.push({id:`q_${s.id}_${n}`, name:`${s.name}: ${fmt(n)} ${u[0].toUpperCase()+u.slice(1)}`, desc:`Log ${fmt(n)} ${u} of ${s.name.toLowerCase()}`, icon:s.icon, tier, test:c=>((c.skillQty[s.id]||{})[u]||0)>=n});
-      else L.push({id:`n_${s.id}_${n}`, name:`${s.name} \u00d7${n}`, desc:`Complete ${n} ${s.name.toLowerCase()} sessions`, icon:s.icon, tier, test:c=>(c.skillCount[s.id]||0)>=n});
-    });
-  }
+  // Every skill, including ones added later, gets a ladder for quests completed.
+  for(const s of state.skills) SKILL_LADDER.forEach(([n,rank,tier])=>L.push({ id:`q_${s.id}_${n}`, name:`${s.name} ${rank}`, desc:`Complete ${fmt(n)} ${s.name.toLowerCase()} quests`, icon:s.icon, tier, test:c=>(c.skillCount[s.id]||0)>=n }));
+  // Achievements about things outside your quest history; checked once the rest is worked out.
+  L.push(
+    {id:'pets5',   name:'Companion Collector', desc:'Collect 5 companions',              icon:'paw',    tier:'bronze', meta:true, test:m=>m.pets>=5},
+    {id:'pets10',  name:'Menagerie',           desc:'Collect 10 companions',             icon:'paw',    tier:'silver', meta:true, test:m=>m.pets>=10},
+    {id:'pets25',  name:'Beastmaster',         desc:'Collect 25 companions',             icon:'paw',    tier:'gold',   meta:true, test:m=>m.pets>=25},
+    {id:'pets50',  name:'Keeper of Legends',   desc:'Collect 50 companions',             icon:'crown',  tier:'red',    meta:true, test:m=>m.pets>=50},
+    {id:'bond10',  name:'Trusted Companion',   desc:'Travel with the same companion for 10 days', icon:'heart', tier:'bronze', meta:true, test:m=>m.bond>=10},
+    {id:'bond20',  name:'Inseparable',         desc:'Travel with the same companion for 20 days', icon:'heart', tier:'silver', meta:true, test:m=>m.bond>=20},
+    {id:'bond50',  name:'Bonded for Life',     desc:'Travel with the same companion for 50 days', icon:'heart', tier:'gold',   meta:true, test:m=>m.bond>=50},
+    {id:'named1',  name:'What\u2019s in a Name', desc:'Give a companion a name',          icon:'quill',  tier:'bronze', meta:true, test:m=>m.named>=1},
+    {id:'friend1', name:'Fellowship',          desc:'Add a friend',                      icon:'users',  tier:'bronze', meta:true, test:m=>m.friends>=1},
+    {id:'friend5', name:'Adventuring Party',   desc:'Add 5 friends',                     icon:'users',  tier:'silver', meta:true, test:m=>m.friends>=5},
+    {id:'titles5', name:'Titled',              desc:'Earn 5 titles',                     icon:'crown',  tier:'bronze', meta:true, test:m=>m.titles>=5},
+    {id:'titles10',name:'Renowned',            desc:'Earn 10 titles',                    icon:'crown',  tier:'silver', meta:true, test:m=>m.titles>=10},
+    {id:'titles15',name:'Legend of Many Names',desc:'Earn 15 titles',                    icon:'crown',  tier:'gold',   meta:true, test:m=>m.titles>=15},
+  );
   return L;
 }
 
@@ -3343,7 +3360,7 @@ function compute(){
   state.skills.forEach(s=>{ skillXP[s.id]=0; skillQty[s.id]={}; skillCount[s.id]=0; skillBest[s.id]=0; skillStreak[s.id]=0; });
   const days = {}, ach = {}, petDates = {}, sideDone = {};
   let uChar = 0; const uSkill = {}, uAb = {};   // progress in full days, earned day by day
-  const c = { quests:0, bestStreak:0, medals:{bronze:0,silver:0,gold:0}, weekMedals:{bronze:0,silver:0,gold:0}, perfect:0, sideDone:0, allSkillsDay:false, level:1, total:0, skillQty, skillCount };
+  const c = { quests:0, bestStreak:0, medals:{bronze:0,silver:0,gold:0}, weekMedals:{bronze:0,silver:0,gold:0}, perfect:0, sideDone:0, dayRun:0, bestDayRun:0, maxLevelUps:0, maxWS:0, allSkillsDay:false, level:1, total:0, skillQty, skillCount };
   let wkE=0, wkP=0; const weeks = {};
   for(let k = start; k <= today; k = addDays(k,1)){
     if(parseKey(k).getDay()===1){ wkE=0; wkP=0; }
@@ -3355,7 +3372,7 @@ function compute(){
       for(const [ab] of ABILITIES){ uAb[ab] = Math.max(uAb[ab]||0, F.abilities[ab]||0); F.abilities[ab] = uAb[ab]; }
     }
     const e = state.log[k] || {};
-    let earned=0, possible=dayPossible(k), xp=0; const items = {}; const hit = new Set(); const gEarn = {}, gCap = {}, dayX = {};
+    let earned=0, possible=dayPossible(k), xp=0; const items = {}; const hit = new Set(); const gEarn = {}, gCap = {}, dayX = {}; let wsToday = 0, levelUps = 0;
     for(const t of tasks){
       const val = e[t.id] || 0, active = isActive(t,k), counts = active && !noMedal(t), tc = cfgAt(t,k);
       if(counts && t.oneOf) gCap[t.oneOf] = Math.max(gCap[t.oneOf]||0, possibleXP(tc));
@@ -3372,6 +3389,7 @@ function compute(){
         const u = unitOf(t); if(u) skillQty[t.skill][u] = (skillQty[t.skill][u]||0) + val;
         hit.add(t.skill);
         if(isSide(t)){ c.sideDone++; sideDone[t.id] = k; }
+        if(isSide(t) || isWeekly(t)) wsToday++;
       }
     }
     for(const g in gEarn) earned += Math.min(gEarn[g], gCap[g]||0);
@@ -3379,7 +3397,7 @@ function compute(){
     if(xp > 0){
       uChar += xp / fullDay(k, ()=>true);
       const abX = {};
-      for(const sid in dayX){ uSkill[sid] = (uSkill[sid]||0) + dayX[sid] / fullDay(k, t=>t.skill===sid); const ab = abilityOf(sid); abX[ab] = (abX[ab]||0) + dayX[sid]; }
+      for(const sid in dayX){ const lvBefore = levelFromDays(uSkill[sid]||0).level; uSkill[sid] = (uSkill[sid]||0) + dayX[sid] / fullDay(k, t=>t.skill===sid); if(levelFromDays(uSkill[sid]).level > lvBefore) levelUps++; const ab = abilityOf(sid); abX[ab] = (abX[ab]||0) + dayX[sid]; }
       for(const ab in abX) uAb[ab] = (uAb[ab]||0) + abX[ab] / fullDay(k, t=>abilityOf(t.skill)===ab);
     }
     for(const sid of hit){ const lv = levelFromDays(uSkill[sid]||0).level; if(lv>=5 && !petDates[`p_${sid}_5`]) petDates[`p_${sid}_5`] = k; if(lv>=10 && !petDates[`p_${sid}_10`]) petDates[`p_${sid}_10`] = k; if(lv>=15 && !petDates[`p_${sid}_15`]) petDates[`p_${sid}_15`] = k; }
@@ -3398,7 +3416,9 @@ function compute(){
     wkE += earned; wkP += possible;
     if(parseKey(k).getDay()===0){ const wr = wkP? wkE/wkP:0, wm = medalFor(wr); weeks[weekStart(k)] = {ratio:wr, medal:wm}; if(wm) c.weekMedals[wm]++; }
     c.level = levelFromDays(uChar).level;
-    for(const d of defs) if(!ach[d.id] && d.test(c)) ach[d.id] = k;
+    c.dayRun = xp > 0 ? c.dayRun + 1 : (k === today ? c.dayRun : 0); c.bestDayRun = Math.max(c.bestDayRun, c.dayRun);
+    c.maxLevelUps = Math.max(c.maxLevelUps, levelUps); c.maxWS = Math.max(c.maxWS, wsToday);
+    for(const d of defs) if(!d.meta && !ach[d.id] && d.test(c)) ach[d.id] = k;
   }
   // current streaks: alive if done today or yesterday
   const cur = {}, nextMult = {};
@@ -3414,7 +3434,14 @@ function compute(){
   for(const [ab] of ABILITIES){ const xp = state.skills.filter(s=>s.ability===ab).reduce((a,s)=>a+(skillXP[s.id]||0),0); abilities[ab] = levelView(uAb[ab]||0, fullDay(today, t=>abilityOf(t.skill)===ab), xp); }
   petDates.p_cat = start;
   for(const id in state.pets) if(!petDates[id]) petDates[id] = state.pets[id].date || today;
-  return { today, start, days, weeks, char: levelView(uChar, fullDay(today, ()=>true), c.total), skills, abilities, cur, best, nextMult, ach, defs, c, pets: petDates, sideDone };
+  const res = { today, start, days, weeks, char: levelView(uChar, fullDay(today, ()=>true), c.total), skills, abilities, cur, best, nextMult, ach, defs, c, pets: petDates, sideDone };
+  // Collection, companionship, friends and titles. The first day each is earned is remembered.
+  const since = state.profile.petSince || today, bond = state.profile.pet && res.pets[state.profile.pet] ? Math.round((parseKey(today) - parseKey(since)) / 864e5) : 0;
+  const meta = { pets: Object.keys(res.pets).length, bond, named: Object.keys(state.petNames||{}).length, friends: ((state.social||{}).friends||[]).length, titles: 0 };
+  meta.titles = titleDefs(res).filter(t=>t.ok).length;
+  state.achSeen = state.achSeen || {};
+  for(const d of defs) if(d.meta && !ach[d.id] && d.test(meta)){ ach[d.id] = state.achSeen[d.id] || today; state.achSeen[d.id] = ach[d.id]; }
+  return res;
 }
 
 function titleDefs(R){
@@ -3895,6 +3922,8 @@ function renderTabs(){
   $('#tabs').innerHTML = tabs.map(([id,l,ic])=>`<button class="tab" data-act="tab" data-id="${id}" ${view===id?'aria-current="page"':''}>${svg(ic)}<span>${l}</span></button>`).join('');
 }
 function render(){
+  // Anything saved since the last draw (naming a companion, adding a friend...) can earn achievements too.
+  if(dataDirty && typeof snapshot === 'function'){ dataDirty = false; const before = snapshot(); R = compute(); setTimeout(()=>celebrate(before), 0); }
   const html = view==='today' ? viewToday() : view==='skills' ? viewSkills() : view==='trophies' ? viewTrophies() : view==='friends' ? viewFriends() : viewHero();
   $('#app').innerHTML = `<main class="wrap">${html}</main>`;
   renderTabs(); settleBars(); fitNames();
@@ -4121,7 +4150,7 @@ function petSheet(id){
     ${got ? `<button class="btn ${isComp?'':'primary'} block" id="f-comp">${isComp ? 'Stop traveling together' : 'Travel together'}</button><p class="hint" style="margin:0">Your traveling companion appears on your character card.</p>` : ''}
     <button class="btn block" id="f-cancel">Close</button>`, root=>{
     root.querySelector('#f-cancel').onclick = closeSheet;
-    const c = root.querySelector('#f-comp'); if(c) c.onclick = ()=>{ state.profile.pet = isComp ? '' : p.id; save(); closeSheet(); render(); };
+    const c = root.querySelector('#f-comp'); if(c) c.onclick = ()=>{ state.profile.pet = isComp ? '' : p.id; state.profile.petSince = todayKey(); save(); closeSheet(); render(); };
     const nb = root.querySelector('#f-name'), box = root.querySelector('#f-namebox'), inp = root.querySelector('#f-petname');
     const setName = v=>{ state.petNames = state.petNames || {}; v = (v||'').trim().slice(0,20); if(v) state.petNames[p.id] = v; else delete state.petNames[p.id]; save(); render(); petSheet(p.id); };
     if(nb) nb.onclick = ()=>{ if(box.hidden){ box.hidden = false; nb.textContent = 'Save name'; inp.focus(); } else setName(inp.value); };
@@ -4239,7 +4268,7 @@ document.addEventListener('click', e=>{
   else if(a==='badge'){ const cur = (state.profile.showcase||[]).filter(x=>R.ach[x]); const i = cur.indexOf(id);
     if(i>=0) cur.splice(i,1); else if(cur.length>=3){ toast('Badges','You can show up to 3. Tap one to remove it first.','star'); return; } else cur.push(id);
     state.profile.showcase = cur; save(); render(); }
-  else if(a==='pick-pet'){ state.profile.pet = id; save(); render(); }
+  else if(a==='pick-pet'){ if(state.profile.pet !== id) state.profile.petSince = todayKey(); state.profile.pet = id; save(); render(); }
   else if(a==='edit-cond') condSheet(id);
   else if(a==='new-cond') condSheet(null);
   else if(a==='ability'){ e.preventDefault(); const el = document.getElementById('ab-'+id); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); else toast(ABILITY_NAME[id], 'No skills here yet. Add one from the Hero tab.', 'skills'); }
