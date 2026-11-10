@@ -482,7 +482,7 @@ const RULES = {
 };
 const DEMO = !!window.XP_DEMO;
 const APP_KIND = 'personal';
-const APP_VERSION = '2026.11.10-1730';
+const APP_VERSION = '2026.11.10-1738';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -1760,7 +1760,7 @@ octowizard: { pal:{a:[330,55,58], c:[220,70,45], y:[48,95,62]}, e:'#120c0a', row
 ".....aa...aa...a",
 ".....a.....aa...",
 "......a......a.."]},
-reddragon: { pal:{a:[2,70,42], d:[355,60,26], y:[40,80,60], x:[40,30,82]}, e:'#ffd23a', rows:[
+reddragon: { pal:{a:[2,70,42], d:[355,60,26], y:[40,80,60], x:[40,30,82]}, shinyPal:{a:[44,90,50], d:[38,75,32], y:[50,95,74], x:[40,30,88]}, e:'#ffd23a', rows:[
 "..........x.....",
 "d.........xx....",
 "dd.........xaaaa",
@@ -1977,7 +1977,7 @@ tortoise: { pal:{a:[95,25,40], c:[30,35,38], z:[35,40,55], x:[110,55,40], y:[330
 "......aaaa.........aaaaaaa......",
 "......aaaa..........aaaa........",
 ".....aaaaa..........aaaaa......."]},
-panther: { pal:{a:[270,20,20], c:[270,25,36]}, e:'#ffe14a', rows:[
+panther: { pal:{a:[270,20,20], c:[270,25,36]}, shinyPal:{a:[0,72,40], c:[0,60,55]}, e:'#ffe14a', rows:[
 "......................a..a......",
 ".....................aaaaaa.....",
 "....................aaaaeaaa....",
@@ -2926,8 +2926,9 @@ function sprGrid(name){
 function sprSVG(name, opts){
   opts = opts || {}; const width = opts.width || 96, locked = !!opts.locked, shiny = !!opts.shiny;
   const sp = SPR[name] || SPR.slime, g = sprGrid(name), N = g.length;
-  const shift = (shiny ? (sp.shinyShift != null ? sp.shinyShift : 150) : 0) + (opts.hue || 0);
-  const pal = Object.assign({}, sp.pal, opts.pal || {});
+  const handPicked = shiny && sp.shinyPal;   // some creatures have hand-picked shiny colours
+  const shift = (shiny && !handPicked ? (sp.shinyShift != null ? sp.shinyShift : 150) : 0) + (opts.hue || 0);
+  const pal = Object.assign({}, handPicked ? sp.shinyPal : sp.pal, opts.pal || {});
   const T = {};
   for(const k in pal){ const [h,s,l] = pal[k]; T[k] = [hslc(h+shift,s+(shiny?10:0),l+15), hslc(h+shift,s+(shiny?10:0),l+(shiny?4:0)), hslc(h+shift,s,l-14)]; }
   const flat = { e: shiny ? '#ffffff' : (sp.e || '#120c0a'), w:'#f3eee4', n:'#1a1110' };

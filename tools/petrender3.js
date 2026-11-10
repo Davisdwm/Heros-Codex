@@ -12,8 +12,9 @@ function sprGrid(name){
 function sprSVG(name, opts){
   opts = opts || {}; const width = opts.width || 96, locked = !!opts.locked, shiny = !!opts.shiny;
   const sp = SPR[name] || SPR.slime, g = sprGrid(name), N = g.length;
-  const shift = shiny ? (sp.shinyShift != null ? sp.shinyShift : 150) : 0;
-  const pal = Object.assign({}, sp.pal, opts.pal || {});
+  const handPicked = shiny && sp.shinyPal;   // some creatures have hand-picked shiny colours
+  const shift = (shiny && !handPicked ? (sp.shinyShift != null ? sp.shinyShift : 150) : 0) + (opts.hue || 0);
+  const pal = Object.assign({}, handPicked ? sp.shinyPal : sp.pal, opts.pal || {});
   const T = {};
   for(const k in pal){ const [h,s,l] = pal[k]; T[k] = [hslc(h+shift,s+(shiny?10:0),l+15), hslc(h+shift,s+(shiny?10:0),l+(shiny?4:0)), hslc(h+shift,s,l-14)]; }
   const flat = { e: shiny ? '#ffffff' : (sp.e || '#120c0a'), w:'#f3eee4', n:'#1a1110' };
