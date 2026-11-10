@@ -246,6 +246,14 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .journal textarea{width:100%;min-height:110px;margin-top:10px;padding:10px 12px;background:var(--inset);border:1px solid var(--line-hi);border-radius:2px;font-size:16px;line-height:1.4;resize:vertical;font-family:var(--body)}
 .journal .jsaved{display:block;text-align:right;margin-top:4px;font-size:12px}
 .jentry{margin:0;padding:10px 12px;background:var(--inset);border-left:2px solid var(--gold);white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.45}
+.mycard{border-top:1px solid var(--line-hi);border-bottom:1px solid var(--line-hi);background:linear-gradient(180deg,rgba(217,173,85,.06),rgba(0,0,0,0));margin-top:6px}
+.mycard>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 4px;cursor:pointer;min-height:52px}
+.mycard>summary::-webkit-details-marker{display:none}
+.mycard .sectitle{color:var(--gold);font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.mycard .seccount{flex:1;text-align:right;font-size:14px;color:var(--muted);letter-spacing:.08em}
+.mycard .chev{width:20px;height:20px;color:var(--gold);transition:transform .2s;flex:none}
+.mycard[open] .chev{transform:rotate(180deg)}
+.mycard .mybody{display:flex;flex-direction:column;gap:12px;padding:0 0 16px}
 .verrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .pickpets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .pick{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1px solid var(--line);background:var(--panel);font-size:12px;font-weight:700;text-align:center;line-height:1.15}
@@ -467,7 +475,7 @@ const RULES = {
 };
 const DEMO = !!window.XP_DEMO;
 const APP_KIND = 'personal';
-const APP_VERSION = '2026.11.10-1738';
+const APP_VERSION = '2026.11.10-1801';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -3917,6 +3925,7 @@ function friendCardHTML(c, key, foot){
     ${foot||''}
   </div></div>`;
 }
+let myCardOpen = false;
 function viewFriends(){
   const S = soc();
   if(!socialReady()) return `<div class="rule">Friends</div><p class="hint" style="text-align:center">${DEMO ? 'Friends are turned off in the sample preview. They work in the installed app.' : 'Friends aren’t connected yet.'}</p>`;
@@ -3932,11 +3941,12 @@ function viewFriends(){
   const list = S.friends.map(code=>{ const f = S.cache[code];
     const foot = `<div class="ffoot"><span class="muted num">${esc(code)}${f && f.at ? ' · updated '+esc(ago(f.at)) : ''}</span><button class="linkbtn" data-act="remove-friend" data-id="${esc(code)}">Remove</button></div>`;
     return f ? friendCardHTML(f.card, code.replace('-',''), foot) : `<div class="fcard hiddencard"><span class="muted">Loading ${esc(code)}…</span>${foot}</div>`; }).join('');
-  return `<div class="rule">Your card</div>${me}
-  <div class="rule">Friends · ${S.friends.length}</div>
+  return `<div class="rule">Friends · ${S.friends.length}</div>
   <div class="addfriend"><input id="f-fcode" placeholder="ABCD-1234" autocomplete="off" autocapitalize="characters" maxlength="9" aria-label="Friend code"><button class="btn primary" data-act="add-friend">${friendsBusy?'Adding…':'Add friend'}</button></div>
   ${friendsMsg ? `<p class="hint" style="margin:0;color:var(--err)">${esc(friendsMsg)}</p>` : ''}
-  ${list || `<p class="hint" style="text-align:center;margin:0">No friends yet. Ask a friend for their code, from the Friends tab in their app.</p>`}`;
+  ${list || `<p class="hint" style="text-align:center;margin:0">No friends yet. Ask a friend for their code, from the Friends tab in their app.</p>`}
+  <details class="mycard" id="mycard" ${myCardOpen?'open':''}><summary><span class="sectitle">Your friend card</span><span class="seccount">${S.on ? esc(S.code) : 'Not shared yet'}</span>${svg('chevron','class="chev"')}</summary>
+    <div class="mybody">${me}</div></details>`;
 }
 async function addFriend(){
   const S = soc(), el = $('#f-fcode'); let code = (el ? el.value : '').trim().toUpperCase().replace(/\s+/g,'');
@@ -3966,6 +3976,7 @@ function render(){
   renderTabs(); settleBars(); fitNames();
   const cd = $('#conds'); if(cd) cd.addEventListener('toggle', ()=>{ condOpen = cd.open; });
   const jd = $('#journal'); if(jd) jd.addEventListener('toggle', ()=>{ journalOpen = jd.open; });
+  const mc = $('#mycard'); if(mc) mc.addEventListener('toggle', ()=>{ myCardOpen = mc.open; });
   const jt = $('#f-journal');
   if(jt){ let jtimer = null; const day = viewDate;
     jt.addEventListener('input', ()=>{ state.journal = state.journal || {}; const v = jt.value.slice(0,1000); if(v.trim()) state.journal[day] = v; else delete state.journal[day];
