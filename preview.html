@@ -448,7 +448,7 @@ const RULES = {
 };
 const DEMO = !!window.XP_DEMO;
 const APP_KIND = 'personal';
-const APP_VERSION = '2026.11.09-2231';
+const APP_VERSION = '2026.11.10-0021';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -548,6 +548,28 @@ const GROUP_NAME = { exercise:'Exercise' };
 // Sprites: 32x32 canvas. Rows of 16 chars are mirrored; rows of 32 are used as-is.
 // Region letters (auto-shaded): a c d x y z.  Flat: e eye, w white, n dark/mouth.
 const SPR = {
+waterelemental: { pal:{a:[205,75,50], c:[190,85,80]}, e:'#0b1d4a', rows:[
+"...........aa...",
+"..........aaaa..",
+".........aacaaaa",
+"........aacaaaaa",
+"........acaaaaaa",
+"........aweeaaaa",
+"........aeeeaaaa",
+".........aaaaaaa",
+"..aa......aaaaaa",
+".aaca...aaaccaaa",
+".acaaaaaaacaaaaa",
+"..aaaaaaaaacaaaa",
+"......aaaacaaaaa",
+".......aaaaaacaa",
+".......aaaaacaaa",
+"........aaacaaaa",
+".........aaaaaaa",
+"........ccaaaacc",
+"......ccaaccccaa",
+"....ccaaaaccaaaa",
+"...cccccccccccc."]},
 butterfly: { pal:{a:[200,80,50], c:[190,85,72], x:[45,95,60], d:[270,25,20]}, e:'#120c0a', rows:[
 "...........d....",
 "..aaaa......d...",
@@ -1783,7 +1805,7 @@ function sprGrid(name){
 function sprSVG(name, opts){
   opts = opts || {}; const width = opts.width || 96, locked = !!opts.locked, shiny = !!opts.shiny;
   const sp = SPR[name] || SPR.slime, g = sprGrid(name), N = g.length;
-  const shift = shiny ? (sp.shinyShift != null ? sp.shinyShift : 150) : 0;
+  const shift = (shiny ? (sp.shinyShift != null ? sp.shinyShift : 150) : 0) + (opts.hue || 0);
   const pal = Object.assign({}, sp.pal, opts.pal || {});
   const T = {};
   for(const k in pal){ const [h,s,l] = pal[k]; T[k] = [hslc(h+shift,s+(shiny?10:0),l+15), hslc(h+shift,s+(shiny?10:0),l+(shiny?4:0)), hslc(h+shift,s,l-14)]; }
@@ -1841,17 +1863,87 @@ const ABILITY_PETS = {
   CHA: [['butterfly','Butterfly','Every room gets a little brighter when it flutters in.'],['lion','Lion','Walks into a room and everyone turns to look. Roars only when it matters.'],['griffin','Griffin','Half lion, half eagle, and all charm. Kings have bowed to less.']],
 };
 const PET_LEVELS = [[5,'base'],[10,'elder'],[15,'legend']];
+/* ============ Skill companions: auto-generated, then customisable ============ */
+// Every creature in the library, with the word used in generated names.
+const CREATURES = {
+  hound:'Hound', fox:'Fox', hare:'Hare', slime:'Slime', bat:'Bat', mandrake:'Mandrake', owl:'Owl', finch:'Finch', frog:'Frog', lizard:'Lizard',
+  mimic:'Mimic', goblin:'Goblin', rockgolem:'Rock Golem', butterfly:'Butterfly', wisp:'Wisp', jackalope:'Jackalope', dog:'Pup', parrot:'Parrot', cat:'Cat',
+  nightmare:'Stallion', turtle:'Turtle', waterelemental:'Elemental', beholder:'Beholder', kingslime:'King Slime', phoenix:'Phoenix', treant:'Treant',
+  golem:'Golem', boa:'Boa', gargoyle:'Gargoyle', minotaur:'Minotaur', wyvern:'Wyvern', unicorn:'Unicorn', octowizard:'Octopus', lion:'Lion',
+  werewolf:'Werewolf', naga:'Naga', phantom:'Phantom', lich:'Lich', panther:'Panther', pegasus:'Pegasus', kitsune:'Kitsune', leviathan:'Leviathan',
+  vampire:'Vampire', emperorslime:'Emperor Slime', thunderbird:'Thunderbird', elk:'Elk', reddragon:'Dragon', griffin:'Griffin', qilin:'Qilin',
+  tortoise:'Tortoise', wingedeye:'Watcher', kraken:'Kraken', kingape:'King Ape', hermitcrab:'Hermit Crab', sphinx:'Sphinx', fenrir:'Fenrir',
+  djinn:'Djinn', titan:'Titan', mindflayer:'Mind Flayer', colossus:'Colossus', elderdragon:'Elder Dragon',
+};
+const TIER_POOLS = [
+  ['hound','fox','hare','slime','bat','mandrake','owl','finch','frog','lizard','mimic','goblin','rockgolem','butterfly','wisp','jackalope'],
+  ['nightmare','turtle','waterelemental','beholder','kingslime','phoenix','treant','golem','boa','gargoyle','minotaur','wyvern','unicorn','octowizard','lion','werewolf','naga','phantom','panther'],
+  ['pegasus','kitsune','leviathan','vampire','emperorslime','thunderbird','elk','reddragon','griffin','qilin','tortoise','wingedeye','kraken','kingape','hermitcrab','sphinx','fenrir','djinn','titan','mindflayer','colossus','elderdragon'],
+];
+// Words in a skill's name that suggest a themed set.
+const THEMES = [
+  [/run|jog|walk|hike|cardio|marathon/, ['hound','nightmare','pegasus']],
+  [/swim|water|surf|sail|row|hydrat/, ['frog','waterelemental','leviathan']],
+  [/climb|boulder|mountain/, ['lizard','wyvern','kingape']],
+  [/read|book|study|learn|school|class|research/, ['owl','golem','lich']],
+  [/writ|journal|poem|poet|blog|story/, ['owl','octowizard','sphinx']],
+  [/music|guitar|piano|sing|drum|song|violin|band/, ['finch','phoenix','thunderbird']],
+  [/yoga|meditat|mindful|breath|pray/, ['fox','turtle','kitsune']],
+  [/stretch|flex|mobility|pilates|danc/, ['hare','boa','kraken']],
+  [/friend|social|family|date|call|text|parent|kid/, ['slime','kingslime','emperorslime']],
+  [/movie|film|art|museum|theat|paint|draw|photo/, ['bat','beholder','vampire']],
+  [/plant|garden|flower|farm|compost/, ['mandrake','treant','elk']],
+  [/clean|house|chore|tidy|laundry|dish|organi/, ['mimic','gargoyle','hermitcrab']],
+  [/code|program|comput|tech|engineer|game/, ['goblin','octowizard','wingedeye']],
+  [/lift|gym|strength|weight|muscle|workout/, ['rockgolem','minotaur','reddragon']],
+  [/sleep|rest|nap|bed/, ['wisp','unicorn','qilin']],
+  [/money|save|budget|financ|invest|work|job|career/, ['mimic','golem','djinn']],
+  [/language|travel|spanish|french|german|japanese|explor/, ['parrot','naga','griffin']],
+  [/pet|dog|cat|animal|horse|bird/, ['dog','lion','griffin']],
+  [/cook|bake|chef|food|meal|kitchen|recipe/, ['mimic','turtle','hermitcrab']],
+  [/bike|cycl|ski|skate|board/, ['jackalope','panther','fenrir']],
+];
+const TIER_TEXT = [
+  (n,k)=>`A small ${n.toLowerCase()} that loves ${k.toLowerCase()} as much as you do.`,
+  (n,k)=>`A seasoned ${n.toLowerCase()} that has learned a great deal about ${k.toLowerCase()} by your side.`,
+  (n,k)=>`A legendary ${n.toLowerCase()}, born from years of ${k.toLowerCase()}.`,
+];
+const TIER_PREFIX = ['', 'Grand ', 'Legendary '];
+function seeded(str){ let h = 2166136261; for(const c of str) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0) / 4294967296; }
+function petNameFor(sprite, skillName, tier){ const word = (String(skillName).trim().split(/\s+/)[0] || 'Hero'); return `${TIER_PREFIX[tier]}${word} ${CREATURES[sprite] || 'Companion'}`.slice(0,40); }
+function usedSprites(exceptId){
+  const used = new Set();
+  for(const s of state.skills){ if(s.id===exceptId) continue; (skillTrio(s) || []).forEach(p=>used.add(p.sprite)); }
+  for(const ab in ABILITY_PETS) ABILITY_PETS[ab].forEach(x=>used.add(x[0]));
+  return used;
+}
+// Build a set for a skill: a themed trio if the name suggests one, otherwise picks from each tier.
+// Creatures already used elsewhere get a new colour so every skill's companions look its own.
+function generatePets(skill, salt){
+  const rnd = seeded(skill.id + '|' + skill.name + '|' + (salt||0)), used = usedSprites(skill.id), name = String(skill.name||'').toLowerCase();
+  const theme = !salt && THEMES.find(([re])=>re.test(name));
+  return [0,1,2].map(tier=>{
+    let sprite = theme ? theme[1][tier] : null;
+    if(!sprite){ const pool = TIER_POOLS[tier], fresh = pool.filter(x=>!used.has(x)), from = fresh.length ? fresh : pool; sprite = from[Math.floor(rnd()*from.length)]; }
+    const hue = used.has(sprite) || salt ? 30 + Math.floor(rnd()*300) : 0;
+    used.add(sprite);
+    return { sprite, hue, name: petNameFor(sprite, skill.name, tier), desc: TIER_TEXT[tier](CREATURES[sprite]||'companion', skill.name||'practice'), auto:true };
+  });
+}
+// A skill's three companions: its own saved set, the starter set for the built-in skills, or a generated set.
+function skillTrio(s){
+  if(Array.isArray(s.pets) && s.pets.length===3) return s.pets;
+  const def = SKILL_PETS[s.id];
+  if(def) return def.map((sprite,i)=>({ sprite, hue:0, name: PET_NAMES[s.id][i][0], desc: PET_NAMES[s.id][i][1] }));
+  return null;
+}
 function petDefs(){
   const out = [{ id:'p_cat', group:'starter', skill:null, sprite:'cat', form:'base', starter:true, name:'Cat', desc:'An orange tabby who followed you out the door one morning and never left.', how:'Starter companion' }];
   for(const s of state.skills){
-    let trio = SKILL_PETS[s.id], names = PET_NAMES[s.id], pal = null;
-    if(!trio){
-      trio = ['slime','gargoyle','elderdragon']; let h=0; for(const ch of s.id) h=(h*31+ch.charCodeAt(0))%360;
-      pal = { a:[h,50,45], c:[h,45,68], d:[h,40,26], x:[(h+120)%360,45,45], y:[(h+40)%360,40,60], z:[(h+200)%360,45,50] };
-      names = [[`${s.name} Slime`,`A small slime that loves ${s.name.toLowerCase()} as much as you do.`],[`${s.name} Gargoyle`,`A stone guardian sworn to your ${s.name.toLowerCase()}.`],[`${s.name} Dragon`,`A legend of ${s.name.toLowerCase()}, born from years of practice.`]];
-    }
-    PET_LEVELS.forEach(([lv,form],i)=>out.push({ id:`p_${s.id}_${lv}`, group:'skill', skill:s.id, sprite:trio[i], form, pal, name:names[i][0], desc:names[i][1], how:`${s.name} level ${lv}` }));
-    out.push({ id:`p_${s.id}_rare`, group:'skill', skill:s.id, sprite:trio[0], form:'rare', pal, rare:true, name:`Shiny ${names[0][0]}`, desc:`A rare, shimmering ${names[0][0].toLowerCase()}. Few adventurers ever see one.`, how:`Shiny: 1 in 1,000 chance with each ${s.name.toLowerCase()} quest` });
+    let trio = skillTrio(s);
+    if(!trio){ s.pets = generatePets(s); trio = s.pets; }   // skills you add get their own set the first time they're seen
+    PET_LEVELS.forEach(([lv,form],i)=>out.push({ id:`p_${s.id}_${lv}`, group:'skill', skill:s.id, sprite:trio[i].sprite, hue:trio[i].hue||0, form, name:trio[i].name, desc:trio[i].desc, how:`${s.name} level ${lv}` }));
+    out.push({ id:`p_${s.id}_rare`, group:'skill', skill:s.id, sprite:trio[0].sprite, hue:trio[0].hue||0, form:'rare', rare:true, name:`Shiny ${trio[0].name}`.slice(0,40), desc:`A rare, shimmering ${trio[0].name.toLowerCase()}. Few adventurers ever see one.`, how:`Shiny: 1 in 1,000 chance with each ${s.name.toLowerCase()} quest` });
   }
   for(const [ab,abName] of ABILITIES){
     ABILITY_PETS[ab].forEach(([sprite,name,desc],i)=>{ const [lv,form] = PET_LEVELS[i];
@@ -1860,7 +1952,7 @@ function petDefs(){
   return out;
 }
 const petOrigin = p => p.starter ? 'Starter companion' : p.group==='ability' ? `${ABILITY_NAME[p.ability]} companion` : skillById(p.skill).name;
-function petArt(def, width, locked){ return sprSVG(def.sprite, {width, locked, shiny: !!def.rare, aura: def.form==='legend' ? '#f2cd78' : '', pal: def.pal || undefined}); }
+function petArt(def, width, locked){ return sprSVG(def.sprite, {width, locked, shiny: !!def.rare, aura: def.form==='legend' ? '#f2cd78' : '', pal: def.pal || undefined, hue: def.hue || 0}); }
 const DEFAULT_CONDITIONS = () => [
   { id:'poisoned',  name:'Poisoned',  desc:'Sick today',                icon:'drop', kind:'bad'  },
   { id:'exhausted', name:'Exhausted', desc:'Didn’t sleep well',     icon:'moon', kind:'bad'  },
@@ -2484,7 +2576,7 @@ async function rpc(fn, body){
 }
 // Companion as compact pixel data (32x32 grid + colour list) so any version of the app can draw it.
 function spriteData(def){
-  sprSVG(def.sprite, {width:32, shiny: !!def.rare, aura: def.form==='legend' ? '#f2cd78' : '', pal: def.pal || undefined});
+  sprSVG(def.sprite, {width:32, shiny: !!def.rare, aura: def.form==='legend' ? '#f2cd78' : '', pal: def.pal || undefined, hue: def.hue || 0});
   const {out, glow} = sprSVG.last, colors = [], idx = {}, p = Array(1024).fill('.');
   for(const [x,y,c] of out){ if(x<0||x>31||y<0||y>31) continue; if(idx[c]==null){ if(colors.length>=70) continue; idx[c]=colors.length; colors.push(c); } p[y*32+x] = String.fromCharCode(48+idx[c]); }
   return { p: p.join(''), c: colors, g: glow || '' };
@@ -2776,7 +2868,7 @@ function taskSheet(id, preset){
         fields = {type:'tiers', unit:q('#f-unit').value, tiers:list};
       }
       mutate(()=>{
-        if(skill==='__new'){ const s = {id:uid('s'), name:newName, icon, ability:q('#f-newab').value, titles:[]}; state.skills.push(s); skill = s.id; }
+        if(skill==='__new'){ const s = {id:uid('s'), name:newName, icon, ability:q('#f-newab').value, titles:[]}; s.pets = generatePets(s); state.skills.push(s); skill = s.id; companionsToast(s); }
         Object.assign(fields, cadence!=='daily' ? {cadence} : {}, cadence==='daily' && q('#f-ex').checked ? {oneOf:'exercise'} : {});
         if(id){ const snap = x=>JSON.stringify({type:x.type, xp:x.xp, unit:x.unit, tiers:x.tiers, target:x.target}); const before = snap(t), old = {type:t.type, xp:t.xp, unit:t.unit, tiers:t.tiers, target:t.target};
           ['xp','unit','tiers','target','cadence','oneOf'].forEach(k=>delete t[k]); Object.assign(t, {name, skill}, fields);
@@ -2788,6 +2880,7 @@ function taskSheet(id, preset){
     sync();
   });
 }
+function companionsToast(s){ setTimeout(()=>toast('New companions await', s.pets.map(p=>p.name).join(' \u00b7 '), 'paw'), 400); }
 function skillSheet(id){
   const s = id ? state.skills.find(x=>x.id===id) : {name:'', icon:'star', ability:'STR', titles:[]};
   let icon = s.icon;
@@ -2808,7 +2901,10 @@ function skillSheet(id){
       if(!name){ const e=root.querySelector('#f-err'); e.textContent='Give the skill a name.'; e.hidden=false; return; }
       const titles = [root.querySelector('#f-t5').value.trim(), root.querySelector('#f-t10').value.trim()].filter(Boolean);
       const ability = root.querySelector('#f-sab').value;
-      mutate(()=>{ if(id) Object.assign(s,{name,icon,ability,titles}); else state.skills.push({id:uid('s'), name, icon, ability, titles}); });
+      mutate(()=>{
+        if(id){ const renamed = name !== s.name; Object.assign(s,{name,icon,ability,titles});
+          if(renamed && Array.isArray(s.pets)) s.pets.forEach((pt,i)=>{ if(pt.auto){ pt.name = petNameFor(pt.sprite, name, i); pt.desc = TIER_TEXT[i](CREATURES[pt.sprite]||'companion', name); } }); }
+        else { const ns = {id:uid('s'), name, icon, ability, titles}; ns.pets = generatePets(ns); state.skills.push(ns); companionsToast(ns); } });
       closeSheet();
     };
   });

@@ -1,6 +1,28 @@
 // Companion sprites v3. 32x32 canvas. Rows of 16 chars are mirrored; rows of 32 are used as-is.
 // Region letters (auto-shaded): a c d x y z.  Flat: e eye, w white, n dark/mouth.
 const SPR = {
+waterelemental: { pal:{a:[205,75,50], c:[190,85,80]}, e:'#0b1d4a', rows:[
+"...........aa...",
+"..........aaaa..",
+".........aacaaaa",
+"........aacaaaaa",
+"........acaaaaaa",
+"........aweeaaaa",
+"........aeeeaaaa",
+".........aaaaaaa",
+"..aa......aaaaaa",
+".aaca...aaaccaaa",
+".acaaaaaaacaaaaa",
+"..aaaaaaaaacaaaa",
+"......aaaacaaaaa",
+".......aaaaaacaa",
+".......aaaaacaaa",
+"........aaacaaaa",
+".........aaaaaaa",
+"........ccaaaacc",
+"......ccaaccccaa",
+"....ccaaaaccaaaa",
+"...cccccccccccc."]},
 butterfly: { pal:{a:[200,80,50], c:[190,85,72], x:[45,95,60], d:[270,25,20]}, e:'#120c0a', rows:[
 "...........d....",
 "..aaaa......d...",
