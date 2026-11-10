@@ -2944,49 +2944,92 @@ function sprGrid(name){
   rows.forEach((r,y)=>[...r].forEach((ch,x)=>{ const X=x+dx, Y=y+top; if(ch!=='.' && X>=0 && X<N && Y>=0) g[Y][X]=ch; }));
   return g;
 }
+// Companions are drawn at 40x40: the 32x32 art is smoothed (Scale3x) and folded to 40x40, then lit from the upper left.
+const SPR_N = 40, hdCache = {};
+function hdGrid(name){
+  if(hdCache[name]) return hdCache[name];
+  const g = sprGrid(name), N = 32, M = 96, T = SPR_N, at = (x,y) => (x<0||y<0||x>=N||y>=N) ? '.' : g[y][x];
+  const big = Array.from({length:M}, ()=>Array(M).fill('.'));
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+    const A=at(x-1,y-1),B=at(x,y-1),C=at(x+1,y-1),D=at(x-1,y),E=at(x,y),F=at(x+1,y),G=at(x-1,y+1),H=at(x,y+1),I=at(x+1,y+1), o=[E,E,E,E,E,E,E,E,E];
+    if(B!==H && D!==F){
+      o[0]= D===B?D:E; o[1]=(D===B&&E!==C)||(B===F&&E!==A)?B:E; o[2]= B===F?F:E;
+      o[3]=(D===B&&E!==G)||(D===H&&E!==A)?D:E; o[5]=(B===F&&E!==I)||(H===F&&E!==C)?F:E;
+      o[6]= D===H?D:E; o[7]=(D===H&&E!==I)||(H===F&&E!==G)?H:E; o[8]= H===F?F:E;
+    }
+    for(let i=0;i<9;i++) big[y*3+(i/3|0)][x*3+i%3] = o[i];
+  }
+  const st = M / T, out = Array.from({length:T}, ()=>Array(T).fill('.'));
+  for(let y=0;y<T;y++) for(let x=0;x<T;x++){
+    const c = {}; let n = 0;
+    for(let j=0;j<3;j++) for(let i=0;i<3;i++){ const ch = big[Math.min(M-1,Math.floor((y+(j+.5)/3)*st))][Math.min(M-1,Math.floor((x+(i+.5)/3)*st))]; c[ch]=(c[ch]||0)+1; n++; }
+    const solid = Object.entries(c).filter(([k])=>k!=='.').sort((a,b)=>b[1]-a[1]);
+    out[y][x] = solid.length && n-(c['.']||0) >= 4 ? solid[0][0] : '.';
+    if(out[y][x]!=='.'){ if(c.e>=2) out[y][x]='e'; else if((c.n||0)>=3) out[y][x]='n'; else if((c.w||0)>=3) out[y][x]='w'; }
+  }
+  // keep left/right symmetric creatures symmetric after the uneven rescale
+  let mn=N, mx=-1; for(let y=0;y<N;y++) for(let x=0;x<N;x++) if(g[y][x]!=='.'){ mn=Math.min(mn,x); mx=Math.max(mx,x); }
+  const cs = mn+mx; let sym = mx>=0; for(let y=0;y<N&&sym;y++) for(let x=mn;x<=mx;x++) if(g[y][x]!==g[y][cs-x]){ sym=false; break; }
+  if(sym){ const c2 = Math.round((cs+2)*T/N-1); for(let y=0;y<T;y++) for(let x=0;2*x<c2;x++) if(c2-x<T) out[y][c2-x] = out[y][x]; }
+  return hdCache[name] = out;
+}
 function sprSVG(name, opts){
-  opts = opts || {}; const width = opts.width || 96, locked = !!opts.locked, shiny = !!opts.shiny;
-  const sp = SPR[name] || SPR.slime, g = sprGrid(name), N = g.length;
+  opts = opts || {}; const width = opts.width || 96, locked = !!opts.locked, shiny = !!opts.shiny, N = SPR_N, k5 = N/32;
+  const sp = SPR[name] || SPR.slime, g = hdGrid(SPR[name] ? name : 'slime');
   const handPicked = shiny && sp.shinyPal;   // some creatures have hand-picked shiny colours
   const shift = (shiny && !handPicked ? (sp.shinyShift != null ? sp.shinyShift : 150) : 0) + (opts.hue || 0);
   const pal = Object.assign({}, handPicked ? sp.shinyPal : sp.pal, opts.pal || {});
-  const T = {};
-  for(const k in pal){ const [h,s,l] = pal[k]; T[k] = [hslc(h+shift,s+(shiny?10:0),l+15), hslc(h+shift,s+(shiny?10:0),l+(shiny?4:0)), hslc(h+shift,s,l-14)]; }
+  const tone = (ch, k) => { const [h,s,l] = pal[ch]; return hslc(h + shift - k*7, s + (shiny?10:0) + (k<0 ? -k*4 : k*3), l + (shiny?4:0) - k*10); };
   const flat = { e: shiny ? '#ffffff' : (sp.e || '#120c0a'), w:'#f3eee4', n:'#1a1110' };
   const solid = (x,y) => y>=0 && y<N && x>=0 && x<N && g[y][x] !== '.';
-  const out = []; let minX=N, maxX=0, maxY=0;
-  for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+  const key = [name, shiny, locked, shift, JSON.stringify(opts.pal||'')].join('|'), memo = sprSVG.memo[key];
+  const out = memo ? memo.out.slice() : []; let minX = memo ? memo.minX : N, maxX = memo ? memo.maxX : 0, maxY = memo ? memo.maxY : 0;
+  if(!memo) for(let y=0;y<N;y++) for(let x=0;x<N;x++){
     const ch = g[y][x];
     if(ch==='.'){ if(solid(x-1,y)||solid(x+1,y)||solid(x,y-1)||solid(x,y+1)) out.push([x,y, locked?'#000':'#100a08']); continue; }
     minX=Math.min(minX,x); maxX=Math.max(maxX,x); maxY=Math.max(maxY,y);
     let col;
     if(locked) col = '#2c2522';
-    else if(T[ch]){ const t=T[ch], up=solid(x,y-1) && g[y-1][x]===ch, dn1=solid(x,y+1), dn2=solid(x,y+2);
-      col = !solid(x,y-1) ? t[0] : !up ? t[0] : (!dn1 || !dn2) ? t[2] : (!solid(x-1,y) ? t[2] : t[1]); }
-    else col = flat[ch] || (T.a ? T.a[1] : '#888');
+    else if(pal[ch]){
+      let nx=0, ny=0, edge=9;   // which way this pixel faces, from the empty space around it
+      for(let dy=-4;dy<=4;dy++) for(let dx=-4;dx<=4;dx++){ if(!dx&&!dy) continue; const d=Math.hypot(dx,dy); if(d>4.2 || solid(x+dx,y+dy)) continue; nx+=dx/d; ny+=dy/d; edge=Math.min(edge,d); }
+      const nl = Math.hypot(nx,ny) || 1; let v = (nx*-0.55 + ny*-0.83)/nl * Math.min(1, nl/2.5);
+      if(edge>=4) v += 0.12;
+      if(edge<=1.01 && v>0.25) v += 0.5;
+      const below = solid(x,y+1) ? g[y+1][x] : '.', right = solid(x+1,y) ? g[y][x+1] : '.';
+      if((below!=='.' && below!==ch && pal[below]) || (right!=='.' && right!==ch && pal[right])) v -= 0.6;   // line where two parts meet
+      if(!solid(x,y+1)) v -= 0.35;
+      let k = Math.max(-1, Math.min(1, Math.round(-v*1.6))); if(edge<=1.01 && v>0.6) k = -2;
+      col = tone(ch, k);
+    } else {
+      col = flat[ch] || (pal.a ? tone('a',0) : '#888');
+      if(ch==='e' && !shiny && !(solid(x-1,y-1) && g[y-1][x-1]==='e') && g[y][x+1]==='e' && g[y+1] && g[y+1][x]==='e') col = '#ffffff';   // glint
+    }
     out.push([x,y,col]);
   }
+  if(!memo) sprSVG.memo[key] = { out: out.slice(), minX, maxX, maxY };
   let extra = '', glowCol = '';
-  if(opts.aura && !locked){ glowCol = opts.aura; const gid = 'la' + (++sprSVG.n); extra = `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${opts.aura}" stop-opacity=".42"/><stop offset="1" stop-color="${opts.aura}" stop-opacity="0"/></radialGradient></defs><ellipse cx="16" cy="17" rx="16" ry="15" fill="url(#${gid})"/>`; }
+  const halo = gid => `<ellipse cx="${16*k5}" cy="${17*k5}" rx="${16*k5}" ry="${15*k5}" fill="url(#${gid})"/>`;
+  if(opts.aura && !locked){ glowCol = opts.aura; const gid = 'la' + (++sprSVG.n); extra = `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${opts.aura}" stop-opacity=".42"/><stop offset="1" stop-color="${opts.aura}" stop-opacity="0"/></radialGradient></defs>${halo(gid)}`; }
   if(shiny && !locked){
-    const gid = 'sg' + (++sprSVG.n), gc = T.a ? T.a[0] : '#fff'; glowCol = gc;
-    extra = `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${gc}" stop-opacity=".5"/><stop offset="1" stop-color="${gc}" stop-opacity="0"/></radialGradient></defs><ellipse cx="16" cy="17" rx="16" ry="15" fill="url(#${gid})"/>`;
-    for(const [x,y] of [[2,4],[28,7],[4,20],[29,22],[24,1]]) if(!solid(x,y)) out.push([x,y,'#fff6b0']);
+    const gid = 'sg' + (++sprSVG.n), gc = pal.a ? tone('a',-1) : '#fff'; glowCol = gc;
+    extra = `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${gc}" stop-opacity=".5"/><stop offset="1" stop-color="${gc}" stop-opacity="0"/></radialGradient></defs>${halo(gid)}`;
+    for(const [x,y] of [[2,5],[35,9],[5,25],[36,27],[30,1]]) if(!solid(x,y)) out.push([x,y,'#fff6b0']);
   }
-  const cx = (minX+maxX+1)/2, rw = Math.max(4,(maxX-minX+1)*0.4);
-  const shadow = `<ellipse cx="${cx}" cy="${maxY+1.5}" rx="${rw}" ry="1.2" fill="#000" opacity=".38"/>`;
+  const cx = (minX+maxX+1)/2, rw = Math.max(5,(maxX-minX+1)*0.4);
+  const shadow = `<ellipse cx="${cx}" cy="${maxY+1.8}" rx="${rw}" ry="1.5" fill="#000" opacity=".38"/>`;
   sprSVG.last = { out, glow: glowCol };
-  return `<svg viewBox="0 0 32 32" width="${width}" height="${width}" shape-rendering="crispEdges" aria-hidden="true">${extra}${shadow}${out.map(([x,y,c])=>`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${c}"/>`).join('')}</svg>`;
+  return `<svg viewBox="0 0 ${N} ${N}" width="${width}" height="${width}" shape-rendering="crispEdges" aria-hidden="true">${extra}${shadow}${out.map(([x,y,c])=>`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${c}"/>`).join('')}</svg>`;
 }
-sprSVG.n = 0;
+sprSVG.n = 0; sprSVG.memo = {};
 
 
 
 // Companions: each skill has pets at levels 5, 10 and 20, plus a shiny level 5 (1 in 1,000 per quest).
 // Each ability has pets at levels 5, 10 and 20. Everyone starts with Cat.
-const SKILL_PETS = { reading:['owl','golem','lich'], running:['hound','nightmare','pegasus'], climbing:['lizard','wyvern','kingape'], guitar:['finch','phoenix','thunderbird'], yoga:['fox','turtle','kitsune'], stretching:['hare','boa','kraken'], social:['slime','kingslime','emperorslime'], cinema:['bat','beholder','penguin'], plants:['mandrake','treant','elk'], housekeeping:['mimic','gargoyle','hermitcrab'] };
+const SKILL_PETS = { reading:['owl','golem','wisp'], running:['hound','nightmare','pegasus'], climbing:['lizard','wyvern','kingape'], guitar:['finch','phoenix','thunderbird'], yoga:['fox','turtle','kitsune'], stretching:['hare','boa','kraken'], social:['slime','kingslime','emperorslime'], cinema:['bat','beholder','penguin'], plants:['mandrake','treant','elk'], housekeeping:['mimic','gargoyle','hermitcrab'] };
 const PET_NAMES = {
-  reading:     [['Wisened Owl','Peers over its spectacles at anything you have not finished reading.'],['Tome Golem','A guardian stitched from a hundred books. It remembers every page.'],['Lich','Spent a thousand years reading. Still has a list of books it wants to get to.']],
+  reading:     [['Wisened Owl','Peers over its spectacles at anything you have not finished reading.'],['Tome Golem','A guardian stitched from a hundred books. It remembers every page.'],['Magic Wisp','A drifting spark of old magic that lights the page while you read. Brightest when you are lost in a good book.']],
   running:     [['Trail Hound','Knows every path for miles and wants to run all of them.'],['Infernal Stallion','A nightmare of smoke and flame. Its hoofprints smolder for hours after a run.'],['Pegasus','Gallops so fast it simply takes off. No road is long enough to slow it down.']],
   climbing:    [['Crag Lizard','Sticks to any rock face. Judges your grip.'],['Ancient Wyvern','Has nested on the highest peaks for a thousand years. Respects a good climb.'],['King Ape','Rules the highest peaks from a throne of stone. Wears its crown to the top of every climb.']],
   guitar:      [['Lyre Finch','Hums your last practice back to you, slightly off-key.'],['Phoenix','Its song catches fire on the high notes.'],['Thunderbird','Every beat of its wings is a drumroll. Every note it sings is thunder.']],
@@ -3181,6 +3224,7 @@ function generatePets(skill, salt){
 }
 // A skill's three companions: its own saved set, the starter set for the built-in skills, or a generated set.
 function skillTrio(s){
+  if(s.id==='reading' && Array.isArray(s.pets) && s.pets[2] && s.pets[2].sprite==='lich'){ s.pets[2].sprite = 'wisp'; s.pets[2].hue = 0; if(s.pets[2].name==='Lich'){ s.pets[2].name = PET_NAMES.reading[2][0]; s.pets[2].desc = PET_NAMES.reading[2][1]; } }
   if(s.id==='cinema' && Array.isArray(s.pets) && s.pets[2] && s.pets[2].sprite==='vampire'){ s.pets[2].sprite = 'penguin'; s.pets[2].hue = 0; if(s.pets[2].name==='Vampire Lord'){ s.pets[2].name = PET_NAMES.cinema[2][0]; s.pets[2].desc = PET_NAMES.cinema[2][1]; } }
   if(Array.isArray(s.pets) && s.pets.length===3) return s.pets;
   const def = SKILL_PETS[s.id];
@@ -3882,20 +3926,21 @@ async function rpc(fn, body){
   if(!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
 }
-// Companion as compact pixel data (32x32 grid + colour list) so any version of the app can draw it.
+// Companion as compact pixel data (40x40 grid + colour list) so any version of the app can draw it.
 function spriteData(def){
   sprSVG(def.sprite, {width:32, shiny: !!def.rare, aura: def.form==='legend' ? '#f2cd78' : '', pal: def.pal || undefined, hue: def.hue || 0});
-  const {out, glow} = sprSVG.last, colors = [], idx = {}, p = Array(1024).fill('.');
-  for(const [x,y,c] of out){ if(x<0||x>31||y<0||y>31) continue; if(idx[c]==null){ if(colors.length>=70) continue; idx[c]=colors.length; colors.push(c); } p[y*32+x] = String.fromCharCode(48+idx[c]); }
-  return { p: p.join(''), c: colors, g: glow || '' };
+  const {out, glow} = sprSVG.last, colors = [], idx = {}, p = Array(SPR_N*SPR_N).fill('.');
+  for(const [x,y,c] of out){ if(x<0||x>=SPR_N||y<0||y>=SPR_N) continue; if(idx[c]==null){ if(colors.length>=70) continue; idx[c]=colors.length; colors.push(c); } p[y*SPR_N+x] = String.fromCharCode(48+idx[c]); }
+  return { p: p.join(''), c: colors, g: glow || '', s: SPR_N };
 }
 function spriteFromData(d, width){
-  if(!d || typeof d.p!=='string' || d.p.length!==1024 || !Array.isArray(d.c) || d.c.length>70 || !d.c.every(c=>typeof c==='string' && COLOR_RE.test(c))) return '';
+  const n = d && d.s===40 ? 40 : 32;
+  if(!d || typeof d.p!=='string' || d.p.length!==n*n || !Array.isArray(d.c) || d.c.length>70 || !d.c.every(c=>typeof c==='string' && COLOR_RE.test(c))) return '';
   let rects = '';
-  for(let i=0;i<1024;i++){ const ch = d.p.charCodeAt(i); if(ch===46) continue; const c = d.c[ch-48]; if(!c) continue; rects += `<rect x="${i%32}" y="${(i/32)|0}" width="1.02" height="1.02" fill="${c}"/>`; }
+  for(let i=0;i<n*n;i++){ const ch = d.p.charCodeAt(i); if(ch===46) continue; const c = d.c[ch-48]; if(!c) continue; rects += `<rect x="${i%n}" y="${(i/n)|0}" width="1.02" height="1.02" fill="${c}"/>`; }
   let glow = '';
-  if(typeof d.g==='string' && COLOR_RE.test(d.g)){ const gid = 'fg'+(++sprSVG.n); glow = `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${d.g}" stop-opacity=".45"/><stop offset="1" stop-color="${d.g}" stop-opacity="0"/></radialGradient></defs><ellipse cx="16" cy="17" rx="16" ry="15" fill="url(#${gid})"/>`; }
-  return `<svg viewBox="0 0 32 32" width="${width}" height="${width}" shape-rendering="crispEdges" aria-hidden="true">${glow}${rects}</svg>`;
+  if(typeof d.g==='string' && COLOR_RE.test(d.g)){ const gid = 'fg'+(++sprSVG.n); glow = `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="${d.g}" stop-opacity=".45"/><stop offset="1" stop-color="${d.g}" stop-opacity="0"/></radialGradient></defs><ellipse cx="${n/2}" cy="${n*17/32}" rx="${n/2}" ry="${n*15/32}" fill="url(#${gid})"/>`; }
+  return `<svg viewBox="0 0 ${n} ${n}" width="${width}" height="${width}" shape-rendering="crispEdges" aria-hidden="true">${glow}${rects}</svg>`;
 }
 function thumbPortrait(){
   return new Promise(res=>{
