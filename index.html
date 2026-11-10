@@ -470,7 +470,7 @@ const RULES = {
 };
 const DEMO = !!window.XP_DEMO;
 const APP_KIND = 'personal';
-const APP_VERSION = '2026.11.10-1458';
+const APP_VERSION = '2026.11.10-1527';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -4039,6 +4039,32 @@ function closeSheet(){ const s=$('#sheet'); if(s) s.remove(); }
 function iconPicker(sel){ return `<div class="icons" id="f-icons">${SKILL_ICONS.map(i=>`<button type="button" data-icon="${i}" aria-label="${i}" aria-pressed="${i===sel}">${svg(i)}</button>`).join('')}</div>`; }
 function wireIcons(root, cb){ root.querySelectorAll('[data-icon]').forEach(b=>b.addEventListener('click',()=>{ root.querySelectorAll('[data-icon]').forEach(x=>x.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true'); cb(b.dataset.icon); })); }
 
+// ---- Permanent deletion (asks first; removes the XP too) ----
+const questXP = id => Object.values(R.days).reduce((a,d)=>a + ((d.items[id]||{}).xp||0), 0);
+function purgeQuest(id){
+  state.tasks = state.tasks.filter(x=>x.id!==id);
+  for(const k in state.log){ delete state.log[k][id]; if(!Object.keys(state.log[k]).length) delete state.log[k]; }
+  state.levelFloor = null;   // levels are worked out again from what's left, so they can go down
+}
+function purgeSkill(id){
+  state.tasks.filter(x=>x.skill===id).forEach(x=>purgeQuest(x.id));
+  state.skills = state.skills.filter(x=>x.id!==id);
+  if(state.goneSkills) delete state.goneSkills[id];
+  const mine = k => k.startsWith('p_'+id+'_');
+  for(const k of Object.keys(state.pets||{})) if(mine(k)) delete state.pets[k];
+  for(const k of Object.keys(state.petNames||{})) if(mine(k)) delete state.petNames[k];
+  if(state.profile.pet && mine(state.profile.pet)){ state.profile.pet = state.profile.starter || 'p_cat'; state.profile.petSince = todayKey(); }
+  state.levelFloor = null;
+}
+function confirmDelete(title, body, onYes){
+  openSheet(`<div class="label" style="color:var(--err)">This can\u2019t be undone</div><h2>${esc(title)}</h2>
+    <p style="margin:0">${body}</p>
+    <button class="btn danger block" id="f-yes">Delete forever</button>
+    <button class="btn block" id="f-no">Keep it</button>`, root=>{
+    root.querySelector('#f-no').onclick = closeSheet;
+    root.querySelector('#f-yes').onclick = ()=>{ closeSheet(); mutate(onYes); };
+  });
+}
 function abilitySelect(id, sel){ return `<select id="${id}">${ABILITIES.map(([ab,n])=>`<option value="${ab}" ${ab===sel?'selected':''}>${n} (${ab})</option>`).join('')}</select>`; }
 function taskSheet(id, preset){
   const t = id ? state.tasks.find(x=>x.id===id) : {name:'', skill: state.skills[0] ? state.skills[0].id : '__new', type:'once', xp: preset==='side' ? 50 : 30, cadence: preset};
@@ -4072,7 +4098,7 @@ function taskSheet(id, preset){
     </div>
     <p class="hint" id="f-err" style="color:var(--err)" hidden></p>
     <button class="btn primary block" id="f-save">${id?'Save quest':'Add quest'}</button>
-    ${id && isSide(t) ? `<button class="btn danger block" id="f-del">Delete side quest</button>` : ''}
+    ${id ? `<button class="btn danger block" id="f-del">Delete ${isSide(t)?'side quest':'quest'}</button>` : ''}
     ${id && !isSide(t) ? `<button class="btn ${t.retired?'gold':'danger'} block" id="f-retire">${t.retired?'Bring back this quest':'Retire this quest'}</button><p class="hint" style="margin:0">Retiring hides a quest from your daily list. The XP you already earned from it stays.</p>`:''}
     <button class="btn block" id="f-cancel">Cancel</button>`, root=>{
     const q = x=>root.querySelector(x);
@@ -4094,7 +4120,8 @@ function taskSheet(id, preset){
     };
     q('#f-side').onclick = ()=>{ cadence='side'; sync(); };
     const del = q('#f-del');
-    if(del) del.onclick = ()=>{ mutate(()=>{ t.deleted = todayKey(); if(!t.retired) t.retired = todayKey(); }); closeSheet(); }   // hidden, but its XP and history stay;
+    if(del) del.onclick = ()=>{ const xp = questXP(id);
+      confirmDelete(`Delete \u201c${t.name}\u201d?`, `This permanently deletes the quest and <b>all ${fmt(xp)} XP</b> it has earned. Your skill, ability and character levels may go down.${isSide(t) ? '' : ' To hide it but keep its XP, retire it instead.'}`, ()=>purgeQuest(id)); };
     q('#f-daily').onclick = ()=>{ cadence='daily'; sync(); };
     q('#f-weekly').onclick = ()=>{ cadence='weekly'; sync(); };
     q('#f-once').onclick = ()=>{ type='once'; sync(); };
@@ -4134,6 +4161,8 @@ function taskSheet(id, preset){
 }
 function companionsToast(s){ setTimeout(()=>toast('New companions await', s.pets.map(p=>p.name).join(' \u00b7 '), 'paw'), 400); }
 function skillSheet(id){
+  const askDeleteSkill = ()=>{ const n = state.tasks.filter(x=>x.skill===id).length, xp = (R.skills[id]||{}).total||0;
+    confirmDelete(`Delete ${s.name}?`, `This permanently deletes the skill, its <b>${n} quest${n===1?'':'s'}</b> and <b>all ${fmt(xp)} XP</b> they have earned, along with this skill\u2019s companions and achievements. Your ability and character levels may go down.`, ()=>purgeSkill(id)); };
   const s = id ? state.skills.find(x=>x.id===id) : {name:'', icon:'star', ability:'STR', titles:[]};
   let icon = s.icon;
   const [a,b] = s.titles||[];
@@ -4145,9 +4174,12 @@ function skillSheet(id){
     <div class="field"><label for="f-t10">Title at skill level 10</label><input id="f-t10" value="${esc(b||'')}" placeholder="e.g. Master Chef" autocomplete="off"></div>
     <p class="hint" id="f-err" style="color:var(--err)" hidden></p>
     <button class="btn primary block" id="f-save">${id?'Save skill':'Add skill'}</button>
+    ${id ? `<button class="btn danger block" id="f-sdel">Delete skill</button>` : ''}
     <button class="btn block" id="f-cancel">Cancel</button>`, root=>{
     wireIcons(root, i=>icon=i);
     root.querySelector('#f-cancel').onclick = closeSheet;
+    const sdel = root.querySelector('#f-sdel');
+    if(sdel) sdel.onclick = ()=>{ askDeleteSkill(); };
     root.querySelector('#f-save').onclick = ()=>{
       const name = root.querySelector('#f-sname').value.trim();
       if(!name){ const e=root.querySelector('#f-err'); e.textContent='Give the skill a name.'; e.hidden=false; return; }
