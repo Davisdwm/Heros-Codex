@@ -467,7 +467,7 @@ const RULES = {
 };
 const DEMO = !!window.XP_DEMO;
 const APP_KIND = 'personal';
-const APP_VERSION = '2026.11.10-1632';
+const APP_VERSION = '2026.11.10-1730';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -3155,11 +3155,12 @@ function petDefs(){
     let trio = skillTrio(s);
     if(!trio){ s.pets = generatePets(s); trio = s.pets; }   // skills you add get their own set the first time they're seen
     PET_LEVELS.forEach(([lv,form],i)=>out.push({ id:`p_${s.id}_${lv}`, group:'skill', skill:s.id, sprite:trio[i].sprite, hue:trio[i].hue||0, form, name:trio[i].name, desc:trio[i].desc, how:`${s.name} level ${lv}` }));
-    out.push({ id:`p_${s.id}_rare`, group:'skill', skill:s.id, sprite:trio[0].sprite, hue:trio[0].hue||0, form:'rare', rare:true, name:`Shiny ${trio[0].name}`.slice(0,40), desc:`A rare, shimmering ${trio[0].name.toLowerCase()}. Few adventurers ever see one.`, how:`Shiny: 1 in 1,000 chance with each ${s.name.toLowerCase()} quest` });
+    out.push({ id:`p_${s.id}_rare`, group:'skill', skill:s.id, sprite:trio[0].sprite, hue:trio[0].hue||0, form:'rare', rare:true, name:`Shiny ${trio[0].name}`.slice(0,40), desc:`A rare, shimmering ${trio[0].name.toLowerCase()}. Few adventurers ever see one.`, how:`An elusive ${s.name} pet` });
   }
   for(const [ab,abName] of ABILITIES){
     ABILITY_PETS[ab].forEach(([sprite,name,desc],i)=>{ const [lv,form] = PET_LEVELS[i];
-      out.push({ id:`p_ab_${ab}_${lv}`, group:'ability', ability:ab, sprite, form, name, desc, how:`${abName} level ${lv}` }); });
+      out.push({ id:`p_ab_${ab}_${lv}`, group:'ability', ability:ab, sprite, form, name, desc, how:`${abName} level ${lv}` });
+      out.push({ id:`p_ab_${ab}_${lv}_shiny`, group:'ability', ability:ab, sprite, form:'rare', rare:true, needs:`p_ab_${ab}_${lv}`, name:`Shiny ${name}`, desc:`A rare, shimmering ${name.toLowerCase()}. Few adventurers ever see one.`, how:`An elusive ${abName} pet` }); });
   }
   return out;
 }
@@ -3750,7 +3751,7 @@ function viewTrophies(){
     const k = R.ach[d.id];
     return `<div class="ach t-${d.tier} ${k?'got':''}"><div class="badge">${svg(d.icon)}</div><div class="an">${esc(d.name)}</div><div class="ad">${k ? 'Earned '+esc(MON[parseKey(k).getMonth()]+' '+parseKey(k).getDate()) : esc(d.desc)}</div></div>`;
   }).join('');
-  const pets = petDefs(); const ownedN = pets.filter(p=>R.pets[p.id]).length;
+  const pets = petDefs().filter(p=>!p.needs || R.pets[p.needs]); const ownedN = pets.filter(p=>R.pets[p.id]).length;   // ability shinies stay hidden until their normal form is found
   const petCardHTML = p=>{ const got = !!R.pets[p.id];
     return `<button class="pet ${got?'got':''} ${p.form}" data-act="pet" data-id="${p.id}"><div class="petart">${petArt(p, 80, !got)}</div><div class="pn">${got ? esc(petTitle(p)) : '???'}</div><div class="ph">${got ? esc(petOrigin(p)) : esc(p.how)}</div></button>`; };
   return `<div class="rule">Medals</div>
@@ -3768,7 +3769,7 @@ function viewTrophies(){
     <p class="hint" style="margin:0">Days earn Bronze at 50%, Silver at 75% and Gold at 90% of the XP available that day, before streak bonuses. Weeks are rated the same way, Monday to Sunday.</p>
   </div></section>
   <div class="rule">Companions · ${ownedN}/${pets.length}</div>
-  <p class="hint" style="margin:-8px 0 0;text-align:center">Each skill has companions at levels 5, 10 and 15, plus a shiny version of the first with a 1 in 1,000 chance every time you complete one of its quests. Each ability has its own companions at levels 5, 10 and 15.</p>
+  <p class="hint" style="margin:-8px 0 0;text-align:center">Each skill has companions at levels 5, 10 and 15, plus an elusive shiny that may appear when you complete its quests. Each ability has its own companions at levels 5, 10 and 15, and some say rarer things follow once you find them.</p>
   ${[['starter','Starter'],['skill','Skill companions'],['ability','Ability companions']].map(([g,label])=>`<div class="label" style="text-align:center">${label}</div><div class="pets ${g==='skill'?'pets4':''}">${pets.filter(p=>p.group===g).map(petCardHTML).join('')}</div>`).join('')}
   <div class="rule">Achievements · ${got}/${defs.length}</div>
   <div class="achs">${achs}</div>`;
@@ -4023,9 +4024,15 @@ function mutate(fn, evt){
   if(evt) floatXP(evt.clientX, evt.clientY, R.char.total - xpBefore);
   celebrate(before);
 }
+// Skill shiny: 1 in (1,000 x the skill's daily quests) per quest, so more quests never means better odds.
+// Ability shinies: 1 in 1,000 per quest for that ability, only once that level's normal companion is found.
 function rollRarePet(task){
+  const daily = state.tasks.filter(t=>t.skill===task.skill && !noMedal(t) && !t.deleted && isActive(t, viewDate)).length;
   const id = `p_${task.skill}_rare`;
-  if(!state.pets[id] && Math.random() < RULES.rarePetChance) state.pets[id] = { date: viewDate };
+  if(!state.pets[id] && Math.random() < RULES.rarePetChance / Math.max(1, daily)) state.pets[id] = { date: viewDate };
+  const ab = abilityOf(task.skill);
+  for(const lv of [5,10,15]){ const base = `p_ab_${ab}_${lv}`, sh = base + '_shiny';
+    if(R.pets[base] && !state.pets[sh] && Math.random() < RULES.rarePetChance) state.pets[sh] = { date: viewDate }; }
 }
 function setVal(id, val){
   const k = viewDate; const e = state.log[k] = state.log[k] || {};
