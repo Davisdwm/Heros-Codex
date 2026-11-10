@@ -249,6 +249,13 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .pickbadge.sel{border-color:var(--gold);background:rgba(217,173,85,.12);box-shadow:inset 0 0 0 1px rgba(217,173,85,.45)}
 .pickbadge .ad{color:var(--gold)!important;font-weight:700}
 .tag.met{color:var(--gold);border-color:var(--gold)}
+.cal button.d{font:inherit;font-size:12px;padding:0;cursor:pointer}
+.cal button.d:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.calnav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.calnav .iconbtn{width:34px;height:34px}
+.pastbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:linear-gradient(180deg,#2a1d18,#1d1512);border:1px solid var(--gold);box-shadow:0 6px 16px rgba(0,0,0,.45);font-size:14px}
+.pastbar b{color:var(--gold-hi)}
+.pastbar .btn{min-height:38px;padding:0 14px;flex:none}
 .verrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .pickpets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .pick{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1px solid var(--line);background:var(--panel);font-size:12px;font-weight:700;text-align:center;line-height:1.15}
@@ -470,7 +477,7 @@ const RULES = {
 };
 const DEMO = !!window.XP_DEMO;
 const APP_KIND = 'personal';
-const APP_VERSION = '2026.11.10-1527';
+const APP_VERSION = '2026.11.10-1625';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -3573,6 +3580,7 @@ function viewToday(){
     return `<div class="abhead"><span class="abbr">${ab}</span>${name}</div>` + list.map(t=>questRow(t, k, d, {dim: t.oneOf && groupDone[t.oneOf] && !e0[t.id]})).join('');
   }).join('');
   return `
+  ${isToday ? '' : `<div class="pastbar"><span>Viewing <b>${esc(niceDate(k))}</b></span><button class="btn primary" data-act="today">Back to today</button></div>`}
   ${DEMO ? `<div class="banner"><span>You’re viewing <b>sample progress</b>.</span><button class="linkbtn" data-act="reset-ask">Start fresh</button></div>` : ''}
   ${heroHeader({conditions:k})}
   <section class="frame day"><div class="in">
@@ -3723,14 +3731,14 @@ function viewTrophies(){
   for(let i=0;i<7;i++){ const k=addDays(ws,i); const d=R.days[k]; if(d){ e+=d.earned; p+=d.possible; } else if(k>R.today) p+=todayPossible; }
   const wr = p? e/p : 0, wm = medalFor(wr);
   // calendar: 5 weeks
-  const calStart = addDays(ws, -28);
+  const calStart = addDays(ws, -28 - calPage*35);
   let cal = ['M','T','W','T','F','S','S',''].map(x=>`<span class="h">${x}</span>`).join('');
   for(let w=0; w<5; w++){
     const wk = addDays(calStart, w*7);
     for(let i=0;i<7;i++){
       const k = addDays(wk,i), d = R.days[k], fut = k>R.today;
       const cls = fut ? 'future' : d && d.medal ? d.medal : d && d.earned ? 'some' : '';
-      cal += `<span class="d ${cls} ${k===R.today?'today':''}" title="${k}${d?': '+Math.round(d.ratio*100)+'%':''}">${parseKey(k).getDate()}</span>`;
+      cal += (!fut && k >= R.start) ? `<button class="d ${cls} ${k===R.today?'today':''}" data-act="calday" data-id="${k}" aria-label="${esc(niceDate(k))}">${parseKey(k).getDate()}</button>` : `<span class="d ${cls} ${k===R.today?'today':''}">${parseKey(k).getDate()}</span>`;
     }
     const W = R.weeks[wk];
     cal += `<span class="w">${W && W.medal ? `<span class="coin ${W.medal}" title="${W.medal} week">W</span>` : `<span class="none" title="${W?'No medal':'In progress'}"></span>`}</span>`;
@@ -3751,7 +3759,11 @@ function viewTrophies(){
   <section class="frame week"><div class="in">
     <div class="medal-line"><span><span class="label">This week</span><br><b class="num">${fmt(e)}</b> <span class="muted">of ${fmt(p)} XP possible</span></span>${wm?`<span class="chip ${wm}"><span class="dot"></span>${wm} pace</span>`:`<span class="chip"><span class="dot"></span>${Math.round(wr*100)}%</span>`}</div>
     ${bar('week', wr*100, 'goldfill')}
+    <div class="calnav"><button class="iconbtn" data-act="calpage" data-n="1" aria-label="Earlier weeks" ${addDays(calStart,-1) < R.start ? 'disabled' : ''}>${svg('left')}</button>
+      <span class="label">${esc(MON[parseKey(calStart).getMonth()]+' '+parseKey(calStart).getDate())} \u2013 ${esc(MON[parseKey(addDays(calStart,34)).getMonth()]+' '+parseKey(addDays(calStart,34)).getDate())}</span>
+      <button class="iconbtn" data-act="calpage" data-n="-1" aria-label="Later weeks" ${calPage===0?'disabled':''}>${svg('right')}</button></div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px"><div class="cal">${cal}</div></div>
+    <p class="hint" style="margin:0;text-align:center">Tap a day to see how it went.</p>
     <p class="hint" style="margin:0">Days earn Bronze at 50%, Silver at 75% and Gold at 90% of the XP available that day, before streak bonuses. Weeks are rated the same way, Monday to Sunday.</p>
   </div></section>
   <div class="rule">Companions · ${ownedN}/${pets.length}</div>
@@ -4194,6 +4206,28 @@ function skillSheet(id){
   });
 }
 const PET_SOUNDS = ['Moo!','Meow!','Bark!','Caw!','Woof!','Purr\u2026','Quack!','Oink!','Baa!','Neigh!','Hoot!','Ribbit!','Squeak!','Chirp!','Hiss!','Roar!','Cluck!','Honk!','Tweet!','Grr\u2026','Bzzz!','Awoo!','Squawk!','Blub!'];
+let calPage = 0;
+function daySheet(k){
+  const d = R.days[k] || {earned:0, possible:0, xp:0, ratio:0, medal:'', items:{}};
+  const done = state.tasks.filter(t=>((d.items[t.id]||{}).val||0) > 0);
+  const kind = t => isSide(t) ? 'Side' : isWeekly(t) ? 'Weekly' : 'Daily';
+  const conds = (state.conditions[k]||[]).map(id=>state.conditionDefs.find(c=>c.id===id)).filter(Boolean);
+  const achs = R.defs.filter(x=>R.ach[x.id]===k), pets = petDefs().filter(x=>R.pets[x.id]===k && !x.starter);
+  openSheet(`<div class="label" style="color:var(--gold)">${k===R.today ? 'Today' : 'Looking back'}</div><h2>${esc(niceDate(k))}</h2>
+    <div class="stats">
+      <div class="stat"><b class="num">${d.medal ? d.medal[0].toUpperCase()+d.medal.slice(1) : '\u2013'}</b><span>Day medal</span></div>
+      <div class="stat"><b class="num">${d.possible ? Math.round(d.ratio*100)+'%' : '\u2013'}</b><span>Of daily quests</span></div>
+      <div class="stat"><b class="num">${fmt(d.xp)}</b><span>XP earned</span></div>
+      <div class="stat"><b class="num">${done.length}</b><span>Quests done</span></div>
+    </div>
+    ${done.length ? `<div class="list">${done.map(t=>{ const it = d.items[t.id]; return `<div><span>${esc(t.name)}<br><span class="muted" style="font-size:13px">${kind(t)} \u00b7 ${esc(skillById(t.skill).name)}${t.type==='tiers' ? ' \u00b7 '+esc(tierLabel(t, it.val)) : ''}</span></span><b class="num" style="color:var(--gold)">+${fmt(it.xp)}</b></div>`; }).join('')}</div>` : `<p class="hint" style="margin:0">No quests were completed this day.</p>`}
+    ${conds.length ? `<div class="field"><label>Conditions</label><div class="condchips">${conds.map(c=>`<span class="cond ${c.kind}">${svg(c.icon)}${esc(c.name)}</span>`).join('')}</div></div>` : ''}
+    ${achs.length ? `<div class="field"><label>Achievements earned</label><div class="condchips">${achs.map(a=>`<span class="cond good">${svg(a.icon)}${esc(a.name)}</span>`).join('')}</div></div>` : ''}
+    ${pets.length ? `<div class="field"><label>Companions found</label><div class="condchips">${pets.map(x=>`<span class="cond good">${svg('paw')}${esc(petTitle(x))}</span>`).join('')}</div></div>` : ''}
+    ${(state.petPets||{})[k] ? `<p class="hint" style="margin:0">You petted your companion (+1 XP).</p>` : ''}
+    <button class="btn primary block" data-act="goday" data-id="${k}">Open this day on the Quests tab</button>
+    <button class="btn block" id="f-cancel">Close</button>`, root=>{ root.querySelector('#f-cancel').onclick = closeSheet; });
+}
 function petSheet(id){
   const p = petDefs().find(x=>x.id===id); if(!p) return;
   const got = R.pets[p.id], isComp = state.profile.pet===p.id;
@@ -4336,7 +4370,10 @@ document.addEventListener('click', e=>{
   else if(a==='ability'){ e.preventDefault(); const el = document.getElementById('ab-'+id); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); else toast(ABILITY_NAME[id], 'No skills here yet. Add one from the Hero tab.', 'skills'); }
   else if(a==='step'){ const t = state.tasks.find(x=>x.id===id); const cur = ((state.log[viewDate]||{})[id])||0; mutate(()=>setVal(id, Math.max(0, cur + (+b.dataset.n)*t.unit)), e); }
   else if(a==='day'){ const n = addDays(viewDate, +b.dataset.n); if(n<=R.today){ viewDate = n; render(); } }
-  else if(a==='today'){ viewDate = R.today; render(); }
+  else if(a==='today'){ viewDate = R.today; render(); window.scrollTo(0,0); }
+  else if(a==='calday') daySheet(id);
+  else if(a==='calpage'){ calPage = Math.max(0, calPage + (+b.dataset.n)); render(); }
+  else if(a==='goday'){ closeSheet(); viewDate = id; view = 'today'; skillView = null; render(); window.scrollTo(0,0); }
   else if(a==='skill'){ skillView = id; render(); window.scrollTo(0,0); }
   else if(a==='skills-back'){ skillView = null; render(); }
   else if(a==='title'){ state.profile.title = id; save(); render(); }
