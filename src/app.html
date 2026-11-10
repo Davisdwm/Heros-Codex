@@ -240,6 +240,11 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .pastbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:linear-gradient(180deg,#2a1d18,#1d1512);border:1px solid var(--gold);box-shadow:0 6px 16px rgba(0,0,0,.45);font-size:14px}
 .pastbar b{color:var(--gold-hi)}
 .pastbar .btn{min-height:38px;padding:0 14px;flex:none}
+.journal{border-top:0;padding-top:0}
+.journal .jprev{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.journal textarea{width:100%;min-height:110px;margin-top:10px;padding:10px 12px;background:var(--inset);border:1px solid var(--line-hi);border-radius:2px;font-size:16px;line-height:1.4;resize:vertical;font-family:var(--body)}
+.journal .jsaved{display:block;text-align:right;margin-top:4px;font-size:12px}
+.jentry{margin:0;padding:10px 12px;background:var(--inset);border-left:2px solid var(--gold);white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.45}
 .verrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .pickpets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .pick{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1px solid var(--line);background:var(--panel);font-size:12px;font-weight:700;text-align:center;line-height:1.15}
@@ -3365,6 +3370,8 @@ function compute(){
   const today = todayKey();
   let start = state.created || today;
   for(const k in state.log) if(k < start) start = k;
+  for(const k in (state.journal||{})) if(k < start) start = k;      // days with a journal entry or conditions count as history too
+  for(const k in (state.conditions||{})) if(k < start) start = k;
   const tasks = state.tasks, defs = achDefs();
   const streak = {}, best = {}, prevStreak = {};
   tasks.forEach(t=>{ streak[t.id]=0; best[t.id]=0; });
@@ -3520,6 +3527,15 @@ function condBar(k){
     <div class="condlist">${defs.map(c=>`<button class="condopt ${c.kind} ${on.includes(c.id)?'on':''}" data-act="cond" data-id="${c.id}" aria-pressed="${on.includes(c.id)}">${svg(c.icon)}<span><b>${esc(c.name)}</b>${c.desc?`<small>${esc(c.desc)}</small>`:''}</span></button>`).join('') || '<p class="hint" style="margin:0">Add conditions from the Hero tab.</p>'}</div></details>`;
 }
 function currentCompanion(){ const id = state.profile.pet; if(!id || !R.pets[id]) return null; return petDefs().find(p=>p.id===id) || null; }
+// Quest Journal: a short note per day, kept on this device only (never on friend cards).
+let journalOpen = false;
+function journalBar(k){
+  const text = (state.journal||{})[k] || '';
+  const preview = text ? esc(text.replace(/\s+/g,' ').slice(0,60)) + (text.length>60 ? '\u2026' : '') : '<span class="muted">Add a note about the day</span>';
+  return `<details class="conds journal" id="journal" ${journalOpen?'open':''}><summary><span class="label">Journal</span><span class="jprev">${preview}</span>${svg('chevron','class="chev"')}</summary>
+    <textarea id="f-journal" maxlength="1000" placeholder="How did the day go? Thoughts, wins, things to remember\u2026">${esc(text)}</textarea>
+    <span class="hint jsaved" id="f-jsaved">${text ? 'Saved' : 'Saves as you type'}</span></details>`;
+}
 function companionHTML(){
   const def = currentCompanion(); if(!def) return '';
   return `<button class="compstrip ${def.form}" data-act="pet" data-id="${def.id}"><span class="compart">${petArt(def, 80)}</span><span class="comptext"><span class="label">Traveling with</span><b>${esc(petTitle(def))}</b><span class="muted">${def.group==='skill' ? esc(skillById(def.skill).name)+' companion' : esc(petOrigin(def))}</span></span></button>`;
@@ -3533,7 +3549,7 @@ function heroHeader(opts){
     ${companionHTML()}
     <div class="xp">${bar('char', ch.into/ch.need*100)}
       <div class="xp-row num"><span><b>${fmt(ch.into)}</b> / ${fmt(ch.need)} XP</span><span>${fmt(ch.need-ch.into)} to Level ${ch.level+1}</span></div></div>
-    ${opts.conditions ? condBar(opts.conditions) : ''}
+    ${opts.conditions ? condBar(opts.conditions) + journalBar(opts.conditions) : ''}
   </div></section>`;
 }
 
@@ -3946,6 +3962,12 @@ function render(){
   $('#app').innerHTML = `<main class="wrap">${html}</main>`;
   renderTabs(); settleBars(); fitNames();
   const cd = $('#conds'); if(cd) cd.addEventListener('toggle', ()=>{ condOpen = cd.open; });
+  const jd = $('#journal'); if(jd) jd.addEventListener('toggle', ()=>{ journalOpen = jd.open; });
+  const jt = $('#f-journal');
+  if(jt){ let jtimer = null; const day = viewDate;
+    jt.addEventListener('input', ()=>{ state.journal = state.journal || {}; const v = jt.value.slice(0,1000); if(v.trim()) state.journal[day] = v; else delete state.journal[day];
+      try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+      const sv = $('#f-jsaved'); if(sv) sv.textContent = 'Saving\u2026'; clearTimeout(jtimer); jtimer = setTimeout(()=>{ const s2 = $('#f-jsaved'); if(s2) s2.textContent = 'Saved'; const pv = document.querySelector('#journal .jprev'); if(pv) pv.textContent = v.trim() ? v.replace(/\s+/g,' ').slice(0,60) + (v.length>60?'\u2026':'') : 'Add a note about the day'; }, 500); }); }
   document.querySelectorAll('details[data-g]').forEach(el=>el.addEventListener('toggle', ()=>{ el.open ? openGroups.add(el.dataset.g) : openGroups.delete(el.dataset.g); }));
   const nameInput = $('#f-heroname');
   if(nameInput) nameInput.addEventListener('change', ()=>{ state.profile.name = nameInput.value.trim().slice(0,40); save(); R = compute(); });
@@ -4208,6 +4230,7 @@ function daySheet(k){
     ${conds.length ? `<div class="field"><label>Conditions</label><div class="condchips">${conds.map(c=>`<span class="cond ${c.kind}">${svg(c.icon)}${esc(c.name)}</span>`).join('')}</div></div>` : ''}
     ${achs.length ? `<div class="field"><label>Achievements earned</label><div class="condchips">${achs.map(a=>`<span class="cond good">${svg(a.icon)}${esc(a.name)}</span>`).join('')}</div></div>` : ''}
     ${pets.length ? `<div class="field"><label>Companions found</label><div class="condchips">${pets.map(x=>`<span class="cond good">${svg('paw')}${esc(petTitle(x))}</span>`).join('')}</div></div>` : ''}
+    ${(state.journal||{})[k] ? `<div class="field"><label>Journal</label><p class="jentry">${esc(state.journal[k])}</p></div>` : ''}
     ${(state.petPets||{})[k] ? `<p class="hint" style="margin:0">You petted your companion (+1 XP).</p>` : ''}
     <button class="btn primary block" data-act="goday" data-id="${k}">Open this day on the Quests tab</button>
     <button class="btn block" id="f-cancel">Close</button>`, root=>{ root.querySelector('#f-cancel').onclick = closeSheet; });
