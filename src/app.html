@@ -1357,12 +1357,12 @@ hydra: { pal:{a:[160, 45, 35], c:[60, 45, 65], d:[160, 40, 20]}, e:'#ffd23a', ro
 ".aaaaa.....aaaaa",
 "..aaan......aaan",
 "..aaan......aaan",
-"...aa.......aaaa",
-"....aa......aaaa",
-"....aa......aaaa",
-".....aa.....aaaa",
-"......aaa...aaaa",
-"......aaa...aaaa",
+"...aaaa.....aaaa",
+"....aaaa....aaaa",
+"....aaaa....aaaa",
+".....aaaa...aaaa",
+"......aaaaa.aaaa",
+"......aaaaa.aaaa",
 ".......aaaaaaaaa",
 "......aaaaaaaaaa",
 "......aaaaaaaaaa",
@@ -1590,11 +1590,11 @@ sauropod: { pal:{a:[120, 30, 45], c:[100, 35, 62], d:[120, 30, 25]}, e:'#120c0a'
 "........................aaa.....",
 ".......................aaeaa....",
 "........................aaaaa...",
-".......................aa.......",
-"......................aa........",
-".....................aa.........",
-"....................aa..........",
-".........aaaaaaaaaaaa...........",
+".......................aaaa.....",
+"......................aaaa......",
+".....................aaaa.......",
+"....................aaaa........",
+".........aaaaaaaaaaaaa..........",
 "......aaaaaaaaaaaaaaaa..........",
 "....aaaaaacccccccaaaaaa.........",
 "..aaaaaaaaaaaaaaaaaaaaa.........",
@@ -1606,12 +1606,12 @@ lochness: { pal:{a:[150, 35, 32], c:[205, 60, 45]}, e:'#ffe14a', rows:[
 "........................aaa.....",
 ".......................aaaea....",
 "........................aaaaa...",
-"........................aa......",
-".......................aa.......",
-"..........aaa..........aa.......",
-".........aaaaa........aa........",
-"....aaa..aaaaa.......aa.........",
-"...aaaaa.aaaaa......aa..........",
+"........................aaaa....",
+".......................aaaa.....",
+"..........aaa..........aaaa.....",
+".........aaaaa........aaaa......",
+"....aaa..aaaaa.......aaaa.......",
+"...aaaaa.aaaaa......aaaa........",
 "cccccccccccccccccccccccccccccccc",
 "cwcccccwcccccwcccccwcccccwcccccw",
 "cccccccccccccccccccccccccccccccc"]},
@@ -2125,13 +2125,13 @@ leviathan: { pal:{a:[175,55,35], x:[190,70,55], c:[205,70,52]}, e:'#ffe14a', row
 ".....................aaaaaaaaa..",
 "......................aaaawnwn..",
 "......................aaaaaaa...",
-".....................aaaa.......",
-".......xx...........aaaa........",
-"......xaaa.........aaaa.........",
-".....xaaaaa.......aaaa..........",
-"....aaa..aaa.....aaa............",
-"...aaa....aaa...aaa.............",
-"..aaa......aaa.aaa..............",
+".....................aaaaaa.....",
+".......xx...........aaaaaa......",
+"......xaaa.........aaaaaa.......",
+".....xaaaaa.......aaaaaa........",
+"....aaaa.aaaa....aaaaaa.........",
+"...aaaa...aaaa..aaaaaa..........",
+"..aaaa.....aaa.aaaaaa...........",
 "cccccccccccccccccccccccccccccccc",
 ".cwcccwccccwcccccwcccwccccwcccc.",
 "cccccccccccccccccccccccccccccccc"]},
@@ -2959,7 +2959,7 @@ sprSVG.n = 0;
 
 // Companions: each skill has pets at levels 5, 10 and 20, plus a shiny level 5 (1 in 1,000 per quest).
 // Each ability has pets at levels 5, 10 and 20. Everyone starts with Cat.
-const SKILL_PETS = { reading:['owl','golem','lich'], running:['hound','nightmare','pegasus'], climbing:['lizard','wyvern','kingape'], guitar:['finch','phoenix','thunderbird'], yoga:['fox','turtle','kitsune'], stretching:['hare','boa','kraken'], social:['slime','kingslime','emperorslime'], cinema:['bat','beholder','vampire'], plants:['mandrake','treant','elk'], housekeeping:['mimic','gargoyle','hermitcrab'] };
+const SKILL_PETS = { reading:['owl','golem','lich'], running:['hound','nightmare','pegasus'], climbing:['lizard','wyvern','kingape'], guitar:['finch','phoenix','thunderbird'], yoga:['fox','turtle','kitsune'], stretching:['hare','boa','kraken'], social:['slime','kingslime','emperorslime'], cinema:['bat','beholder','penguin'], plants:['mandrake','treant','elk'], housekeeping:['mimic','gargoyle','hermitcrab'] };
 const PET_NAMES = {
   reading:     [['Wisened Owl','Peers over its spectacles at anything you have not finished reading.'],['Tome Golem','A guardian stitched from a hundred books. It remembers every page.'],['Lich','Spent a thousand years reading. Still has a list of books it wants to get to.']],
   running:     [['Trail Hound','Knows every path for miles and wants to run all of them.'],['Infernal Stallion','A nightmare of smoke and flame. Its hoofprints smolder for hours after a run.'],['Pegasus','Gallops so fast it simply takes off. No road is long enough to slow it down.']],
@@ -2968,7 +2968,7 @@ const PET_NAMES = {
   yoga:        [['Lotus Fox','Naps in perfect balance on one paw.'],['Turtle Monk','Has held the same pose for three hundred years. Still breathing deeply.'],['Nine-Tailed Kitsune','A tail for every century of practice. Perfectly still, perfectly aware.']],
   stretching:  [['Limber Hare','Can touch its toes. Can also touch your toes.'],['Lithe Boa','Ties itself in knots on purpose. Untangles with a sigh of relief.'],['Kraken','Reaches eight directions at once. Never once pulled a muscle.']],
   social:      [['Chatter Slime','Wobbles happily whenever someone says hello.'],['King Slime','Rules a kingdom of friends. Its crown has a jewel for each one.'],['Emperor Slime','Stood up one day and never sat back down. Its court is everyone it has ever met.']],
-  cinema:      [['Matinee Bat','Watches from the rafters. Shushes no one.'],['Beholder','Never blinks during a film. Has a dozen eyes for every scene.'],['Vampire Lord','Has seen every film ever made, at midnight, from the best seat in the house.']],
+  cinema:      [['Matinee Bat','Watches from the rafters. Shushes no one.'],['Beholder','Never blinks during a film. Has a dozen eyes for every scene.'],['Dapper Penguin','Shows up to every premiere in a perfect tuxedo. Has never once missed opening night.']],
   plants:      [['Mandrake Sprout','Screams softly when thirsty. Quite polite about it.'],['Ancient Treant','Has watched forests rise and fall. Approves of your ferns.'],['Mossy Elk','Moss grows on its back and ferns sprout from its antlers. The forest walks with it.']],
   housekeeping:[['Dust Mimic','Eats crumbs. Only crumbs. Probably.'],['Gargoyle Sentinel','Guards your home from its perch. Nothing gets past it, especially clutter.'],['Hermit Crab','Carries a whole house on its back and keeps every room spotless.']],
 };
@@ -3156,6 +3156,7 @@ function generatePets(skill, salt){
 }
 // A skill's three companions: its own saved set, the starter set for the built-in skills, or a generated set.
 function skillTrio(s){
+  if(s.id==='cinema' && Array.isArray(s.pets) && s.pets[2] && s.pets[2].sprite==='vampire'){ s.pets[2].sprite = 'penguin'; s.pets[2].hue = 0; if(s.pets[2].name==='Vampire Lord'){ s.pets[2].name = PET_NAMES.cinema[2][0]; s.pets[2].desc = PET_NAMES.cinema[2][1]; } }
   if(Array.isArray(s.pets) && s.pets.length===3) return s.pets;
   const def = SKILL_PETS[s.id];
   if(def) return def.map((sprite,i)=>({ sprite, hue:0, name: PET_NAMES[s.id][i][0], desc: PET_NAMES[s.id][i][1] }));
