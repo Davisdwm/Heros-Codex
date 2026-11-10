@@ -232,6 +232,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .fbadge.ach span{font-size:11px;font-weight:700;line-height:1.15;color:var(--fg)}
 .pickbadge.sel{border-color:var(--gold);background:rgba(217,173,85,.12);box-shadow:inset 0 0 0 1px rgba(217,173,85,.45)}
 .pickbadge .ad{color:var(--gold)!important;font-weight:700}
+.tag.met{color:var(--gold);border-color:var(--gold)}
 .verrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .pickpets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .pick{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1px solid var(--line);background:var(--panel);font-size:12px;font-weight:700;text-align:center;line-height:1.15}
@@ -1950,6 +1951,9 @@ function petDefs(){
   }
   return out;
 }
+// "Whiskers, the Cat" once you name a companion; otherwise just its kind.
+const petNick = p => ((state.petNames||{})[p.id] || '').trim();
+const petTitle = p => petNick(p) ? `${petNick(p)}, the ${p.name}` : p.name;
 const petOrigin = p => p.starter ? 'Starter companion' : p.group==='ability' ? `${ABILITY_NAME[p.ability]} companion` : skillById(p.skill).name;
 function petArt(def, width, locked){ return sprSVG(def.sprite, {width, locked, shiny: !!def.rare, aura: def.form==='legend' ? '#f2cd78' : '', pal: def.pal || undefined, hue: def.hue || 0}); }
 const DEFAULT_CONDITIONS = () => [
@@ -2047,7 +2051,7 @@ if(!state){ state = DEMO ? demoState() : defaultState(); firstRun = !DEMO; save(
 /* ============ Engine ============ */
 function stepUp(r, lvl){ const g = lvl >= RULES.lateFrom ? RULES.lateGrowth : RULES.growth; return Math.ceil(r*g/RULES.roundTo)*RULES.roundTo; }
 // Levels are measured in "full days": a day where every daily quest for that skill, ability or
-// character is done (weekly quests count as if done 3 times a week). Days per level: 4, 6, 10, 13, 16, 19, 21, 23, ...
+// character is done (weekly quests count as often as you plan to do them each week). Days per level: 4, 6, 10, 13, 16, 19, 21, 23, ...
 function daysForLevel(L){ return L<=1 ? 4 : L===2 ? 6 : L<=6 ? 10 + 3*(L-3) : 21 + 2*(L-7); }
 function levelFromDays(u){ let lvl = 1, start = 0; while(u >= start + daysForLevel(lvl) - 1e-9){ start += daysForLevel(lvl); lvl++; } return { level:lvl, start, span:daysForLevel(lvl) }; }
 // Shown in XP: progress into the level and what the level needs, at today's full-day value.
@@ -2058,7 +2062,7 @@ function fullDay(k, pred){
   for(const t of state.tasks){
     if(!isActive(t,k) || isSide(t) || !pred(t)) continue;
     if(t.created && t.created >= k && k !== state.created && t.created !== '2000-01-01') continue;   // new quests count from the next day
-    const v = possibleXP(cfgAt(t,k)) * (isWeekly(t) ? RULES.weeklyPerWeek/7 : 1);
+    const tc = cfgAt(t,k), v = possibleXP(tc) * (isWeekly(t) ? perWeek(tc)/7 : 1);
     if(t.oneOf && !isWeekly(t)) g[t.oneOf] = Math.max(g[t.oneOf]||0, v); else p += v;
   }
   for(const x in g) p += g[x];
@@ -2079,6 +2083,7 @@ const abilityOf = sid => (state.skills.find(s=>s.id===sid)||{}).ability || (stat
 function cfgAt(t, k){ if(t.hist) for(const h of t.hist) if(k < h.until) return Object.assign({}, t, h); return t; }
 function isActive(t, k){ return (t.created||'0000') <= k && (!t.retired || k < t.retired); }
 const isWeekly = t => t.cadence === 'weekly';
+const perWeek = t => Math.min(7, Math.max(1, Math.round(t.perWeek || 3)));   // how often you plan to do a weekly quest
 const isSide = t => t.cadence === 'side';
 const noMedal = t => isWeekly(t) || isSide(t);   // weekly & side quests never count toward day medals
 // XP a day can count toward its medal: weekly quests never count; a group (e.g. exercise) counts once, at its best quest
@@ -2283,7 +2288,7 @@ function condBar(k){
 function currentCompanion(){ const id = state.profile.pet; if(!id || !R.pets[id]) return null; return petDefs().find(p=>p.id===id) || null; }
 function companionHTML(){
   const def = currentCompanion(); if(!def) return '';
-  return `<button class="compstrip ${def.form}" data-act="pet" data-id="${def.id}"><span class="compart">${petArt(def, 80)}</span><span class="comptext"><span class="label">Traveling with</span><b>${esc(def.name)}</b><span class="muted">${def.group==='skill' ? esc(skillById(def.skill).name)+' companion' : esc(petOrigin(def))}</span></span></button>`;
+  return `<button class="compstrip ${def.form}" data-act="pet" data-id="${def.id}"><span class="compart">${petArt(def, 80)}</span><span class="comptext"><span class="label">Traveling with</span><b>${esc(petTitle(def))}</b><span class="muted">${def.group==='skill' ? esc(skillById(def.skill).name)+' companion' : esc(petOrigin(def))}</span></span></button>`;
 }
 function heroHeader(opts){
   const ch = R.char; opts = opts || {};
@@ -2400,7 +2405,7 @@ function questRow(t, k, d, opt){
   return `<article class="frame quest ${done?'done is-done':''} ${opt.dim?'dim':''}"><div class="in ${t.type==='tiers'?'tiered':''}">
     <div class="sigil">${svg(s.icon)}</div>
     <div class="qmain"><div class="qname">${esc(t.name)}</div>
-      <div class="qmeta">${meta}<span>${esc(s.name)}</span>${goal}${t.oneOf && !opt.dim ? `<span class="tag">${esc(GROUP_NAME[t.oneOf]||t.oneOf)}</span>` : ''}${opt.dim ? `<span class="tag">Bonus only</span>` : ''}${isWeekly(t) ? `<span class="tag">${opt.week||0}\u00d7 this week</span>` : ''}${opt.side ? '' : streakHTML+bonusHTML}</div></div>
+      <div class="qmeta">${meta}<span>${esc(s.name)}</span>${goal}${t.oneOf && !opt.dim ? `<span class="tag">${esc(GROUP_NAME[t.oneOf]||t.oneOf)}</span>` : ''}${opt.dim ? `<span class="tag">Bonus only</span>` : ''}${isWeekly(t) ? `<span class="tag ${(opt.week||0)>=perWeek(t)?'met':''}">${opt.week||0}/${perWeek(t)} this week</span>` : ''}${opt.side ? '' : streakHTML+bonusHTML}</div></div>
     ${ctrl}</div></article>`;
 }
 
@@ -2495,7 +2500,7 @@ function viewTrophies(){
   }).join('');
   const pets = petDefs(); const ownedN = pets.filter(p=>R.pets[p.id]).length;
   const petCardHTML = p=>{ const got = !!R.pets[p.id];
-    return `<button class="pet ${got?'got':''} ${p.form}" data-act="pet" data-id="${p.id}"><div class="petart">${petArt(p, 80, !got)}</div><div class="pn">${got ? esc(p.name) : '???'}</div><div class="ph">${got ? esc(petOrigin(p)) : esc(p.how)}</div></button>`; };
+    return `<button class="pet ${got?'got':''} ${p.form}" data-act="pet" data-id="${p.id}"><div class="petart">${petArt(p, 80, !got)}</div><div class="pn">${got ? esc(petTitle(p)) : '???'}</div><div class="ph">${got ? esc(petOrigin(p)) : esc(p.how)}</div></button>`; };
   return `<div class="rule">Medals</div>
   <div class="medalcount">
     ${['bronze','silver','gold'].map(m=>`<div class="frame mc"><div class="in"><span class="coin ${m}">${m[0].toUpperCase()}</span><b class="num">${c.medals[m]}</b><span class="label">${m} days</span></div></div>`).join('')}
@@ -2517,7 +2522,7 @@ function viewHero(){
   const p = state.profile, T = titleDefs(R), cur = currentTitle(R);
   const totalTime = Object.values(R.skills).reduce((a,s)=>a+s.minutes,0);
   const skillRows = state.skills.map(s=>`<div class="mrow"><div class="sigil">${svg(s.icon)}</div><div class="mm"><b>${esc(s.name)}</b><span>${esc(ABILITY_NAME[s.ability]||'')} · ${state.tasks.filter(t=>t.skill===s.id && !t.retired).length} active quest(s)</span></div><button class="btn" data-act="edit-skill" data-id="${s.id}">Edit</button></div>`).join('');
-  const questRows = state.tasks.filter(t=>!t.deleted).map(t=>`<div class="mrow ${t.retired?'retired':''}"><div class="sigil">${svg(skillById(t.skill).icon)}</div><div class="mm"><b>${esc(t.name)}</b><span>${t.type==='once' ? `${t.xp} XP, once a day` : t.type==='tiers' ? t.tiers.map(x=>`${tierLabel(t,x.amt)}: ${x.xp} XP`).join(' · ') : `${t.xp} XP per ${t.unit} min · goal ${fmtMin(t.target)}`}${isWeekly(t)?' · weekly':''}${isSide(t)?' · side quest'+(R.sideDone[t.id]?' (done)':''):''}${t.oneOf?' · '+(GROUP_NAME[t.oneOf]||t.oneOf).toLowerCase():''}${t.retired?' · retired':''}</span></div><button class="btn" data-act="edit-task" data-id="${t.id}">Edit</button></div>`).join('');
+  const questRows = state.tasks.filter(t=>!t.deleted).map(t=>`<div class="mrow ${t.retired?'retired':''}"><div class="sigil">${svg(skillById(t.skill).icon)}</div><div class="mm"><b>${esc(t.name)}</b><span>${t.type==='once' ? `${t.xp} XP, once a day` : t.type==='tiers' ? t.tiers.map(x=>`${tierLabel(t,x.amt)}: ${x.xp} XP`).join(' · ') : `${t.xp} XP per ${t.unit} min · goal ${fmtMin(t.target)}`}${isWeekly(t)?' · weekly, '+perWeek(t)+'× a week':''}${isSide(t)?' · side quest'+(R.sideDone[t.id]?' (done)':''):''}${t.oneOf?' · '+(GROUP_NAME[t.oneOf]||t.oneOf).toLowerCase():''}${t.retired?' · retired':''}</span></div><button class="btn" data-act="edit-task" data-id="${t.id}">Edit</button></div>`).join('');
   return `<section class="frame gold profile"><div class="in">
     ${portraitHTML()}
     <label class="btn gold" for="f-photo">Change portrait</label>
@@ -2555,7 +2560,7 @@ function viewHero(){
   <div class="btnrow"><button class="btn gold" data-act="export">Save backup</button><button class="btn" data-act="import">Restore backup</button></div>
   <button class="btn danger block" data-act="reset-ask">${DEMO?'Clear sample data and start fresh':'Reset all progress'}</button>
   <div class="verrow"><span class="hint">App version ${esc(APP_VERSION)}</span><button class="linkbtn" data-act="check-update">Check for updates</button></div>
-  <p class="hint" style="text-align:center;margin:0">Leveling is measured in full days: a day where you complete every daily quest for that skill, ability or your character (weekly quests count as 3 times a week). Level 2 takes 4 full days, then 6, 10, 13, 16, 19, then 2 more days each level. Partial days, streak bonuses, weekly and side quests all count, and adding quests raises what future levels need without taking away levels you have earned.</p>`;
+  <p class="hint" style="text-align:center;margin:0">Leveling is measured in full days: a day where you complete every daily quest for that skill, ability or your character (weekly quests count as often as you plan to do them). Level 2 takes 4 full days, then 6, 10, 13, 16, 19, then 2 more days each level. Partial days, streak bonuses, weekly and side quests all count, and adding quests raises what future levels need without taking away levels you have earned.</p>`;
 }
 
 /* ============ Friends: shared hero cards (Supabase) ============ */
@@ -2609,7 +2614,7 @@ function buildCard(pic){
   const comp = currentCompanion(), ab = {};
   for(const [k] of ABILITIES){ const A = R.abilities[k]; ab[k] = { l:A.level, i:A.into, n:A.need }; }
   return { v:1, app:APP_KIND, name: (state.profile.name||'Unnamed Hero').slice(0,40), title: currentTitle(R), lvl:R.char.level, xi:R.char.into, xn:R.char.need,
-    pic: pic||'', comp: comp ? { name: comp.name, s: spriteData(comp) } : null, ab, badges: showcaseBadges() };
+    pic: pic||'', comp: comp ? { name: petTitle(comp).slice(0,60), s: spriteData(comp) } : null, ab, badges: showcaseBadges() };
 }
 var pubTimer = null, pubTries = 0;
 function schedulePublish(){ const S = state.social; if(!S || !S.on || !socialReady()) return; clearTimeout(pubTimer); pubTimer = setTimeout(publishCard, 3000); }
@@ -2808,6 +2813,8 @@ function taskSheet(id, preset){
       <div class="field"><label>Icon</label>${iconPicker(icon)}</div></div>
     <div class="field"><label>How often</label><div class="seg seg3"><button type="button" id="f-daily">Daily</button><button type="button" id="f-weekly">Weekly</button><button type="button" id="f-side">Side quest</button></div>
       <span class="hint" id="f-cad-hint"></span></div>
+    <div class="field" id="f-pw-wrap"><label for="f-pw">Times per week</label><select id="f-pw">${[1,2,3,4,5,6,7].map(n=>`<option value="${n}" ${n===perWeek(t)?'selected':''}>${n} time${n>1?'s':''} a week</option>`).join('')}</select>
+      <span class="hint">How often you plan to do it. This sets how much it counts toward a full day for leveling.</span></div>
     <label class="checkrow" id="f-ex-wrap"><input type="checkbox" id="f-ex" ${t.oneOf==='exercise'?'checked':''}> <span>Counts as exercise<br><span class="hint">Only one exercise a day counts toward day medals. Extra ones still earn XP.</span></span></label>
     <div class="field" id="f-type-wrap"><label>How it counts</label><div class="seg"><button type="button" id="f-once" aria-pressed="${type==='once'}">Checkbox</button><button type="button" id="f-tiers" aria-pressed="${type==='tiers'}">Bubbles</button></div></div>
     <div class="field" id="f-once-wrap"><label for="f-txp">XP when done</label><input id="f-txp" type="number" inputmode="numeric" min="1" step="5" value="${t.xp||30}"></div>
@@ -2834,6 +2841,7 @@ function taskSheet(id, preset){
       q('#f-weekly').setAttribute('aria-pressed', cadence==='weekly');
       q('#f-side').setAttribute('aria-pressed', cadence==='side');
       q('#f-ex-wrap').hidden = cadence!=='daily';
+      q('#f-pw-wrap').hidden = cadence!=='weekly';
       if(cadence==='side' && type!=='once'){ type='once'; return sync(); }
       q('#f-type-wrap').hidden = cadence==='side';
       q('#f-cad-hint').textContent = cadence==='weekly' ? 'Shows every day under Weekly Quests. Earns XP once a day but never counts toward day medals.'
@@ -2868,9 +2876,9 @@ function taskSheet(id, preset){
       }
       mutate(()=>{
         if(skill==='__new'){ const s = {id:uid('s'), name:newName, icon, ability:q('#f-newab').value, titles:[]}; s.pets = generatePets(s); state.skills.push(s); skill = s.id; companionsToast(s); }
-        Object.assign(fields, cadence!=='daily' ? {cadence} : {}, cadence==='daily' && q('#f-ex').checked ? {oneOf:'exercise'} : {});
-        if(id){ const snap = x=>JSON.stringify({type:x.type, xp:x.xp, unit:x.unit, tiers:x.tiers, target:x.target}); const before = snap(t), old = {type:t.type, xp:t.xp, unit:t.unit, tiers:t.tiers, target:t.target};
-          ['xp','unit','tiers','target','cadence','oneOf'].forEach(k=>delete t[k]); Object.assign(t, {name, skill}, fields);
+        Object.assign(fields, cadence!=='daily' ? {cadence} : {}, cadence==='weekly' ? {perWeek: +q('#f-pw').value} : {}, cadence==='daily' && q('#f-ex').checked ? {oneOf:'exercise'} : {});
+        if(id){ const snap = x=>JSON.stringify({type:x.type, xp:x.xp, unit:x.unit, tiers:x.tiers, target:x.target, perWeek:x.perWeek}); const before = snap(t), old = {type:t.type, xp:t.xp, unit:t.unit, tiers:t.tiers, target:t.target, perWeek:t.perWeek};
+          ['xp','unit','tiers','target','cadence','oneOf','perWeek'].forEach(k=>delete t[k]); Object.assign(t, {name, skill}, fields);
           if(snap(t) !== before) (t.hist = t.hist || []).push(Object.assign({ until: todayKey() }, old)); }
         else state.tasks.push(Object.assign({id:uid('t'), name, skill, created: todayKey()}, fields));
       });
@@ -2911,13 +2919,20 @@ function skillSheet(id){
 function petSheet(id){
   const p = petDefs().find(x=>x.id===id); if(!p) return;
   const got = R.pets[p.id], isComp = state.profile.pet===p.id;
-  openSheet(`<div class="label" style="color:var(--gold)">${got ? (p.rare?'Shiny companion':'Companion') : 'Not yet found'}</div><h2>${got ? esc(p.name) : '???'}</h2>
+  openSheet(`<div class="label" style="color:var(--gold)">${got ? (p.rare?'Shiny companion':'Companion') : 'Not yet found'}</div><h2 id="f-pettitle">${got ? esc(petTitle(p)) : '???'}</h2>
     <div class="petbig ${p.form}" style="align-self:center">${petArt(p, 200, !got)}</div>
     ${got ? `<p style="margin:0">${esc(p.desc)}</p><p class="hint" style="margin:0">${esc(petOrigin(p))} · found ${esc(niceDate(got))}</p>` : `<p class="hint" style="margin:0">How to find it: ${esc(p.how)}.</p>`}
+    ${got ? `<div class="field" id="f-namebox" hidden><label for="f-petname">Name your ${esc(p.name)}</label><input id="f-petname" maxlength="20" value="${esc(petNick(p))}" placeholder="e.g. Whiskers" autocomplete="off"></div>
+      <div class="btnrow"><button class="btn gold" id="f-name">${petNick(p) ? 'Rename' : 'Name'}</button>${petNick(p) ? `<button class="btn" id="f-unname">Remove name</button>` : ''}</div>` : ''}
     ${got ? `<button class="btn ${isComp?'':'primary'} block" id="f-comp">${isComp ? 'Stop traveling together' : 'Travel together'}</button><p class="hint" style="margin:0">Your traveling companion appears on your character card.</p>` : ''}
     <button class="btn block" id="f-cancel">Close</button>`, root=>{
     root.querySelector('#f-cancel').onclick = closeSheet;
     const c = root.querySelector('#f-comp'); if(c) c.onclick = ()=>{ state.profile.pet = isComp ? '' : p.id; save(); closeSheet(); render(); };
+    const nb = root.querySelector('#f-name'), box = root.querySelector('#f-namebox'), inp = root.querySelector('#f-petname');
+    const setName = v=>{ state.petNames = state.petNames || {}; v = (v||'').trim().slice(0,20); if(v) state.petNames[p.id] = v; else delete state.petNames[p.id]; save(); render(); petSheet(p.id); };
+    if(nb) nb.onclick = ()=>{ if(box.hidden){ box.hidden = false; nb.textContent = 'Save name'; inp.focus(); } else setName(inp.value); };
+    if(inp) inp.onkeydown = e=>{ if(e.key==='Enter') setName(inp.value); };
+    const un = root.querySelector('#f-unname'); if(un) un.onclick = ()=>setName('');
   });
 }
 function condSheet(id){
