@@ -479,7 +479,7 @@ const RULES = {
 };
 const DEMO = !!window.XP_DEMO;
 const APP_KIND = 'personal';
-const APP_VERSION = '2026.11.10-1839';
+const APP_VERSION = '2026.11.10-1843';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -3270,7 +3270,7 @@ function ensurePetSince(s){ if(s && s.profile && !s.profile.petSince) s.profile.
 // Change the travelling companion and remember from which day (for loyalty and bond achievements).
 function setCompanion(id){ const k = todayKey(); state.profile.pet = id; state.profile.petSince = k; const L = state.travelLog = state.travelLog || [];
   if(L.length && L[L.length-1].from === k) L[L.length-1].pet = id; else L.push({ pet:id, from:k }); }
-const LOYALTY = [[10,'Pal'],[25,'Friend'],[50,'Bonded']];   // total points for each level
+const LOYALTY = [[10,'Pal'],[20,'Friend'],[30,'Bonded']];   // total points for each level
 const MEDAL_POINTS = { bronze:1, silver:2, gold:3 };
 function load(){ try{ const raw = localStorage.getItem(STORE_KEY); if(raw) return ensurePetSince(migrate(JSON.parse(raw))); }catch(e){} return null; }
 let saveWarned = false;
