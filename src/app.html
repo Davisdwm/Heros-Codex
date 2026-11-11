@@ -388,6 +388,11 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .ach.got.t-gold .badge{background:var(--goldm)} .ach.got.t-gold svg{color:var(--goldm)}
 .ach.got.t-red .badge{background:var(--red)} .ach.got.t-red svg{color:var(--red-hi)}
 .ach:not(.got) .badge{opacity:.6}
+button.ach{font:inherit;color:inherit;cursor:pointer}
+button.ach.got:hover{border-color:var(--line-hi)}
+.ach.achbig{border:0;background:none;padding:4px 0 0;align-self:center;width:auto}
+.ach.achbig .badge{width:92px;height:102px}
+.ach.achbig .badge svg{width:38px;height:38px}
 
 /* Hero screen */
 .profile .in{padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
@@ -3896,7 +3901,8 @@ function viewTrophies(){
   const got = defs.filter(d=>R.ach[d.id]).length;
   const achs = defs.map(d=>{
     const k = R.ach[d.id];
-    return `<div class="ach t-${d.tier} ${k?'got':''}"><div class="badge">${svg(d.icon)}</div><div class="an">${esc(d.name)}</div><div class="ad">${k ? 'Earned '+esc(MON[parseKey(k).getMonth()]+' '+parseKey(k).getDate()) : esc(d.desc)}</div></div>`;
+    const inner = `<div class="badge">${svg(d.icon)}</div><div class="an">${esc(d.name)}</div><div class="ad">${esc(d.desc)}</div>`;
+    return k ? `<button type="button" class="ach t-${d.tier} got" data-act="ach-info" data-id="${esc(d.id)}" aria-label="${esc(d.name)}: earned">${inner}</button>` : `<div class="ach t-${d.tier}">${inner}</div>`;
   }).join('');
   const pets = petDefs().filter(p=>!p.needs || R.pets[p.needs]); const ownedN = pets.filter(p=>R.pets[p.id]).length;   // ability shinies stay hidden until their normal form is found
   const petCardHTML = p=>{ const got = !!R.pets[p.id];
@@ -4006,14 +4012,28 @@ function thumbPortrait(){
 }
 function showcaseBadges(){
   const ids = (state.profile.showcase || []).filter(id=>R.ach[id]).slice(0,3);
-  return ids.map(id=>{ const d = R.defs.find(x=>x.id===id); return d ? { n:d.name, t:d.tier, i:d.icon } : null; }).filter(Boolean);
+  return ids.map(id=>{ const d = R.defs.find(x=>x.id===id); return d ? { id:d.id, n:d.name, t:d.tier, i:d.icon, d:String(d.desc||'').slice(0,120), k:R.ach[id] } : null; }).filter(Boolean);
 }
-function badgesHTML(list){
+// Badge details shown on friend cards, looked up when one is tapped (rebuilt on every draw).
+let fbadgeStore = [];
+function achDate(k){ return `${niceDate(k)}, ${parseKey(k).getFullYear()}`; }
+function achSheet(b){
+  // b: { n, t, i, d, k, who } - who is empty for your own achievements
+  const tiers = ['bronze','silver','gold','red'], tier = tiers.includes(b.t) ? b.t : 'bronze';
+  openSheet(`<div class="label" style="color:var(--gold)">${b.who ? esc(b.who) + '\u2019s achievement' : 'Achievement'}</div>
+    <div class="ach got t-${tier} achbig"><div class="badge">${svg(b.i)}</div></div>
+    <h2 style="text-align:center;margin:0">${esc(b.n)}</h2>
+    <div class="field"><label>How it\u2019s earned</label><p style="margin:0">${b.d ? esc(b.d) : '<span class="muted">Not shared on this card yet.</span>'}</p></div>
+    <div class="field"><label>Earned</label><p style="margin:0">${b.k ? esc(achDate(b.k)) : '<span class="muted">Date not shared on this card yet.</span>'}</p></div>
+    <button class="btn block" id="f-cancel">Close</button>`, root=>{ root.querySelector('#f-cancel').onclick = closeSheet; });
+}
+function badgesHTML(list, who){
   if(!Array.isArray(list) || !list.length) return '';
   const tiers = ['bronze','silver','gold','red'];
   return `<div class="fbadges">${list.slice(0,3).map(b=>{ if(!b || typeof b!=='object') return '';
     const tier = tiers.includes(b.t) ? b.t : 'bronze', icon = Object.prototype.hasOwnProperty.call(ICONS, b.i) ? b.i : 'star';
-    return `<div class="fbadge ach got t-${tier}"><div class="badge">${svg(icon)}</div><span>${esc(String(b.n||'').slice(0,40))}</span></div>`; }).join('')}</div>`;
+    const key = 'fb' + (fbadgeStore.length); fbadgeStore.push({ n:String(b.n||'').slice(0,40), t:tier, i:icon, id:typeof b.id==='string' ? b.id : '', d:typeof b.d==='string' ? b.d.slice(0,120) : '', k:typeof b.k==='string' && /^\d{4}-\d{2}-\d{2}$/.test(b.k) ? b.k : '', who:String(who||'').slice(0,40) });
+    return `<button type="button" class="fbadge ach got t-${tier}" data-act="fbadge-info" data-id="${key}"><div class="badge">${svg(icon)}</div><span>${esc(String(b.n||'').slice(0,40))}</span></button>`; }).join('')}</div>`;
 }
 function buildCard(pic){
   const comp = currentCompanion(), ab = {};
@@ -4060,7 +4080,7 @@ function friendCardHTML(c, key, foot){
     ${comp ? `<div class="fcomp">${comp}<span><span class="label">Traveling with</span><br>${esc(String(c.comp.name||'').slice(0,40))}</span></div>` : ''}
     ${bar('fx-'+key, xpct, 'thin')}
     <div class="fabs">${abs}</div>
-    ${badgesHTML(c.badges)}
+    ${badgesHTML(c.badges, key==='me' ? '' : c.name)}
     ${foot||''}
   </div></div>`;
 }
@@ -4129,6 +4149,7 @@ function renderTabs(){
 function render(){
   // Anything saved since the last draw (naming a companion, adding a friend...) can earn achievements too.
   if(dataDirty && typeof snapshot === 'function'){ dataDirty = false; const before = snapshot(); R = compute(); setTimeout(()=>celebrate(before), 0); }
+  fbadgeStore = [];
   const html = view==='today' ? viewToday() : view==='skills' ? viewSkills() : view==='trophies' ? viewTrophies() : view==='friends' ? viewFriends() : viewHero();
   $('#app').innerHTML = `<main class="wrap">${html}</main>`;
   deskLayout();
@@ -4556,6 +4577,8 @@ document.addEventListener('click', e=>{
   else if(a==='share-code'){ const code = soc().code, text = `Add me on Hero\u2019s Codex! My friend code is ${code}`; if(navigator.share) navigator.share({ text }).catch(()=>{}); else (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(()=>toast('Copied','Invite text copied.','users')).catch(()=>toast('Your code', code, 'users')); }
   else if(a==='add-friend'){ addFriend(); }
   else if(a==='remove-friend'){ const S = soc(); S.friends = S.friends.filter(x=>x!==id); delete S.cache[id]; save(); render(); }
+  else if(a==='ach-info'){ const d = R.defs.find(x=>x.id===id); if(d && R.ach[d.id]) achSheet({ n:d.name, t:d.tier, i:d.icon, d:d.desc, k:R.ach[d.id] }); }
+  else if(a==='fbadge-info'){ const b = fbadgeStore[+String(id).slice(2)]; if(b){ const local = R.defs.find(x=>(b.id && x.id===b.id) || x.name===b.n); achSheet(Object.assign({}, b, { d: b.d || (local ? local.desc : '') })); } }
   else if(a==='badge'){ const cur = (state.profile.showcase||[]).filter(x=>R.ach[x]); const i = cur.indexOf(id);
     if(i>=0) cur.splice(i,1); else if(cur.length>=3){ toast('Badges','You can show up to 3. Tap one to remove it first.','star'); return; } else cur.push(id);
     state.profile.showcase = cur; save(); render(); }
