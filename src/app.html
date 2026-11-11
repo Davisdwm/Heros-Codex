@@ -449,6 +449,34 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 @keyframes pop{from{transform:scale(.6);opacity:0}}
 @keyframes drop{from{transform:translateY(-20px);opacity:0}}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* Computer screens: menu down the left, and a two-column page with the summary cards beside the main list. */
+@media (min-width:1024px){
+  :root{--side-w:236px}
+  body{padding-left:var(--side-w)}
+  .tabs{top:0;bottom:0;right:auto;width:var(--side-w);border-top:0;border-right:1px solid var(--line-hi);background:linear-gradient(90deg,#120e0d,#1b1513);padding:0}
+  .tabs::before{top:0;bottom:0;left:auto;right:-1px;width:1px;height:auto;background:linear-gradient(180deg,transparent,var(--gold),transparent)}
+  .tabs nav{max-width:none;margin:0;display:flex;flex-direction:column;gap:4px;height:auto;padding:24px 16px}
+  .tabs nav::before{content:"Hero\2019s Codex";display:block;padding:10px 12px 26px;margin-bottom:10px;border-bottom:1px solid var(--line);font-family:var(--display);font-size:24px;letter-spacing:.04em;color:var(--gold);text-align:center}
+  .tab{flex-direction:row;justify-content:flex-start;gap:14px;padding:13px 14px;font-size:13px;border:1px solid transparent}
+  .tab:hover{color:var(--fg);background:rgba(255,255,255,.03)}
+  .tab[aria-current="page"]{background:rgba(217,173,85,.08);border-color:var(--line-hi)}
+  .wrap{max-width:1320px;padding:28px 36px 48px}
+  .wrap.split{display:grid;grid-template-columns:minmax(330px,380px) minmax(0,1fr);gap:28px;align-items:start}
+  .wrap:not(.split){max-width:880px}
+  .dside{position:sticky;top:28px;display:flex;flex-direction:column;gap:18px;max-height:calc(100vh - 56px);overflow:auto;scrollbar-width:thin}
+  .dmain{display:flex;flex-direction:column;gap:18px;min-width:0}
+  .dmain .quests{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));align-items:start}
+  .dmain .quests>:not(.quest){grid-column:1/-1}
+  .dmain .grid2{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+  .dmain .pets{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .dmain .pets4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .dmain .achs{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+  .dmain .pickpets{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+  .backdrop{align-items:center;padding-left:var(--side-w)}
+  .sheet{border:1px solid var(--gold);max-height:84vh;padding:24px 26px}
+  .toasts{left:var(--side-w)}
+}
+@media (min-width:1640px){.dmain .pets4{grid-template-columns:repeat(8,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media (max-width:360px){.aboxes{grid-template-columns:repeat(2,minmax(0,1fr))}.achs{grid-template-columns:repeat(2,minmax(0,1fr))}.hero .in{gap:10px}.portrait{width:64px;height:64px}}
 </style>
@@ -4075,6 +4103,25 @@ async function addFriend(){
 }
 
 /* ============ Render ============ */
+// On a computer screen, move each tab's summary cards into a side column next to the main list.
+const DESK = window.matchMedia('(min-width:1024px)');
+const DESK_SIDE = {
+  today:    el => el.matches('.banner, .hero, .frame.day'),
+  skills:   (el, i, kids) => kids[1] && kids[1].matches('.detailhead') ? i <= 4 :   // one skill: header, stats and calendar beside the list
+            el.matches('.hero, .aboxes') || (el.matches('.rule') && !!el.nextElementSibling && el.nextElementSibling.matches('.aboxes')),
+  trophies: el => el.matches('.medalcount, .frame.week') || (el.matches('.rule') && !!el.nextElementSibling && el.nextElementSibling.matches('.medalcount')),
+  hero:     el => el.matches('.profile, .stats'),
+};
+function deskLayout(){
+  const main = $('#app main'), test = DESK_SIDE[view];
+  if(!main || !DESK.matches || !test) return;
+  const kids = [...main.children], side = kids.filter((el, i) => test(el, i, kids));
+  if(!side.length || side.length === kids.length) return;
+  const a = document.createElement('aside'), b = document.createElement('div'); a.className = 'dside'; b.className = 'dmain';
+  kids.forEach(k => (side.includes(k) ? a : b).appendChild(k));
+  main.append(a, b); main.classList.add('split');
+}
+if(DESK.addEventListener) DESK.addEventListener('change', ()=>render());
 function renderTabs(){
   const tabs = [['today','Quests','quests'],['skills','Skills','skills'],['trophies','Trophies','trophy'],['friends','Friends','users'],['hero','Hero','hero']];
   $('#tabs').innerHTML = tabs.map(([id,l,ic])=>`<button class="tab" data-act="tab" data-id="${id}" ${view===id?'aria-current="page"':''}>${svg(ic)}<span>${l}</span></button>`).join('');
@@ -4084,6 +4131,7 @@ function render(){
   if(dataDirty && typeof snapshot === 'function'){ dataDirty = false; const before = snapshot(); R = compute(); setTimeout(()=>celebrate(before), 0); }
   const html = view==='today' ? viewToday() : view==='skills' ? viewSkills() : view==='trophies' ? viewTrophies() : view==='friends' ? viewFriends() : viewHero();
   $('#app').innerHTML = `<main class="wrap">${html}</main>`;
+  deskLayout();
   renderTabs(); settleBars(); fitNames();
   const cd = $('#conds'); if(cd) cd.addEventListener('toggle', ()=>{ condOpen = cd.open; });
   const jd = $('#journal'); if(jd) jd.addEventListener('toggle', ()=>{ journalOpen = jd.open; });
