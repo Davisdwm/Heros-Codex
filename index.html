@@ -325,6 +325,10 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 @keyframes petbub{0%{opacity:0;transform:translate(-50%,8px) scale(.7)}15%{opacity:1;transform:translate(-50%,0) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-10px)}}
 .petbig{display:grid;place-items:center;width:180px;height:180px;max-width:100%;border-radius:50%;background:radial-gradient(circle,rgba(217,173,85,.16),rgba(0,0,0,0) 68%)}
 .petbig svg{image-rendering:pixelated}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.swatch{display:flex;align-items:center;gap:8px;padding:7px 12px 7px 8px;border:1px solid var(--line);background:var(--inset);font-size:13px;font-weight:700}
+.swatch span{width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.25);display:block}
+.swatch.sel{border-color:var(--gold);background:rgba(217,173,85,.12)}
 .petdesc{max-width:300px;margin:4px 0 0;color:var(--muted);font-size:15px}
 
 /* Tabs */
@@ -527,7 +531,7 @@ const RULES = {
 };
 const DEMO = !!window.XP_DEMO;
 const APP_KIND = 'personal';
-const APP_VERSION = '2026.11.11-1420';
+const APP_VERSION = '2026.11.14-0438';
 const STORE_KEY = DEMO ? 'heros-ledger-demo-v1' : 'heros-ledger-v1';
 
 /* ============ Icons ============ */
@@ -3309,7 +3313,7 @@ function skillTrio(s){
   return null;
 }
 function petDefs(){
-  const out = [{ id:'p_cat', group:'starter', skill:null, sprite:'cat', form:'base', starter:true, name:'Cat', desc:'An orange tabby who followed you out the door one morning and never left.', how:'Starter companion' }];
+  const out = [{ id:'p_cat', group:'starter', skill:null, sprite:'cat', form:'base', starter:true, pal: starterPal('cat'), name:'Cat', desc:'An orange tabby who followed you out the door one morning and never left.', how:'Starter companion' }];
   for(const s of state.skills){
     let trio = skillTrio(s);
     if(!trio){ s.pets = generatePets(s); trio = s.pets; }   // skills you add get their own set the first time they're seen
@@ -3327,6 +3331,17 @@ function petDefs(){
 const petNick = p => ((state.petNames||{})[p.id] || '').trim();
 const petTitle = p => petNick(p) ? `${petNick(p)}, the ${p.name}` : p.name;
 const petOrigin = p => p.starter ? 'Starter companion' : p.group==='ability' ? `${ABILITY_NAME[p.ability]} companion` : skillById(p.skill).name;
+// Starter companions can be recoloured. Only the body colours change: light, dark-detail and accent colours stay.
+const STARTER_COLORS = [['','Original',null],['red','Red',[0,72,48]],['yellow','Yellow',[48,90,55]],['blue','Blue',[215,70,50]],['black','Black',[230,8,17]]];
+function starterPal(sprite){
+  const col = STARTER_COLORS.find(x=>x[0]===state.profile.starterColor), sp = SPR[sprite];
+  if(!col || !col[2] || !sp || !sp.pal || !sp.pal.a) return undefined;
+  const [ah,as,al] = sp.pal.a, [th,ts,tl] = col[2], out = {};
+  for(const k in sp.pal){ const [h,s,l] = sp.pal[k], dh = ((h - ah + 540) % 360) - 180;
+    if(k!=='a' && (l >= 80 || s < 30 || Math.abs(dh) > 20)) continue;   // keep cream bellies, greys and accent colours
+    out[k] = [th + dh, Math.max(0, Math.min(100, s * ts / Math.max(1, as))), Math.max(6, Math.min(92, l + (tl - al)))]; }
+  return out;
+}
 function petArt(def, width, locked){ return sprSVG(def.sprite, {width, locked, shiny: !!def.rare, aura: def.form==='legend' ? '#f2cd78' : '', pal: def.pal || undefined, hue: def.hue || 0}); }
 const DEFAULT_CONDITIONS = () => [
   { id:'poisoned',  name:'Poisoned',  desc:'Sick today',                icon:'drop', kind:'bad'  },
@@ -4466,11 +4481,13 @@ function petSheet(id){
     ${got ? `<button type="button" class="petbig petpet ${p.form}" id="f-petpet" aria-label="${esc(petTitle(p))}" style="align-self:center">${petArt(p, 200)}</button>` : `<div class="petbig ${p.form}" style="align-self:center">${petArt(p, 200, true)}</div>`}
     ${got ? `<p style="margin:0">${esc(p.desc)}</p><p class="hint" style="margin:0">${esc(petOrigin(p))} · found ${esc(niceDate(got))}</p>` : `<p class="hint" style="margin:0">How to find it: ${esc(p.how)}.</p>`}
     ${got ? loyaltyHTML(p) : ''}
+    ${got && p.starter ? `<div class="field"><label>Color</label><div class="swatches">${STARTER_COLORS.map(([id,label,c])=>`<button type="button" class="swatch ${(state.profile.starterColor||'')===id?'sel':''}" data-color="${id}" aria-pressed="${(state.profile.starterColor||'')===id}"><span style="background:${c ? hslc(c[0],c[1],c[2]) : 'linear-gradient(135deg,'+hslc(...SPR[p.sprite].pal.a)+' 50%,'+hslc(...(SPR[p.sprite].pal.c||SPR[p.sprite].pal.a))+' 50%)'}"></span>${label}</button>`).join('')}</div></div>` : ''}
     ${got ? `<div class="field" id="f-namebox" hidden><label for="f-petname">Name your ${esc(p.name)}</label><input id="f-petname" maxlength="20" value="${esc(petNick(p))}" placeholder="e.g. Whiskers" autocomplete="off"></div>
       <div class="btnrow"><button class="btn gold" id="f-name">${petNick(p) ? 'Rename' : 'Name'}</button>${petNick(p) ? `<button class="btn" id="f-unname">Remove name</button>` : ''}</div>` : ''}
     ${got ? `<button class="btn ${isComp?'':'primary'} block" id="f-comp">${isComp ? 'Stop traveling together' : 'Travel together'}</button><p class="hint" style="margin:0">Your traveling companion appears on your character card.</p>` : ''}
     <button class="btn block" id="f-cancel">Close</button>`, root=>{
     root.querySelector('#f-cancel').onclick = closeSheet;
+    root.querySelectorAll('[data-color]').forEach(btn=>btn.onclick = ()=>{ const v = btn.dataset.color; if(v) state.profile.starterColor = v; else delete state.profile.starterColor; save(); R = compute(); render(); petSheet(p.id); });
     const c = root.querySelector('#f-comp'); if(c) c.onclick = ()=>{ setCompanion(isComp ? '' : p.id); save(); closeSheet(); render(); };
     const nb = root.querySelector('#f-name'), box = root.querySelector('#f-namebox'), inp = root.querySelector('#f-petname');
     const setName = v=>{ state.petNames = state.petNames || {}; v = (v||'').trim().slice(0,20); if(v) state.petNames[p.id] = v; else delete state.petNames[p.id]; save(); render(); petSheet(p.id); };
